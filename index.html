@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple YouTube Soundboard</title>
+    <title>Quick YouTube Soundboard</title>
     <style>
         body {
             background-color: #2F4F4F;
@@ -13,7 +13,7 @@
             color: #F0FFF0;
         }
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
             text-align: center;
         }
@@ -44,23 +44,46 @@
         #uploadBtn:hover {
             background-color: #9ACD32;
         }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            background-color: #6B8E23;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+        }
+        #loopBtn {
+            font-size: 10px;
+        }
+        .control-btn:hover {
+            background-color: #9ACD32;
+        }
+        #nowPlaying {
+            margin: 10px 0;
+            color: #F0FFF0;
+        }
+        #timeLeft {
+            margin: 5px 0;
+            color: #F0FFF0;
+            font-size: 14px;
+        }
         .soundboard {
             display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
             gap: 10px;
-            align-items: center;
-        }
-        .sound-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
             justify-content: center;
-        }
-        .sound-btn-container {
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
         .sound-btn {
             width: 100px;
@@ -69,8 +92,8 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            position: relative;
             color: #F0FFF0;
-            text-align: center;
         }
         .sound-btn:hover {
             background-color: #6B8E23;
@@ -80,209 +103,128 @@
             color: #8FBC8F;
             border: 2px solid #F0FFF0;
         }
-        .track-control {
-            background-color: #556B2F;
-            height: 100px;
-            width: 400px;
-            border-radius: 10px;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-        .track-control.active {
-            display: flex;
-        }
-        .track-info {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex: 1;
-        }
-        .controls {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-            margin-bottom: 5px;
-        }
-        .control-btn {
+        .delete-btn {
             width: 40px;
             height: 40px;
-            background: #6B8E23;
+            background-color: #FF4444;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px;
-        }
-        .loop-btn, .fade-btn {
-            font-size: 10px; /* Smaller text for Loop and Fade Out */
-        }
-        .control-btn:hover {
-            background-color: #9ACD32;
-        }
-        .play-pause-btn.playing {
-            background-color: #F0FFF0;
-            color: #9ACD32;
-        }
-        .loop-btn.looped {
-            background-color: #F0FFF0;
-            color: #9ACD32;
-        }
-        .fade-btn.fading {
-            background-color: #F0FFF0;
-            color: #9ACD32;
-        }
-        .now-playing {
-            color: #F0FFF0;
-            font-size: 14px;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-        .volume-control {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        .volume-slider {
-            -webkit-appearance: none;
-            width: 100px;
-            height: 8px;
-            background: #6B8E23;
-            outline: none;
-            border-radius: 5px;
-            border: 1px solid #9ACD32;
-        }
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #9ACD32;
-            cursor: pointer;
-            border-radius: 50%;
-        }
-        .volume-slider::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            background: #9ACD32;
-            cursor: pointer;
-            border-radius: 50%;
-            border: none;
-        }
-        .volume-slider:hover {
-            background: #8FBC8F;
-        }
-        .progress-control {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-        .progress-slider {
-            -webkit-appearance: none;
-            width: 200px;
-            height: 8px;
-            background: #6B8E23;
-            outline: none;
-            border-radius: 5px;
-            border: 1px solid #9ACD32;
-        }
-        .progress-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #9ACD32;
-            cursor: pointer;
-            border-radius: 50%;
-        }
-        .progress-slider::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            background: #9ACD32;
-            cursor: pointer;
-            border-radius: 50%;
-            border: none;
-        }
-        .progress-slider:hover {
-            background: #8FBC8F;
-        }
-        .time-display {
-            font-size: 12px;
-            color: #F0FFF0;
-        }
-        .delete-btn, .rename-btn {
-            width: 40px;
-            height: 100px;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
             display: none;
             align-items: center;
             justify-content: center;
             padding: 8px;
         }
-        .delete-btn {
-            background-color: #8B3A3A; /* Softer, natural red */
-            font-size: 16px;
-        }
         .rename-btn {
-            background-color: #8FBC8F; /* Matching light green */
-            font-size: 14px; /* Slightly smaller text */
-            line-height: 1; /* Tighten line spacing */
-            writing-mode: vertical-rl; /* Vertical text */
-            text-orientation: mixed; /* Ensure letters stack upright */
-        }
-        .delete-btn.active, .rename-btn.active {
-            display: flex;
-        }
-        .footer {
-            margin-top: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
             font-size: 12px;
-            text-align: center;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
         }
-        .footer a {
-            color: #9ACD32;
-            text-decoration: none;
-            display: block;
-            margin: 5px 0;
-        }
-        .footer a:hover {
-            color: #F0FFF0;
+        .button-container {
+            display: flex;
+            align-items: center;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Simple YouTube Soundboard</h1>
+        <h1>Quick YouTube Soundboard</h1>
         
+        <div class="controls">
+            <button class="control-btn" id="playBtn">▶</button>
+            <button class="control-btn" id="pauseBtn">⏸</button>
+            <button class="control-btn" id="stopBtn">⏹</button>
+            <button class="control-btn" id="loopBtn">Loop: Off</button>
+            <button class="control-btn delete-btn" id="deleteBtn">X</button>
+            <button class="control-btn rename-btn" id="renameBtn">R</button>
+        </div>
+        
+        <div id="nowPlaying">Nothing playing</div>
+        <div id="timeLeft"></div>
+
         <div class="input-section">
             <input type="text" id="youtubeLink" placeholder="Paste YouTube link here">
             <button id="uploadBtn">Upload to Soundboard</button>
         </div>
 
-        <div class="soundboard" id="soundboard"></div>
-
-        <div class="footer">
-            <a href="https://youtube.com/@justrecklessproductions?si=GNB6dt49b1hkcOn0" target="_blank">Just Reckless Productions</a>
-            <a href="https://patreon.com/JustRecklessProductions" target="_blank">Collections</a>
+        <div class="soundboard" id="soundboard">
         </div>
     </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        let players = {};
+        let player;
+        let currentVideoId = '';
+        let isLooping = false;
         let soundButtons = {};
+        let currentButtonContainer = null;
+        let duration = 0;
+        let timeInterval;
 
         function onYouTubeIframeAPIReady() {
             document.getElementById('uploadBtn').addEventListener('click', addSound);
+            document.getElementById('playBtn').addEventListener('click', () => player?.playVideo());
+            document.getElementById('pauseBtn').addEventListener('click', () => player?.pauseVideo());
+            document.getElementById('stopBtn').addEventListener('click', () => {
+                if (player) {
+                    player.stopVideo();
+                    clearCurrentSelection();
+                }
+            });
+            document.getElementById('loopBtn').addEventListener('click', toggleLoop);
+            document.getElementById('deleteBtn').addEventListener('click', deleteCurrentSound);
+            document.getElementById('renameBtn').addEventListener('click', renameCurrentSound);
+            
+            // Load saved buttons when the app initializes
+            loadFromLocalStorage();
+        }
+
+        // --- Local Storage Functions ---
+        function saveToLocalStorage() {
+            const soundsToSave = Object.keys(soundButtons).map(id => ({
+                id: id,
+                name: soundButtons[id].button.textContent
+            }));
+            localStorage.setItem('mySoundboard', JSON.stringify(soundsToSave));
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('mySoundboard');
+            if (!savedData) return;
+
+            const sounds = JSON.parse(savedData);
+            sounds.forEach(sound => {
+                createButtonUI(sound.id, sound.name);
+            });
+        }
+        // -------------------------------
+
+        function createButtonUI(videoId, trackName) {
+            const soundboard = document.getElementById('soundboard');
+            const buttonContainer = document.createElement('div');
+            const button = document.createElement('button');
+
+            buttonContainer.className = 'button-container';
+            button.className = 'sound-btn';
+            button.textContent = trackName;
+
+            buttonContainer.appendChild(button);
+            soundboard.appendChild(buttonContainer);
+
+            soundButtons[videoId] = { button, container: buttonContainer };
+            
+            button.addEventListener('click', () => playSound(videoId, button.textContent, buttonContainer));
         }
 
         function addSound() {
@@ -296,122 +238,54 @@
                 return;
             }
 
+            // Check if sound already exists to avoid duplicates
+            if (soundButtons[videoId]) {
+                alert('This sound is already on your soundboard!');
+                linkInput.value = '';
+                return;
+            }
+
             const trackName = prompt('Enter name for this track:');
             if (!trackName) return;
 
-            const soundboard = document.getElementById('soundboard');
-            const soundRow = document.createElement('div');
-            soundRow.className = 'sound-row';
-
-            const soundBtnContainer = document.createElement('div');
-            soundBtnContainer.className = 'sound-btn-container';
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.textContent = 'X';
-
-            const renameBtn = document.createElement('button');
-            renameBtn.className = 'rename-btn';
-            renameBtn.textContent = 'RENAME';
-
-            const button = document.createElement('button');
-            button.className = 'sound-btn';
-            button.textContent = trackName;
-            button.dataset.videoId = videoId;
-
-            const controlDiv = document.createElement('div');
-            controlDiv.className = 'track-control';
-            controlDiv.dataset.videoId = videoId;
-
-            button.addEventListener('click', () => toggleSound(videoId, trackName, button, controlDiv, deleteBtn, renameBtn, soundRow));
-            deleteBtn.addEventListener('click', () => deleteSound(videoId));
-            renameBtn.addEventListener('click', () => renameSound(videoId));
-
-            soundBtnContainer.appendChild(deleteBtn);
-            soundBtnContainer.appendChild(renameBtn);
-            soundBtnContainer.appendChild(button);
-            soundRow.appendChild(soundBtnContainer);
-            soundRow.appendChild(controlDiv);
-            soundboard.appendChild(soundRow);
-            soundButtons[videoId] = { button, trackName, controlDiv, soundRow, deleteBtn, renameBtn };
+            createButtonUI(videoId, trackName);
+            saveToLocalStorage(); // Save after adding
 
             linkInput.value = '';
         }
 
         function extractVideoId(url) {
-            const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]{11}).*/;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             const match = url.match(regExp);
             return (match && match[2].length === 11) ? match[2] : null;
         }
 
-        function toggleSound(videoId, trackName, button, controlDiv, deleteBtn, renameBtn, soundRow) {
-            if (players[videoId]) {
-                stopSound(videoId, button, controlDiv, deleteBtn, renameBtn);
-            } else {
-                playSound(videoId, trackName, button, controlDiv, deleteBtn, renameBtn, soundRow);
+        function playSound(videoId, title, container) {
+            if (player && currentVideoId === videoId) {
+                player.stopVideo();
+                clearCurrentSelection();
+                return;
             }
-        }
 
-        function playSound(videoId, trackName, button, controlDiv, deleteBtn, renameBtn, soundRow) {
-            button.classList.add('playing');
-            controlDiv.classList.add('active');
-            deleteBtn.classList.add('active');
-            renameBtn.classList.add('active');
+            if (currentButtonContainer) {
+                currentButtonContainer.querySelector('.sound-btn').classList.remove('playing');
+                document.getElementById('deleteBtn').style.display = 'none';
+                document.getElementById('renameBtn').style.display = 'none';
+            }
 
-            const playerDiv = document.createElement('div');
-            playerDiv.id = `player-${videoId}`;
-            document.body.appendChild(playerDiv);
+            container.querySelector('.sound-btn').classList.add('playing');
+            document.getElementById('deleteBtn').style.display = 'inline-flex';
+            document.getElementById('renameBtn').style.display = 'inline-flex';
+            currentButtonContainer = container;
 
-            const trackInfo = document.createElement('div');
-            trackInfo.className = 'track-info';
+            currentVideoId = videoId;
+            document.getElementById('nowPlaying').textContent = `Now playing: ${title}`;
 
-            const nowPlaying = document.createElement('div');
-            nowPlaying.className = 'now-playing';
-            nowPlaying.textContent = `Now playing: ${trackName}`;
+            if (player) {
+                player.destroy();
+            }
 
-            const volumeDiv = document.createElement('div');
-            volumeDiv.className = 'volume-control';
-            const volumeSlider = document.createElement('input');
-            volumeSlider.type = 'range';
-            volumeSlider.className = 'volume-slider';
-            volumeSlider.min = '0';
-            volumeSlider.max = '100';
-            volumeSlider.value = '100';
-            volumeDiv.appendChild(volumeSlider);
-
-            const controls = document.createElement('div');
-            controls.className = 'controls';
-            controls.innerHTML = `
-                <button class="control-btn play-pause-btn" data-video-id="${videoId}">▶</button>
-                <button class="control-btn stop-btn" data-video-id="${videoId}">⏹</button>
-                <button class="control-btn loop-btn" data-video-id="${videoId}">Loop: Off</button>
-                <button class="control-btn fade-btn" data-video-id="${videoId}">Fade Out: Off</button>
-            `;
-
-            const progressDiv = document.createElement('div');
-            progressDiv.className = 'progress-control';
-            const timeIn = document.createElement('span');
-            timeIn.className = 'time-display';
-            timeIn.id = `timeIn-${videoId}`;
-            const progressSlider = document.createElement('input');
-            progressSlider.type = 'range';
-            progressSlider.className = 'progress-slider';
-            progressSlider.min = '0';
-            progressSlider.value = '0';
-            const timeLeft = document.createElement('span');
-            timeLeft.className = 'time-display';
-            timeLeft.id = `timeLeft-${videoId}`;
-            progressDiv.appendChild(timeIn);
-            progressDiv.appendChild(progressSlider);
-            progressDiv.appendChild(timeLeft);
-
-            trackInfo.appendChild(nowPlaying);
-            trackInfo.appendChild(volumeDiv);
-            controlDiv.appendChild(trackInfo);
-            controlDiv.appendChild(controls);
-            controlDiv.appendChild(progressDiv);
-
-            const player = new YT.Player(`player-${videoId}`, {
+            player = new YT.Player('player', {
                 height: '0',
                 width: '0',
                 videoId: videoId,
@@ -420,187 +294,81 @@
                     'controls': 0
                 },
                 events: {
-                    'onReady': (event) => onPlayerReady(event, videoId, trackName, progressSlider),
-                    'onStateChange': (event) => onPlayerStateChange(event, videoId, button, controlDiv, deleteBtn, renameBtn)
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
                 }
             });
-
-            players[videoId] = {
-                player,
-                button,
-                controlDiv,
-                soundRow,
-                deleteBtn,
-                renameBtn,
-                isLooping: false,
-                isFading: false,
-                timeInterval: null,
-                fadeInterval: null
-            };
-
-            const playPauseBtn = controls.querySelector('.play-pause-btn');
-            playPauseBtn.addEventListener('click', () => togglePlayPause(videoId));
-            controls.querySelector('.stop-btn').addEventListener('click', () => stopSound(videoId, button, controlDiv, deleteBtn, renameBtn));
-            controls.querySelector('.loop-btn').addEventListener('click', () => toggleLoop(videoId));
-            controls.querySelector('.fade-btn').addEventListener('click', () => fadeOut(videoId));
-            volumeSlider.addEventListener('input', () => adjustVolume(videoId, volumeSlider.value));
-            progressSlider.addEventListener('input', () => seekTo(videoId, progressSlider.value));
         }
 
-        function onPlayerReady(event, videoId, trackName, progressSlider) {
-            const player = event.target;
-            player.playVideo();
-            adjustVolume(videoId, 100);
-            const duration = player.getDuration();
-            progressSlider.max = duration;
-            players[videoId].timeInterval = setInterval(() => updateProgress(videoId, duration, progressSlider), 1000);
-            updateProgress(videoId, duration, progressSlider);
-            updatePlayPauseButton(videoId, YT.PlayerState.PLAYING);
+        function onPlayerReady(event) {
+            event.target.playVideo();
+            duration = event.target.getDuration();
+            updateTimeLeft();
+            timeInterval = setInterval(updateTimeLeft, 1000);
         }
 
-        function onPlayerStateChange(event, videoId, button, controlDiv, deleteBtn, renameBtn) {
-            if (event.data === YT.PlayerState.ENDED) {
-                if (players[videoId].isLooping) {
-                    players[videoId].player.playVideo();
-                } else {
-                    stopSound(videoId, button, controlDiv, deleteBtn, renameBtn);
-                }
-            } else if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED) {
-                updatePlayPauseButton(videoId, event.data);
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.ENDED && isLooping) {
+                player.playVideo();
+            } else if (event.data === YT.PlayerState.ENDED) {
+                clearCurrentSelection();
             }
         }
 
-        function togglePlayPause(videoId) {
-            if (players[videoId]) {
-                const player = players[videoId].player;
-                if (player.getPlayerState() === YT.PlayerState.PLAYING) {
-                    player.pauseVideo();
-                } else {
-                    player.playVideo();
-                }
-            }
+        function toggleLoop() {
+            isLooping = !isLooping;
+            document.getElementById('loopBtn').textContent = `Loop: ${isLooping ? 'On' : 'Off'}`;
         }
 
-        function updatePlayPauseButton(videoId, state) {
-            const playPauseBtn = players[videoId].controlDiv.querySelector('.play-pause-btn');
-            if (state === YT.PlayerState.PLAYING) {
-                playPauseBtn.textContent = '⏸';
-                playPauseBtn.classList.add('playing');
-            } else {
-                playPauseBtn.textContent = '▶';
-                playPauseBtn.classList.remove('playing');
+        function clearCurrentSelection() {
+            if (currentButtonContainer) {
+                currentButtonContainer.querySelector('.sound-btn').classList.remove('playing');
+                document.getElementById('deleteBtn').style.display = 'none';
+                document.getElementById('renameBtn').style.display = 'none';
+                currentButtonContainer = null;
             }
+            document.getElementById('nowPlaying').textContent = 'Nothing playing';
+            document.getElementById('timeLeft').textContent = '';
+            currentVideoId = '';
+            clearInterval(timeInterval);
         }
 
-        function toggleLoop(videoId) {
-            players[videoId].isLooping = !players[videoId].isLooping;
-            const loopBtn = players[videoId].controlDiv.querySelector('.loop-btn');
-            loopBtn.textContent = `Loop: ${players[videoId].isLooping ? 'On' : 'Off'}`;
-            if (players[videoId].isLooping) {
-                loopBtn.classList.add('looped');
-            } else {
-                loopBtn.classList.remove('looped');
-            }
-        }
-
-        function fadeOut(videoId) {
-            if (players[videoId] && !players[videoId].isFading) {
-                const player = players[videoId].player;
-                const fadeBtn = players[videoId].controlDiv.querySelector('.fade-btn');
-                const volumeSlider = players[videoId].controlDiv.querySelector('.volume-slider');
-                players[videoId].isFading = true;
-                fadeBtn.textContent = 'Fade Out: On';
-                fadeBtn.classList.add('fading');
-
-                let currentVolume = player.getVolume();
-                const fadeInterval = setInterval(() => {
-                    if (currentVolume > 0) {
-                        currentVolume -= 2; // Adjust fade speed by changing this value
-                        if (currentVolume < 0) currentVolume = 0;
-                        player.setVolume(currentVolume);
-                        volumeSlider.value = currentVolume; // Update volume slider in real-time
-                    } else {
-                        clearInterval(fadeInterval);
-                        player.pauseVideo();
-                        players[videoId].isFading = false;
-                        fadeBtn.textContent = 'Fade Out: Off';
-                        fadeBtn.classList.remove('fading');
-                        updatePlayPauseButton(videoId, YT.PlayerState.PAUSED);
-                    }
-                }, 100); // Adjust fade duration by changing this interval (100ms steps)
-                
-                players[videoId].fadeInterval = fadeInterval;
-            }
-        }
-
-        function stopSound(videoId, button, controlDiv, deleteBtn, renameBtn) {
-            if (players[videoId]) {
-                players[videoId].player.destroy();
-                document.body.removeChild(document.getElementById(`player-${videoId}`));
-                controlDiv.innerHTML = '';
-                controlDiv.classList.remove('active');
-                deleteBtn.classList.remove('active');
-                renameBtn.classList.remove('active');
-                clearInterval(players[videoId].timeInterval);
-                if (players[videoId].fadeInterval) clearInterval(players[videoId].fadeInterval);
-                delete players[videoId];
-                button.classList.remove('playing');
-            }
-        }
-
-        function deleteSound(videoId) {
-            if (players[videoId]) {
-                players[videoId].player.destroy();
-                document.body.removeChild(document.getElementById(`player-${videoId}`));
-                clearInterval(players[videoId].timeInterval);
-                if (players[videoId].fadeInterval) clearInterval(players[videoId].fadeInterval);
+        function deleteCurrentSound() {
+            if (currentButtonContainer) {
                 const soundboard = document.getElementById('soundboard');
-                soundboard.removeChild(players[videoId].soundRow);
-                delete players[videoId];
-                delete soundButtons[videoId];
+                soundboard.removeChild(currentButtonContainer);
+                delete soundButtons[currentVideoId];
+                clearCurrentSelection();
+                saveToLocalStorage(); // Save after deleting
             }
         }
 
-        function renameSound(videoId) {
-            const button = soundButtons[videoId].button;
-            const newName = prompt('Enter new name:', button.textContent);
-            if (newName) {
-                button.textContent = newName;
-                soundButtons[videoId].trackName = newName;
-                if (players[videoId]) {
-                    players[videoId].controlDiv.querySelector('.now-playing').textContent = `Now playing: ${newName}`;
+        function renameCurrentSound() {
+            if (currentButtonContainer) {
+                const button = currentButtonContainer.querySelector('.sound-btn');
+                const newName = prompt('Enter new name:', button.textContent);
+                if (newName) {
+                    button.textContent = newName;
+                    saveToLocalStorage(); // Save after renaming
+                    
+                    // Update 'Now Playing' text if the renamed sound is currently playing
+                    if (currentVideoId) {
+                        document.getElementById('nowPlaying').textContent = `Now playing: ${newName}`;
+                    }
                 }
             }
         }
 
-        function adjustVolume(videoId, volume) {
-            if (players[videoId]) {
-                players[videoId].player.setVolume(volume);
-            }
-        }
-
-        function seekTo(videoId, time) {
-            if (players[videoId]) {
-                players[videoId].player.seekTo(time, true);
-            }
-        }
-
-        function updateProgress(videoId, duration, progressSlider) {
-            if (players[videoId] && players[videoId].player.getCurrentTime) {
-                const currentTime = players[videoId].player.getCurrentTime();
-                progressSlider.value = currentTime;
-
-                const timeInMinutes = Math.floor(currentTime / 60);
-                const timeInSeconds = Math.floor(currentTime % 60);
-                const timeLeftMinutes = Math.floor((duration - currentTime) / 60);
-                const timeLeftSeconds = Math.floor((duration - currentTime) % 60);
-
-                document.getElementById(`timeIn-${videoId}`).textContent = 
-                    `${timeInMinutes}:${timeInSeconds < 10 ? '0' : ''}${timeInSeconds}`;
-                document.getElementById(`timeLeft-${videoId}`).textContent = 
-                    `-${timeLeftMinutes}:${timeLeftSeconds < 10 ? '0' : ''}${timeLeftSeconds}`;
+        function updateTimeLeft() {
+            if (player && player.getCurrentTime) {
+                const currentTime = player.getCurrentTime();
+                const timeLeft = duration - currentTime;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = Math.floor(timeLeft % 60);
+                document.getElementById('timeLeft').textContent = `Time left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
             }
         }
     </script>
+    <div id="player" style="display: none;"></div>
 </body>
 </html>
