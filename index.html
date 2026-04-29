@@ -21,7 +21,7 @@
             background-color: var(--bg);
             color: var(--text);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden; /* Handled by internal flex layout */
+            overflow: hidden; 
             display: flex;
             height: 100vh;
         }
@@ -52,64 +52,41 @@
         }
 
         input[type="text"] {
-            flex-grow: 1;
-            padding: 12px;
-            background: #222;
-            border: 1px solid #444;
-            color: white;
-            border-radius: 6px;
-            outline: none;
+            flex-grow: 1; padding: 12px; background: #222;
+            border: 1px solid #444; color: white; border-radius: 6px; outline: none;
         }
-        
         input[type="text"]:focus { border-color: var(--neon-2); }
 
         button.btn-primary {
-            padding: 12px 24px;
-            background: transparent;
-            color: white;
-            border: 1px solid var(--neon-2);
-            border-radius: 6px;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-weight: bold;
-            transition: all 0.3s;
+            padding: 12px 24px; background: transparent; color: white;
+            border: 1px solid var(--neon-2); border-radius: 6px; cursor: pointer;
+            text-transform: uppercase; font-weight: bold; transition: all 0.3s;
         }
-
         button.btn-primary:hover {
-            background: var(--neon-2);
-            color: black;
-            box-shadow: 0 0 15px var(--neon-2);
+            background: var(--neon-2); color: black; box-shadow: 0 0 15px var(--neon-2);
         }
 
         .toggle-desktop-btn {
-            display: none;
-            padding: 12px 24px;
-            background: transparent;
-            color: var(--neon-3);
-            border: 1px solid var(--neon-3);
-            border-radius: 6px;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-weight: bold;
-            transition: all 0.3s;
+            display: none; padding: 12px 24px; background: transparent;
+            color: var(--neon-3); border: 1px solid var(--neon-3);
+            border-radius: 6px; cursor: pointer; text-transform: uppercase;
+            font-weight: bold; transition: all 0.3s;
         }
         .toggle-desktop-btn:hover {
-            background: var(--neon-3);
-            color: black;
-            box-shadow: 0 0 15px var(--neon-3);
+            background: var(--neon-3); color: black; box-shadow: 0 0 15px var(--neon-3);
         }
 
-        /* --- CSS Grid Layout (Halved Sizes) --- */
+        /* --- True Masonry Grid (CSS Columns) --- */
         .masonry-container {
             padding: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 15px;
+            column-count: 4;
+            column-gap: 15px;
             max-width: 1400px;
             margin: 0 auto;
         }
 
         .track-box {
+            break-inside: avoid;
             background: black;
             border-radius: 12px;
             display: flex;
@@ -121,140 +98,111 @@
             overflow: hidden;
             border: 2px solid;
             color: var(--neon-color);
-            aspect-ratio: 1 / 1;
+            margin-bottom: 15px;
         }
+
+        /* Crucial Fix: Only apply 1:1 if the class exists */
+        .track-box.aspect-square { aspect-ratio: 1 / 1; }
 
         .track-box:hover { transform: scale(1.03); }
         .track-box.dragging { opacity: 0.4; }
+        
+        /* Anti-Flicker D&D Fix */
+        .dragging * { pointer-events: none !important; }
 
         /* Transparent Drag Header */
         .drag-header {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 25px;
-            background: transparent;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: grab;
-            opacity: 0;
-            transition: opacity 0.2s;
+            position: absolute; top: 0; left: 0; width: 100%; height: 25px;
+            background: transparent; z-index: 10; display: flex;
+            align-items: center; justify-content: center; cursor: grab;
+            opacity: 0; transition: opacity 0.2s;
         }
         .drag-header:active { cursor: grabbing; }
         .drag-header::after {
-            content: "⠿"; /* 6 dots equivalent */
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.2rem;
-            letter-spacing: 2px;
+            content: "⠿"; color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem; letter-spacing: 2px;
         }
         .track-box:hover .drag-header { opacity: 1; }
 
         .track-symbol {
-            font-size: 3.5rem;
-            text-shadow: 0 0 10px var(--neon-color);
-            z-index: 1;
-            pointer-events: none;
+            font-size: 3.5rem; text-shadow: 0 0 15px var(--neon-color);
+            z-index: 1; pointer-events: none; padding: 40px 10px;
         }
 
         .track-box img {
-            width: 100%; height: 100%;
-            display: block;
-            object-fit: cover;
-            z-index: 0;
-            opacity: 0.8;
-            transition: opacity 0.3s;
-            pointer-events: none;
+            width: 100%; display: block; object-fit: cover; z-index: 0;
+            opacity: 0.8; transition: opacity 0.3s; pointer-events: none;
         }
         .track-box:hover img { opacity: 0.4; }
         
+        /* Updated Hover Text Position */
         .track-box .hover-text {
-            position: absolute;
-            top: 30px;
-            z-index: 2;
-            font-weight: bold;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            opacity: 0;
-            transition: opacity 0.3s;
-            text-shadow: 2px 2px 4px black;
-            pointer-events: none;
+            position: absolute; top: 25px; z-index: 2; font-weight: bold;
+            font-size: 0.9rem; text-transform: uppercase; opacity: 0;
+            transition: opacity 0.3s; text-shadow: 2px 2px 4px black;
+            pointer-events: none; width: 100%; text-align: center;
         }
         .track-box:hover .hover-text { opacity: 1; }
 
         /* --- Dashboard Panel --- */
         .dashboard {
-            position: fixed;
-            top: 0; right: 0;
-            width: 400px;
-            height: 100vh;
-            background: var(--panel-bg);
-            border-left: 1px solid #333;
-            transform: translateX(100%);
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
+            position: fixed; top: 0; right: 0; width: 450px; height: 100vh;
+            background: var(--panel-bg); border-left: 1px solid #333;
+            transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 1000; display: flex; flex-direction: column;
             box-shadow: -5px 0 30px rgba(0,0,0,0.8);
         }
 
         .dashboard.open { transform: translateX(0); }
 
         .dashboard-header {
-            padding: 20px;
-            border-bottom: 1px solid #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #000;
+            padding: 20px; border-bottom: 1px solid #333; display: flex;
+            justify-content: space-between; align-items: center; background: #000;
         }
 
-        .close-btn {
-            background: none; border: none; color: white;
-            font-size: 2rem; cursor: pointer;
-        }
+        .close-btn { background: none; border: none; color: white; font-size: 2rem; cursor: pointer; }
 
         .master-pause {
-            background: transparent; color: var(--neon-1);
-            border: 1px solid var(--neon-1); padding: 8px 16px;
-            border-radius: 4px; cursor: pointer; font-weight: bold;
+            background: transparent; color: var(--neon-1); border: 1px solid var(--neon-1);
+            padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;
         }
-        .master-pause:hover {
-            background: var(--neon-1); color: black; box-shadow: 0 0 10px var(--neon-1);
-        }
+        .master-pause:hover { background: var(--neon-1); color: black; box-shadow: 0 0 10px var(--neon-1); }
 
-        .queue-container {
-            flex-grow: 1; overflow-y: auto; padding: 15px;
-        }
+        .queue-container { flex-grow: 1; overflow-y: auto; padding: 15px; }
 
         /* --- Queue Items --- */
         .queue-item {
-            background: #000;
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 15px; padding-top: 25px; /* space for drag header */
-            margin-bottom: 15px;
-            position: relative;
-            transition: all 0.3s;
+            background: #000; border: 1px solid #444; border-radius: 8px;
+            margin-bottom: 15px; position: relative; transition: all 0.3s;
+            display: flex; overflow: hidden; /* New flex layout for delete bar */
         }
         .queue-item.dragging { opacity: 0.5; }
 
-        .q-drag-header {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 20px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: grab;
-            background: transparent;
-        }
-        .q-drag-header:active { cursor: grabbing; }
-        .q-drag-header::after {
-            content: "⠿"; color: rgba(255, 255, 255, 0.5); font-size: 1rem;
-        }
-
-        /* Active Glow */
         .queue-item.is-playing {
             border-color: var(--neon-color);
             box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1);
         }
+
+        .queue-item-inner {
+            flex-grow: 1; padding: 15px; padding-top: 25px;
+            display: flex; flex-direction: column;
+        }
+
+        .q-drag-header {
+            position: absolute; top: 0; left: 0; width: calc(100% - 30px); height: 20px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: grab; background: transparent; z-index: 5;
+        }
+        .q-drag-header:active { cursor: grabbing; }
+        .q-drag-header::after { content: "⠿"; color: rgba(255, 255, 255, 0.5); font-size: 1rem; }
+
+        /* Sleek Right Side Delete Bar */
+        .queue-delete-bar {
+            width: 30px; background: #220000; border-left: 1px solid #444;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s; color: #ff4444; font-weight: bold;
+        }
+        .queue-delete-bar:hover { background: #ff4444; color: white; }
 
         .queue-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -262,23 +210,17 @@
         }
 
         /* Progress Bar & Time */
-        .progress-container {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-        }
-        .time-text {
-            font-size: 0.85rem; color: #aaa; cursor: pointer; min-width: 80px;
-        }
+        .progress-container { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .time-text { font-size: 0.85rem; color: #aaa; cursor: pointer; min-width: 80px; }
         .time-text:hover { color: white; text-decoration: underline; }
-        .progress-slider {
-            flex-grow: 1; accent-color: var(--neon-color); cursor: pointer;
-        }
+        .progress-slider { flex-grow: 1; accent-color: var(--neon-color); cursor: pointer; }
 
-        .queue-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .queue-controls { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
         
         .control-btn {
             background: #222; color: white; border: 1px solid #444;
-            padding: 5px 12px; border-radius: 4px; cursor: pointer;
-            font-size: 0.9rem; font-weight: bold;
+            padding: 5px 10px; border-radius: 4px; cursor: pointer;
+            font-size: 0.85rem; font-weight: bold;
         }
         .control-btn:hover { background: #444; border-color: var(--neon-color); }
         .control-btn.active { background: var(--neon-color); color: black; box-shadow: 0 0 10px var(--neon-color); }
@@ -291,14 +233,15 @@
         @media (min-width: 769px) {
             .toggle-desktop-btn { display: block; }
             .fab { display: none !important; }
-            /* Desktop push logic */
-            .main-wrapper.push-active { padding-right: 400px; }
+            .main-wrapper.push-active { padding-right: 450px; }
         }
-
+        @media (max-width: 1024px) { .masonry-container { column-count: 3; } }
         @media (max-width: 768px) {
+            .masonry-container { column-count: 2; }
             .dashboard { width: 100%; border-left: none; }
             .input-group { flex-direction: column; }
         }
+        @media (max-width: 480px) { .masonry-container { column-count: 1; } }
 
         /* --- Mobile FAB --- */
         .fab {
@@ -310,7 +253,7 @@
         }
         .fab:hover { background: var(--neon-3); color: black; transform: scale(1.1); }
 
-        /* --- Modal for Image Crop --- */
+        /* --- Modals --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); display: none; align-items: center;
@@ -318,14 +261,40 @@
         }
         .modal {
             background: #111; padding: 30px; border-radius: 12px;
-            border: 1px solid var(--neon-4); text-align: center; max-width: 400px;
+            border: 1px solid var(--neon-4); text-align: center; max-width: 400px; width: 90%;
             box-shadow: 0 0 30px var(--neon-4);
         }
-        .modal h2 { margin-bottom: 20px; color: var(--neon-4); }
+        .modal h2 { margin-bottom: 20px; color: var(--text); }
         .modal-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 20px;}
         .modal-buttons button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
         .btn-auto { background: var(--neon-2); color: black; }
         .btn-keep { background: transparent; border: 1px solid white; color: white; }
+        .btn-cancel { margin-top:20px; background:none; border:none; color:#777; cursor:pointer; }
+
+        /* Color Picker Setup */
+        .color-options { display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 20px;}
+        .color-swatch {
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            border: 2px solid #fff; transition: transform 0.2s;
+        }
+        .color-swatch:hover { transform: scale(1.1); }
+        input[type="color"] {
+            width: 45px; height: 45px; border: none; border-radius: 50%;
+            cursor: pointer; background: transparent;
+        }
+        input[type="color"]::-webkit-color-swatch { border-radius: 50%; border: 2px solid #fff; }
+
+        /* Symbol Grid */
+        .symbol-modal { max-width: 600px; }
+        .symbol-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 10px; max-height: 300px; overflow-y: auto; padding: 10px;
+            background: #000; border-radius: 8px; border: 1px solid #333;
+        }
+        .sym-item {
+            font-size: 1.5rem; cursor: pointer; padding: 5px; border-radius: 4px; transition: background 0.2s;
+        }
+        .sym-item:hover { background: #333; }
 
         #hidden-players { display: none; }
     </style>
@@ -365,16 +334,38 @@
                 <button class="btn-auto" id="btnAutoAdjust">Auto Adjust (1:1)</button>
                 <button class="btn-keep" id="btnKeepAspect">Do Not Adjust</button>
             </div>
-            <button style="margin-top:20px; background:none; border:none; color:#777; cursor:pointer;" id="btnCancelImg">Cancel</button>
+            <button class="btn-cancel" id="btnCancelImg">Cancel</button>
         </div>
     </div>
     <input type="file" id="hiddenFileInput" accept="image/*" style="display: none;">
 
+    <div class="modal-overlay" id="colorModal">
+        <div class="modal">
+            <h2>Select Color</h2>
+            <div class="color-options" id="colorOptions">
+                <div class="color-swatch" style="background: #fc0e12; box-shadow: 0 0 10px #fc0e12;" data-color="#fc0e12"></div>
+                <div class="color-swatch" style="background: #00fff7; box-shadow: 0 0 10px #00fff7;" data-color="#00fff7"></div>
+                <div class="color-swatch" style="background: #ff00fc; box-shadow: 0 0 10px #ff00fc;" data-color="#ff00fc"></div>
+                <div class="color-swatch" style="background: #fff500; box-shadow: 0 0 10px #fff500;" data-color="#fff500"></div>
+                <input type="color" id="nativeColorPicker" value="#ffffff" title="Custom Color">
+            </div>
+            <button class="btn-cancel" id="btnCancelColor">Cancel</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="symbolModal">
+        <div class="modal symbol-modal">
+            <h2>Select Symbol</h2>
+            <div class="symbol-grid" id="symbolGrid"></div>
+            <button class="btn-cancel" id="btnCancelSymbol">Cancel</button>
+        </div>
+    </div>
+
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        // --- State ---
+        // --- State & Constants ---
         const neonColors = ['#fc0e12', '#00fff7', '#ff00fc', '#fff500'];
-        const symbols = ['♫', '𝄞', '♪', '𝄢', '𝄽', '♬', '♮', '𝄡'];
+        const allSymbolsList = ['🔥', '🌊', '🌧', '⛈', '🌬', '🍃', '🌲', '🌋', '🏔', '🌌', '🌙', '🌑', '☀️', '☁️', '🌫', '❄️', '💨', '🌦', '🌈', '🪐', '☄️', '🏜', '🏝', '🫧', '♨', '☀', '☁', '★', '☆', '☂', '🗡️', '⚔️', '🛡️', '🏹', '🔪', '🪓', '💥', '💣', '🧨', '⚡', '🚀', '🛸', '🚂', '🚗', '✈️', '🏆', '⚽', '🎯', '🆙', '🆒', '💯', '💢', '⏴', '⏵', '⏶', '⏷', '⚓', '🐺', '🐦', '🐦‍⬛', '🦉', '🐈‍⬛', '🐍', '🦂', '🦗', '🦄', '🐼', '🚨', '🆘', '⚠️', '‼️', '❕', '🛑', '🚫', '⛔', '📛', '🚩', '☢️', '☣️', '🩹', '🩺', '🚑', '🚒', '🔔', '📢', '📣', '☠', '☢', '☣', '🚷', '💡', '🔋', '⚙️', '🧪', '💻', '📱', '📷', '📶', '⏻', '🔍', '📍', '📅', '✉️', '🛒', '⚙', '⚗', '⚛', '⚖', '⏼', '⏽', '⏾', '☏', '☎', '💀', '☠️', '👻', '👹', '👺', '🧛', '🧟', '🧌', '🦇', '🕷️', '🕸️', '🩸', '⚰️', '🪦', '🏚️', '🥀', '⛓️', '👽', '🤡', '😈', '👿', '😱', '😨', '😰', '👁️', '🧠', '🫀', '🌚', '🫥', '✨', '🌟', '🕯', '⛺', '🏙', '🏠', '📖', '📚', '🔑', '🔒', '💎', '👑', '🌸', '☘', '🍀', '🎸', '🎨', '🎬', '☕', '🍕', '🍎', '🎁', '🎈', '🧘', '🛌', '🛁', '😀', '😂', '😍', '🤔', '🤫', '✔️', '❌', '✖️', '♫', '♩', '♪', '♬', '♭', '♮', '♯', '𝄞', '𝄢', '♚', '♛', '♜', '♝', '♞', '♟', '♔', '♕', '♖', '♗', '♘', '♙', '♤', '♢', '♧', '♠', '♣', '♥', '♦', '☖', '☗', '☙', '✚', '✜', '✛', '✙', '☯', '☮', '☼', '☾', '☽', '☄', '☉', '☰', '☱', '☲', '☳', '☴', '☵', '☶', '☷', '☐', '☑', '☒', '☋', '☌', '☍', '☚', '☛', '☜', '☝', '☞', '☟', '〰', '≋', '☃', '☇', '☈', '☓', '☹', '☺', '☻'];
         
         let tracks = []; 
         let queue = [];  
@@ -384,15 +375,15 @@
         let isDashboardOpen = false;
 
         let pendingImageFile = null;
-        let pendingQueueIdForImage = null;
+        let activeTargetTrackId = null; // Used for all pickers
 
-        // --- IndexedDB Setup (Tracks + Images) ---
+        // --- IndexedDB Setup ---
         const DB_NAME = 'SuperSimpleDB';
         let db;
 
         function initDB() {
             return new Promise((resolve, reject) => {
-                const req = indexedDB.open(DB_NAME, 2);
+                const req = indexedDB.open(DB_NAME, 3);
                 req.onupgradeneeded = (e) => {
                     db = e.target.result;
                     if (!db.objectStoreNames.contains('tracks')) db.createObjectStore('tracks', { keyPath: 'id' });
@@ -402,14 +393,11 @@
             });
         }
 
-        function saveTrackToDB(track) {
-            db.transaction('tracks', 'readwrite').objectStore('tracks').put(track);
-        }
+        function saveTrackToDB(track) { db.transaction('tracks', 'readwrite').objectStore('tracks').put(track); }
         function saveAllTracksToDB() {
             const tx = db.transaction('tracks', 'readwrite');
             tracks.forEach(t => tx.objectStore('tracks').put(t));
         }
-
         function loadTracksFromDB() {
             return new Promise((resolve) => {
                 const req = db.transaction('tracks', 'readonly').objectStore('tracks').getAll();
@@ -417,7 +405,7 @@
             });
         }
 
-        // --- LocalStorage Setup (Queue State Persistence) ---
+        // --- LocalStorage Setup ---
         function saveQueueState() {
             const state = queue.map(q => ({
                 queueId: q.queueId, trackId: q.trackId, ytId: q.ytId,
@@ -440,8 +428,9 @@
             tracks = (await loadTracksFromDB()) || [];
             if(tracks.length > 0) {
                 colorIndex = tracks.length % neonColors.length;
-                symbolIndex = tracks.length % symbols.length;
+                symbolIndex = tracks.length % allSymbolsList.length;
             }
+            populateSymbolGrid();
             renderMasonry();
 
             const savedQueue = loadQueueState();
@@ -449,8 +438,6 @@
 
             setupEventListeners();
             startUITracker();
-            
-            // Periodically save state in case of sudden exit
             setInterval(saveQueueState, 5000);
         }
 
@@ -464,24 +451,40 @@
             document.getElementById('closeDashboard').addEventListener('click', toggleDashboard);
             document.getElementById('masterPauseBtn').addEventListener('click', masterPause);
             
+            // Image Modals
             document.getElementById('btnAutoAdjust').addEventListener('click', () => processPendingImage(true));
             document.getElementById('btnKeepAspect').addEventListener('click', () => processPendingImage(false));
-            document.getElementById('btnCancelImg').addEventListener('click', closeImageModal);
+            document.getElementById('btnCancelImg').addEventListener('click', () => hideModal('imageModal'));
             document.getElementById('hiddenFileInput').addEventListener('change', handleFileSelect);
 
+            // Color Modals
+            document.querySelectorAll('.color-swatch').forEach(el => {
+                el.addEventListener('click', (e) => applyColorChange(e.target.dataset.color));
+            });
+            document.getElementById('nativeColorPicker').addEventListener('change', (e) => applyColorChange(e.target.value));
+            document.getElementById('btnCancelColor').addEventListener('click', () => hideModal('colorModal'));
+
+            // Symbol Modals
+            document.getElementById('btnCancelSymbol').addEventListener('click', () => hideModal('symbolModal'));
+
+            // Column-Aware Drag & Drop Initialization
             setupDragAndDrop(document.getElementById('masonryContainer'), 'track-box', updateTrackOrder);
             setupDragAndDrop(document.getElementById('queueContainer'), 'queue-item', updateQueueOrder);
 
             window.addEventListener('beforeunload', saveQueueState);
         }
 
-        // --- Generic Drag & Drop Engine ---
+        function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // --- Robust Drag & Drop Engine ---
         function setupDragAndDrop(container, itemClass, callback) {
             container.addEventListener('dragover', e => {
                 e.preventDefault();
-                const afterElement = getDragAfterElement(container, e.clientY, itemClass);
+                // Get mouse coordinates for strict column checks
+                const afterElement = getDragAfterElement(container, e.clientX, e.clientY, itemClass);
                 const draggable = document.querySelector('.dragging');
                 if(!draggable) return;
+                
                 if (afterElement == null) container.appendChild(draggable);
                 else container.insertBefore(draggable, afterElement);
             });
@@ -491,17 +494,21 @@
             });
         }
 
-        function getDragAfterElement(container, y, itemClass) {
+        function getDragAfterElement(container, x, y, itemClass) {
             const elements = [...container.querySelectorAll(`.${itemClass}:not(.dragging)`)];
             return elements.reduce((closest, child) => {
                 const box = child.getBoundingClientRect();
+                // If it's the masonry grid, ensure we are in the same visual column (X axis)
+                if(itemClass === 'track-box' && (x < box.left || x > box.right)) {
+                    return closest; 
+                }
                 const offset = y - box.top - box.height / 2;
                 if (offset < 0 && offset > closest.offset) return { offset, element: child };
                 else return closest;
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        // --- Core Functions ---
+        // --- Core Add Track ---
         function handleAddTrack() {
             const url = document.getElementById('youtubeLink').value.trim();
             if (!url) return;
@@ -510,16 +517,14 @@
 
             const newTrack = {
                 id: 'track_' + Date.now(), ytId, color: neonColors[colorIndex],
-                symbol: symbols[symbolIndex], baseName: `Track ${tracks.length + 1}`,
+                symbol: allSymbolsList[symbolIndex], baseName: `Track ${tracks.length + 1}`,
                 customImage: null, autoAdjustImg: true
             };
 
             colorIndex = (colorIndex + 1) % neonColors.length;
-            symbolIndex = (symbolIndex + 1) % symbols.length;
+            symbolIndex = (symbolIndex + 1) % allSymbolsList.length;
 
-            tracks.push(newTrack);
-            saveTrackToDB(newTrack);
-            renderMasonry();
+            tracks.push(newTrack); saveTrackToDB(newTrack); renderMasonry();
             document.getElementById('youtubeLink').value = '';
         }
 
@@ -535,8 +540,7 @@
                 const t = tracks.find(tr => tr.id === el.dataset.trackId);
                 if(t) newTracks.push(t);
             });
-            tracks = newTracks;
-            saveAllTracksToDB();
+            tracks = newTracks; saveAllTracksToDB();
         }
 
         // --- Masonry UI ---
@@ -546,19 +550,17 @@
 
             tracks.forEach(track => {
                 const box = document.createElement('div');
-                box.className = `track-box ${track.autoAdjustImg ? 'aspect-square' : ''}`;
+                box.className = `track-box ${track.autoAdjustImg && track.customImage ? 'aspect-square' : ''}`;
                 box.style.setProperty('--neon-color', track.color);
                 box.dataset.trackId = track.id;
 
-                // Drag Handle
                 const dragHeader = document.createElement('div');
                 dragHeader.className = 'drag-header';
                 dragHeader.addEventListener('mousedown', () => box.draggable = true);
                 dragHeader.addEventListener('mouseup', () => box.draggable = false);
                 dragHeader.addEventListener('mouseleave', () => box.draggable = false);
                 box.addEventListener('dragstart', (e) => {
-                    if(!box.draggable) e.preventDefault();
-                    else box.classList.add('dragging');
+                    if(!box.draggable) e.preventDefault(); else box.classList.add('dragging');
                 });
                 box.addEventListener('dragend', () => box.classList.remove('dragging'));
                 box.appendChild(dragHeader);
@@ -575,7 +577,7 @@
                 box.appendChild(hoverTxt);
 
                 box.addEventListener('click', (e) => {
-                    if(e.target === dragHeader) return; // Prevent queueing when dragging
+                    if(e.target === dragHeader) return; 
                     addToQueue(track);
                     if(!isDashboardOpen) toggleDashboard();
                 });
@@ -595,21 +597,21 @@
             const name = count > 0 ? `${track.baseName} (${count + 1})` : track.baseName;
 
             const qItem = {
-                queueId: 'q_' + Date.now(), trackId: track.id, ytId: track.ytId,
+                queueId: 'q_' + Date.now() + Math.floor(Math.random() * 1000), 
+                trackId: track.id, ytId: track.ytId,
                 name, color: track.color, player: null, state: 'PAUSED',
                 duration: 0, isLooping: false, volume: 50, currentTime: 0, isScrubbing: false
             };
-            queue.push(qItem);
-            renderQueue();
-            createHiddenPlayer(qItem);
-            saveQueueState();
+            queue.push(qItem); renderQueue(); createHiddenPlayer(qItem); saveQueueState();
         }
 
         function restoreQueueItem(savedQ) {
-            const qItem = { ...savedQ, player: null, isScrubbing: false };
-            queue.push(qItem);
-            renderQueue();
-            createHiddenPlayer(qItem, true);
+            // Ensure color syncing on restore if base track was changed while away
+            const baseTrack = tracks.find(t => t.id === savedQ.trackId);
+            const syncedColor = baseTrack ? baseTrack.color : savedQ.color;
+
+            const qItem = { ...savedQ, color: syncedColor, player: null, isScrubbing: false };
+            queue.push(qItem); renderQueue(); createHiddenPlayer(qItem, true);
         }
 
         function createHiddenPlayer(qItem, isRestore = false) {
@@ -626,12 +628,10 @@
                         event.target.setVolume(qItem.volume);
                         if(isRestore) event.target.seekTo(qItem.currentTime);
                         
-                        // Wait for seek, then ensure correct state
                         setTimeout(() => {
                             if(qItem.state === 'PLAYING') event.target.playVideo();
                             else event.target.pauseVideo();
                         }, 200);
-                        
                         updateQueueUI();
                     },
                     'onStateChange': (event) => handlePlayerStateChange(event, qItem)
@@ -660,9 +660,38 @@
                 el.dataset.queueId = qItem.queueId;
                 el.style.setProperty('--neon-color', qItem.color);
 
-                // Setup Queue Drag Header
-                const dHeader = document.createElement('div');
-                dHeader.className = 'q-drag-header';
+                const playIcon = qItem.state === 'PLAYING' ? '⏸' : '▶';
+                const playClass = qItem.state === 'PLAYING' ? 'active' : '';
+
+                el.innerHTML = `
+                    <div class="queue-item-inner">
+                        <div class="q-drag-header"></div>
+                        <div class="queue-header">
+                            <span>${qItem.name}</span>
+                            <span>${qItem.state === 'PLAYING' ? 'Playing' : 'Paused'}</span>
+                        </div>
+                        <div class="progress-container">
+                            <span class="time-text" id="timeTxt_${qItem.queueId}">0:00 / 0:00</span>
+                            <input type="range" class="progress-slider" id="slider_${qItem.queueId}" min="0" max="${qItem.duration}" value="${qItem.currentTime}">
+                        </div>
+                        <div class="queue-controls">
+                            <button class="control-btn play-pause-btn ${playClass}">${playIcon}</button>
+                            <button class="control-btn stop-btn">⏹</button>
+                            <button class="control-btn loop-btn ${qItem.isLooping ? 'active' : ''}">Loop</button>
+                            <button class="control-btn rename-btn">Rename</button>
+                            <button class="control-btn pic-btn">Art</button>
+                            <button class="control-btn color-btn">Color</button>
+                            <button class="control-btn sym-btn">Symbol</button>
+                        </div>
+                        <div class="volume-control">
+                            <span>🔈</span><input type="range" min="0" max="100" value="${qItem.volume}" class="vol-slider"><span>🔊</span>
+                        </div>
+                    </div>
+                    <div class="queue-delete-bar">X</div>
+                `;
+
+                // Sub-Elements setup
+                const dHeader = el.querySelector('.q-drag-header');
                 dHeader.addEventListener('mousedown', () => el.draggable = true);
                 dHeader.addEventListener('mouseup', () => el.draggable = false);
                 dHeader.addEventListener('mouseleave', () => el.draggable = false);
@@ -670,39 +699,11 @@
                     if(!el.draggable) e.preventDefault(); else el.classList.add('dragging');
                 });
                 el.addEventListener('dragend', () => el.classList.remove('dragging'));
-                el.appendChild(dHeader);
 
-                // Play/Pause Button State
-                const playIcon = qItem.state === 'PLAYING' ? '⏸' : '▶';
-                const playClass = qItem.state === 'PLAYING' ? 'active' : '';
-
-                el.innerHTML += `
-                    <div class="queue-header">
-                        <span>${qItem.name}</span>
-                        <span>${qItem.state === 'PLAYING' ? 'Playing' : 'Paused'}</span>
-                    </div>
-                    <div class="progress-container">
-                        <span class="time-text" id="timeTxt_${qItem.queueId}">0:00 / 0:00</span>
-                        <input type="range" class="progress-slider" id="slider_${qItem.queueId}" min="0" max="${qItem.duration}" value="${qItem.currentTime}">
-                    </div>
-                    <div class="queue-controls">
-                        <button class="control-btn play-pause-btn ${playClass}">${playIcon}</button>
-                        <button class="control-btn stop-btn">⏹</button>
-                        <button class="control-btn loop-btn ${qItem.isLooping ? 'active' : ''}">Loop</button>
-                        <button class="control-btn rename-btn">Rename</button>
-                        <button class="control-btn pic-btn">Art</button>
-                        <button class="control-btn del-btn" style="border-color: #ff4444; color: #ff4444;">X</button>
-                    </div>
-                    <div class="volume-control">
-                        <span>🔈</span><input type="range" min="0" max="100" value="${qItem.volume}" class="vol-slider"><span>🔊</span>
-                    </div>
-                `;
-
-                // Interactive Elements Logic
+                // Listeners
                 el.querySelector('.play-pause-btn').onclick = () => { 
                     if(!qItem.player) return;
-                    if(qItem.state === 'PLAYING') qItem.player.pauseVideo();
-                    else qItem.player.playVideo();
+                    if(qItem.state === 'PLAYING') qItem.player.pauseVideo(); else qItem.player.playVideo();
                 };
                 el.querySelector('.stop-btn').onclick = () => { 
                     if(qItem.player && qItem.player.stopVideo) {
@@ -715,8 +716,13 @@
                     const newName = prompt("Rename track:", qItem.name);
                     if(newName) { qItem.name = newName; updateQueueUI(); saveQueueState(); }
                 };
-                el.querySelector('.del-btn').onclick = () => removeQueueItem(qItem.queueId);
-                el.querySelector('.pic-btn').onclick = () => triggerImageUpload(qItem.queueId);
+                
+                // Pickers
+                el.querySelector('.pic-btn').onclick = () => { activeTargetTrackId = qItem.trackId; document.getElementById('hiddenFileInput').click(); };
+                el.querySelector('.color-btn').onclick = () => { activeTargetTrackId = qItem.trackId; document.getElementById('colorModal').style.display = 'flex'; };
+                el.querySelector('.sym-btn').onclick = () => { activeTargetTrackId = qItem.trackId; document.getElementById('symbolModal').style.display = 'flex'; };
+                
+                el.querySelector('.queue-delete-bar').onclick = () => removeQueueItem(qItem.queueId);
                 
                 el.querySelector('.vol-slider').oninput = (e) => {
                     qItem.volume = e.target.value;
@@ -724,11 +730,9 @@
                     saveQueueState();
                 };
 
-                // Time Entry
                 const timeTxt = el.querySelector('.time-text');
                 timeTxt.onclick = () => promptTimeEntry(qItem);
 
-                // Scrubbing Slider
                 const slider = el.querySelector('.progress-slider');
                 slider.addEventListener('mousedown', () => qItem.isScrubbing = true);
                 slider.addEventListener('input', (e) => {
@@ -736,8 +740,7 @@
                     timeTxt.textContent = `${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}`;
                 });
                 slider.addEventListener('change', (e) => {
-                    qItem.isScrubbing = false;
-                    qItem.currentTime = e.target.value;
+                    qItem.isScrubbing = false; qItem.currentTime = e.target.value;
                     if(qItem.player) qItem.player.seekTo(qItem.currentTime, true);
                     saveQueueState();
                 });
@@ -755,8 +758,7 @@
                 const item = queue.find(q => q.queueId === el.dataset.queueId);
                 if(item) newQueue.push(item);
             });
-            queue = newQueue;
-            saveQueueState();
+            queue = newQueue; saveQueueState();
         }
 
         function removeQueueItem(queueId) {
@@ -765,15 +767,11 @@
                 if(queue[index].player && queue[index].player.destroy) queue[index].player.destroy();
                 const div = document.getElementById(`player_${queueId}`);
                 if(div) div.remove();
-                queue.splice(index, 1);
-                updateQueueUI();
-                saveQueueState();
+                queue.splice(index, 1); updateQueueUI(); saveQueueState();
             }
         }
 
-        function masterPause() {
-            queue.forEach(q => { if(q.state === 'PLAYING' && q.player) q.player.pauseVideo(); });
-        }
+        function masterPause() { queue.forEach(q => { if(q.state === 'PLAYING' && q.player) q.player.pauseVideo(); }); }
 
         // --- Time Tracker & Input ---
         function startUITracker() {
@@ -788,10 +786,7 @@
                         const sliderEl = document.getElementById(`slider_${qItem.queueId}`);
                         
                         if(timeEl) timeEl.textContent = `${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}`;
-                        if(sliderEl) {
-                            sliderEl.max = qItem.duration;
-                            sliderEl.value = qItem.currentTime;
-                        }
+                        if(sliderEl) { sliderEl.max = qItem.duration; sliderEl.value = qItem.currentTime; }
                     }
                 });
             }, 500);
@@ -808,26 +803,19 @@
             const input = prompt("Enter specific time (MM:SS):", formatTime(qItem.currentTime));
             if(!input) return;
             
-            let seconds = 0;
-            const parts = input.split(':');
+            let seconds = 0; const parts = input.split(':');
             if(parts.length === 2) seconds = (parseInt(parts[0]) * 60) + parseInt(parts[1]);
             else seconds = parseInt(input);
 
             if(isNaN(seconds)) return alert("Invalid time format.");
-            if(seconds > qItem.duration) seconds = qItem.duration; // Clamp
+            if(seconds > qItem.duration) seconds = qItem.duration;
             
             qItem.currentTime = seconds;
             if(qItem.player) qItem.player.seekTo(seconds, true);
-            updateQueueUI();
-            saveQueueState();
+            updateQueueUI(); saveQueueState();
         }
 
-        // --- Image Processing ---
-        function triggerImageUpload(queueId) {
-            pendingQueueIdForImage = queueId;
-            document.getElementById('hiddenFileInput').click();
-        }
-
+        // --- Customization Logic (Images, Colors, Symbols) ---
         function handleFileSelect(e) {
             if(!e.target.files[0]) return;
             pendingImageFile = e.target.files[0];
@@ -835,27 +823,11 @@
             e.target.value = '';
         }
 
-        function closeImageModal() {
-            document.getElementById('imageModal').style.display = 'none';
-            pendingImageFile = null; pendingQueueIdForImage = null;
-        }
-
         async function processPendingImage(autoAdjust) {
-            if(!pendingImageFile || !pendingQueueIdForImage) return closeImageModal();
-
+            if(!pendingImageFile || !activeTargetTrackId) return hideModal('imageModal');
             const base64Data = await readImageFile(pendingImageFile, autoAdjust);
-            const qItem = queue.find(q => q.queueId === pendingQueueIdForImage);
-            
-            if(qItem) {
-                const trackIndex = tracks.findIndex(t => t.id === qItem.trackId);
-                if(trackIndex > -1) {
-                    tracks[trackIndex].customImage = base64Data;
-                    tracks[trackIndex].autoAdjustImg = autoAdjust;
-                    saveTrackToDB(tracks[trackIndex]);
-                    renderMasonry();
-                }
-            }
-            closeImageModal();
+            updateTrackData(activeTargetTrackId, { customImage: base64Data, autoAdjustImg: autoAdjust });
+            hideModal('imageModal');
         }
 
         function readImageFile(file, autoAdjust) {
@@ -870,8 +842,7 @@
                             const size = Math.min(img.width, img.height);
                             canvas.width = size; canvas.height = size;
                             const ctx = canvas.getContext('2d');
-                            const x = (img.width - size) / 2;
-                            const y = (img.height - size) / 2;
+                            const x = (img.width - size) / 2; const y = (img.height - size) / 2;
                             ctx.drawImage(img, x, y, size, size, 0, 0, size, size);
                             resolve(canvas.toDataURL('image/jpeg', 0.8));
                         };
@@ -880,6 +851,47 @@
                 };
                 reader.readAsDataURL(file);
             });
+        }
+
+        function applyColorChange(hexColor) {
+            if(!activeTargetTrackId) return;
+            updateTrackData(activeTargetTrackId, { color: hexColor });
+            hideModal('colorModal');
+        }
+
+        function populateSymbolGrid() {
+            const grid = document.getElementById('symbolGrid');
+            allSymbolsList.forEach(sym => {
+                const div = document.createElement('div');
+                div.className = 'sym-item'; div.textContent = sym;
+                div.onclick = () => {
+                    if(activeTargetTrackId) {
+                        updateTrackData(activeTargetTrackId, { symbol: sym, customImage: null });
+                        hideModal('symbolModal');
+                    }
+                };
+                grid.appendChild(div);
+            });
+        }
+
+        function updateTrackData(trackId, updatesObj) {
+            // Update base track
+            const tIndex = tracks.findIndex(t => t.id === trackId);
+            if(tIndex > -1) {
+                tracks[tIndex] = { ...tracks[tIndex], ...updatesObj };
+                saveTrackToDB(tracks[tIndex]);
+            }
+            
+            // Sync any existing queue items of this track
+            queue.forEach(q => {
+                if(q.trackId === trackId) {
+                    if(updatesObj.color) q.color = updatesObj.color;
+                }
+            });
+
+            renderMasonry();
+            updateQueueUI();
+            saveQueueState();
         }
     </script>
 </body>
