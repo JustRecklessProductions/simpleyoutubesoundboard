@@ -6,139 +6,132 @@
     <title>Super Simple Soundboard</title>
     <style>
         :root {
-            --bg: #0b0b0b;
-            --panel-bg: #111;
-            --text: #ffffff;
-            --neon-1: #fc0e12;
-            --neon-2: #00fff7;
-            --neon-3: #ff00fc;
-            --neon-4: #fff500;
+            --bg: #0b0b0b; --panel-bg: #111; --text: #ffffff;
+            --neon-1: #fc0e12; --neon-2: #00fff7; --neon-3: #ff00fc; --neon-4: #fff500;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
+            background-color: var(--bg); color: var(--text);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden; 
-            display: flex;
-            height: 100vh;
+            overflow: hidden; display: flex; height: 100vh;
         }
 
+        /* --- Main Content Area --- */
         .main-wrapper {
-            flex-grow: 1;
-            overflow-y: auto;
-            transition: padding-right 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            flex-grow: 1; overflow-y: auto; transition: padding-right 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             position: relative;
         }
 
         .header-container { padding: 20px; text-align: center; border-bottom: 1px solid #333; }
         h1 { margin-bottom: 15px; font-weight: 300; letter-spacing: 2px; }
 
-        .input-group { display: flex; justify-content: center; gap: 10px; max-width: 800px; margin: 0 auto; }
+        .input-group {
+            display: flex; justify-content: center; gap: 10px; max-width: 900px; margin: 0 auto; flex-wrap: wrap;
+        }
+
         input[type="text"] {
-            flex-grow: 1; padding: 12px; background: #222;
-            border: 1px solid #444; color: white; border-radius: 6px; outline: none;
+            flex-grow: 1; padding: 12px; background: #222; border: 1px solid #444;
+            color: white; border-radius: 6px; outline: none; min-width: 200px;
         }
         input[type="text"]:focus { border-color: var(--neon-2); }
 
-        button.btn-primary, .toggle-desktop-btn {
-            padding: 12px 24px; background: transparent; color: white;
+        .btn-primary {
+            padding: 12px 20px; background: transparent; color: white;
             border: 1px solid var(--neon-2); border-radius: 6px; cursor: pointer;
             text-transform: uppercase; font-weight: bold; transition: all 0.3s;
         }
-        button.btn-primary:hover { background: var(--neon-2); color: black; box-shadow: 0 0 15px var(--neon-2); }
-        
-        .toggle-desktop-btn { display: none; color: var(--neon-3); border-color: var(--neon-3); }
-        .toggle-desktop-btn:hover { background: var(--neon-3); color: black; box-shadow: 0 0 15px var(--neon-3); }
+        .btn-primary:hover { background: var(--neon-2); color: black; box-shadow: 0 0 15px var(--neon-2); }
 
-        /* --- True Grid Layout (Fixes 1:1 and D&D Jitter) --- */
+        .btn-secondary {
+            padding: 12px 20px; background: transparent; color: var(--neon-4);
+            border: 1px solid var(--neon-4); border-radius: 6px; cursor: pointer;
+            text-transform: uppercase; font-weight: bold; transition: all 0.3s;
+        }
+        .btn-secondary:hover { background: var(--neon-4); color: black; box-shadow: 0 0 15px var(--neon-4); }
+
+        .btn-action {
+            display: none; padding: 12px 20px; background: transparent; color: var(--neon-3);
+            border: 1px solid var(--neon-3); border-radius: 6px; cursor: pointer;
+            text-transform: uppercase; font-weight: bold; transition: all 0.3s;
+        }
+        .btn-action:hover { background: var(--neon-3); color: black; box-shadow: 0 0 15px var(--neon-3); }
+
+        /* --- True CSS Grid for Jitter-Free D&D --- */
         .masonry-container {
-            padding: 20px;
-            display: grid;
+            padding: 20px; display: grid; gap: 15px;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 15px;
-            max-width: 1400px;
-            margin: 0 auto;
+            max-width: 1400px; margin: 0 auto;
         }
 
         .track-box {
-            aspect-ratio: 1 / 1; /* Forces 1:1 off rip */
-            background: black;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-            overflow: hidden;
-            border: 2px solid;
-            color: var(--neon-color);
+            background: black; border-radius: 12px; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            position: relative; overflow: hidden; border: 2px solid; color: var(--neon-color);
+            aspect-ratio: 1 / 1; /* Forces 1:1 straight off the rip */
         }
 
         .track-box:hover { transform: scale(1.03); }
-        
-        /* Mobile & Desktop D&D Pop-out */
-        .track-box.dragging, .queue-item.dragging { 
-            opacity: 0.9; 
-            transform: scale(1.08) !important; 
-            box-shadow: 0 15px 30px rgba(0,0,0,0.8);
-            z-index: 100;
-        }
+        .track-box.dragging { opacity: 0.5; transform: scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 50; }
         .dragging * { pointer-events: none !important; }
 
-        /* Click Flash Animation */
-        @keyframes trackFlash {
-            0% { background-color: var(--neon-color); color: black; }
-            100% { background-color: black; color: var(--neon-color); }
+        /* Added Flash UI */
+        .track-box.flash-add {
+            animation: flashSuccess 0.4s ease-out;
         }
-        .flash-anim { animation: trackFlash 0.3s ease-out; }
+        @keyframes flashSuccess {
+            0% { box-shadow: 0 0 40px var(--neon-color), inset 0 0 30px var(--neon-color); transform: scale(1.1); }
+            100% { box-shadow: none; transform: scale(1); }
+        }
+
+        /* iOS Jiggle Edit Mode */
+        .edit-mode-active .track-box { animation: jiggle 0.3s infinite alternate; }
+        .edit-mode-active .track-box:nth-child(odd) { animation-direction: alternate-reverse; animation-duration: 0.32s;}
+        .edit-mode-active .track-box:hover { transform: none; }
+        
+        .delete-badge {
+            position: absolute; top: -5px; right: -5px; width: 25px; height: 25px;
+            background: #ff4444; color: white; border-radius: 50%; font-weight: bold;
+            display: none; align-items: center; justify-content: center; cursor: pointer;
+            z-index: 20; border: 2px solid #000; font-size: 14px;
+        }
+        .edit-mode-active .delete-badge { display: flex; }
+
+        @keyframes jiggle {
+            0% { transform: rotate(-1deg); }
+            100% { transform: rotate(1deg); }
+        }
 
         .drag-header {
             position: absolute; top: 0; left: 0; width: 100%; height: 25px;
-            background: transparent; z-index: 10; display: flex;
-            align-items: center; justify-content: center; cursor: grab;
-            opacity: 0; transition: opacity 0.2s;
+            background: transparent; z-index: 10; display: flex; align-items: center;
+            justify-content: center; cursor: grab; opacity: 0; transition: opacity 0.2s;
         }
         .drag-header:active { cursor: grabbing; }
         .drag-header::after { content: "⠿"; color: rgba(255, 255, 255, 0.7); font-size: 1.2rem; letter-spacing: 2px; }
         .track-box:hover .drag-header { opacity: 1; }
 
-        .track-symbol {
-            font-size: 3.5rem; text-shadow: 0 0 15px var(--neon-color);
-            z-index: 1; pointer-events: none; padding: 40px 10px;
-        }
-
-        .track-box img {
-            width: 100%; height: 100%; display: block; object-fit: cover; z-index: 0;
-            opacity: 0.8; transition: opacity 0.3s; pointer-events: none;
-        }
+        .track-symbol { font-size: 3.5rem; text-shadow: 0 0 15px var(--neon-color); z-index: 1; pointer-events: none; }
+        .track-box img { width: 100%; height: 100%; display: block; object-fit: cover; z-index: 0; opacity: 0.8; transition: opacity 0.3s; pointer-events: none; }
         .track-box:hover img { opacity: 0.4; }
         
         .track-box .hover-text {
-            position: absolute; top: 25px; z-index: 2; font-weight: bold;
-            font-size: 0.9rem; text-transform: uppercase; opacity: 0;
-            transition: opacity 0.3s; text-shadow: 2px 2px 4px black;
-            pointer-events: none; width: 100%; text-align: center;
+            position: absolute; top: 25px; z-index: 2; font-weight: bold; font-size: 0.85rem;
+            text-transform: uppercase; opacity: 0; transition: opacity 0.3s; text-shadow: 2px 2px 4px black;
+            pointer-events: none; width: 90%; text-align: center; word-wrap: break-word;
         }
         .track-box:hover .hover-text { opacity: 1; }
 
         /* --- Dashboard Panel --- */
         .dashboard {
-            position: fixed; top: 0; right: 0; width: 450px; height: 100vh;
+            position: fixed; top: 0; right: 0; width: 480px; height: 100vh;
             background: var(--panel-bg); border-left: 1px solid #333;
             transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            z-index: 1000; display: flex; flex-direction: column;
-            box-shadow: -5px 0 30px rgba(0,0,0,0.8);
+            z-index: 1000; display: flex; flex-direction: column; box-shadow: -5px 0 30px rgba(0,0,0,0.8);
         }
         .dashboard.open { transform: translateX(0); }
-
-        .dashboard-header {
-            padding: 20px; border-bottom: 1px solid #333; display: flex;
-            justify-content: space-between; align-items: center; background: #000;
-        }
+        .dashboard-header { padding: 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; background: #000; }
         .close-btn { background: none; border: none; color: white; font-size: 2rem; cursor: pointer; }
 
         .master-pause {
@@ -149,37 +142,31 @@
 
         .queue-container { flex-grow: 1; overflow-y: auto; padding: 15px; }
 
+        /* --- Queue Items --- */
         .queue-item {
-            background: #000; border: 1px solid #444; border-radius: 8px;
-            margin-bottom: 15px; position: relative; transition: border-color 0.3s, box-shadow 0.3s;
-            display: flex; overflow: hidden;
+            background: #000; border: 1px solid #444; border-radius: 8px; margin-bottom: 15px;
+            position: relative; transition: all 0.3s; display: flex; overflow: hidden;
         }
-        .queue-item.is-playing {
-            border-color: var(--neon-color);
-            box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1);
-        }
+        .queue-item.dragging { opacity: 0.5; transform: scale(1.02); }
+        .queue-item.is-playing { border-color: var(--neon-color); box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); }
 
         .queue-item-inner { flex-grow: 1; padding: 15px; padding-top: 25px; display: flex; flex-direction: column; }
+        
         .q-drag-header {
             position: absolute; top: 0; left: 0; width: calc(100% - 30px); height: 20px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: grab; background: transparent; z-index: 5;
+            display: flex; align-items: center; justify-content: center; cursor: grab; background: transparent; z-index: 5;
         }
         .q-drag-header:active { cursor: grabbing; }
         .q-drag-header::after { content: "⠿"; color: rgba(255, 255, 255, 0.5); font-size: 1rem; }
 
         .queue-delete-bar {
-            width: 30px; background: #220000; border-left: 1px solid #444;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.2s; color: #ff4444; font-weight: bold;
+            width: 30px; background: #220000; border-left: 1px solid #444; display: flex;
+            align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
+            color: #ff4444; font-weight: bold;
         }
         .queue-delete-bar:hover { background: #ff4444; color: white; }
 
-        .queue-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 10px; color: var(--neon-color); font-weight: bold;
-        }
-
+        .queue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: var(--neon-color); font-weight: bold; }
         .progress-container { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
         .time-text { font-size: 0.85rem; color: #aaa; cursor: pointer; min-width: 80px; }
         .time-text:hover { color: white; text-decoration: underline; }
@@ -187,76 +174,65 @@
 
         .queue-controls { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
         .control-btn {
-            background: #222; color: white; border: 1px solid #444;
-            padding: 5px 10px; border-radius: 4px; cursor: pointer;
-            font-size: 0.80rem; font-weight: bold;
+            background: #222; color: white; border: 1px solid #444; padding: 5px 10px;
+            border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold;
         }
         .control-btn:hover { background: #444; border-color: var(--neon-color); }
         .control-btn.active { background: var(--neon-color); color: black; box-shadow: 0 0 10px var(--neon-color); }
-
+        
         .volume-control { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
         .volume-control input[type="range"] { flex-grow: 1; accent-color: var(--neon-color); }
 
-        /* --- Modals & Utilities --- */
+        /* --- Responsive & Mobile --- */
         @media (min-width: 769px) {
-            .toggle-desktop-btn { display: block; }
+            .btn-action { display: block; }
             .fab { display: none !important; }
-            .main-wrapper.push-active { padding-right: 450px; }
+            .main-wrapper.push-active { padding-right: 480px; }
         }
         @media (max-width: 768px) {
             .dashboard { width: 100%; border-left: none; }
             .input-group { flex-direction: column; }
+            .track-box .hover-text { opacity: 1; font-size: 0.7rem; top: auto; bottom: 5px; } /* Mobile text visibility */
         }
 
         .fab {
-            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
-            border-radius: 50%; background: black; border: 2px solid var(--neon-3);
-            color: var(--neon-3); font-size: 1.5rem; display: flex; align-items: center;
-            justify-content: center; cursor: pointer; z-index: 999;
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%;
+            background: black; border: 2px solid var(--neon-3); color: var(--neon-3); font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 999;
             box-shadow: 0 0 15px var(--neon-3); transition: all 0.3s;
         }
-        .fab:hover { background: var(--neon-3); color: black; transform: scale(1.1); }
 
+        /* --- Modals --- */
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: none; align-items: center;
-            justify-content: center; z-index: 2000; backdrop-filter: blur(5px);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+            display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(5px);
         }
         .modal {
-            background: #111; padding: 30px; border-radius: 12px;
-            border: 1px solid var(--neon-4); text-align: center; max-width: 400px; width: 90%;
-            box-shadow: 0 0 30px var(--neon-4);
+            background: #111; padding: 30px; border-radius: 12px; border: 1px solid var(--neon-4);
+            text-align: center; max-width: 450px; width: 90%; box-shadow: 0 0 30px var(--neon-4);
         }
         .modal h2 { margin-bottom: 20px; color: var(--text); }
-        .modal-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 20px;}
-        .modal-buttons button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap;}
+        .modal-buttons button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
         .btn-auto { background: var(--neon-2); color: black; }
         .btn-keep { background: transparent; border: 1px solid white; color: white; }
+        .btn-danger { background: #ff4444; color: white; }
         .btn-cancel { margin-top:20px; background:none; border:none; color:#777; cursor:pointer; }
 
         .color-options { display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 20px;}
-        .color-swatch {
-            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
-            border: 2px solid #fff; transition: transform 0.2s;
-        }
+        .color-swatch { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid #fff; transition: transform 0.2s; }
         .color-swatch:hover { transform: scale(1.1); }
         input[type="color"] { width: 45px; height: 45px; border: none; border-radius: 50%; cursor: pointer; background: transparent; }
         input[type="color"]::-webkit-color-swatch { border-radius: 50%; border: 2px solid #fff; }
 
-        .symbol-modal { max-width: 600px; }
         .symbol-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-            gap: 10px; max-height: 300px; overflow-y: auto; padding: 10px;
-            background: #000; border-radius: 8px; border: 1px solid #333;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 10px;
+            max-height: 300px; overflow-y: auto; padding: 10px; background: #000; border-radius: 8px; border: 1px solid #333;
         }
         .sym-item { font-size: 1.5rem; cursor: pointer; padding: 5px; border-radius: 4px; transition: background 0.2s; }
         .sym-item:hover { background: #333; }
 
         #hidden-players { display: none; }
-        
-        /* Spotify Embed Fix */
-        .spotify-embed { width: 100%; height: 80px; border: none; margin-bottom: 10px; border-radius: 8px; }
-        .spotify-disabled { opacity: 0.3; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -265,11 +241,15 @@
         <div class="header-container">
             <h1>Super Simple Soundboard</h1>
             <div class="input-group">
-                <input type="text" id="linkInput" placeholder="Paste YouTube or Spotify link here...">
-                <button class="btn-primary" id="uploadBtn">Add Track</button>
-                <button class="toggle-desktop-btn" id="toggleDesktopBtn">Toggle Queue</button>
+                <input type="text" id="youtubeLink" placeholder="Paste YouTube link here...">
+                <button class="btn-primary" id="uploadBtn">Add YouTube Link</button>
+                <button class="btn-secondary" id="uploadMp3Btn">Upload MP3</button>
+                <button class="btn-action" id="editGridBtn">Edit Grid</button>
+                <button class="btn-action" id="toggleDesktopBtn">Toggle Queue</button>
             </div>
+            <input type="file" id="mp3Input" accept="audio/*" style="display: none;">
         </div>
+
         <div class="masonry-container" id="masonryContainer"></div>
     </div>
 
@@ -277,7 +257,7 @@
 
     <div class="dashboard" id="dashboard">
         <div class="dashboard-header">
-            <button class="master-pause" id="masterPauseBtn">⏸ Pause All (YT)</button>
+            <button class="master-pause" id="masterPauseBtn">⏸ Pause All</button>
             <h2 style="color: white; font-weight: 300;">QUEUE</h2>
             <button class="close-btn" id="closeDashboard">&times;</button>
         </div>
@@ -289,11 +269,22 @@
     <div class="modal-overlay" id="imageModal">
         <div class="modal">
             <h2>Process Album Art</h2>
-            <div class="modal-buttons">
+            <div class="modal-buttons" id="imageModalButtons">
                 <button class="btn-auto" id="btnAutoAdjust">Auto Adjust (1:1)</button>
                 <button class="btn-keep" id="btnKeepAspect">Do Not Adjust</button>
             </div>
-            <button class="btn-cancel" id="btnCancelImg">Cancel</button>
+            <button class="btn-cancel" onclick="hideModal('imageModal')">Cancel</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="artOptionsModal">
+        <div class="modal">
+            <h2>Art Options</h2>
+            <div class="modal-buttons">
+                <button class="btn-auto" id="btnReplaceArt">Replace Art</button>
+                <button class="btn-danger" id="btnRemoveArt">Remove Art</button>
+            </div>
+            <button class="btn-cancel" onclick="hideModal('artOptionsModal')">Cancel</button>
         </div>
     </div>
     <input type="file" id="hiddenFileInput" accept="image/*" style="display: none;">
@@ -301,43 +292,45 @@
     <div class="modal-overlay" id="colorModal">
         <div class="modal">
             <h2>Select Color</h2>
-            <div class="color-options" id="colorOptions">
+            <div class="color-options">
                 <div class="color-swatch" style="background: #fc0e12; box-shadow: 0 0 10px #fc0e12;" data-color="#fc0e12"></div>
                 <div class="color-swatch" style="background: #00fff7; box-shadow: 0 0 10px #00fff7;" data-color="#00fff7"></div>
                 <div class="color-swatch" style="background: #ff00fc; box-shadow: 0 0 10px #ff00fc;" data-color="#ff00fc"></div>
                 <div class="color-swatch" style="background: #fff500; box-shadow: 0 0 10px #fff500;" data-color="#fff500"></div>
                 <input type="color" id="nativeColorPicker" value="#ffffff" title="Custom Color">
             </div>
-            <button class="btn-cancel" id="btnCancelColor">Cancel</button>
+            <button class="btn-cancel" onclick="hideModal('colorModal')">Cancel</button>
         </div>
     </div>
 
     <div class="modal-overlay" id="symbolModal">
-        <div class="modal symbol-modal">
+        <div class="modal" style="max-width: 600px;">
             <h2>Select Symbol</h2>
             <div class="symbol-grid" id="symbolGrid"></div>
-            <button class="btn-cancel" id="btnCancelSymbol">Cancel</button>
+            <button class="btn-cancel" onclick="hideModal('symbolModal')">Cancel</button>
         </div>
     </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
+        // --- State & Constants ---
         const neonColors = ['#fc0e12', '#00fff7', '#ff00fc', '#fff500'];
-        const allSymbolsList = ['🔥','🌊','🌧','⛈','🌬','🍃','🌲','🌋','🏔','🌌','🌙','🌑','☀️','☁️','🌫','❄️','💨','🌦','🌈','🪐','☄️','🏜','🏝','🫧','♨','☀','☁','★','☆','☂','🗡️','⚔️','🛡️','🏹','🔪','🪓','💥','💣','🧨','⚡','🚀','🛸','🚂','🚗','✈️','🏆','⚽','🎯','🆙','🆒','💯','💢','⏴','⏵','⏶','⏷','⚓','🐺','🐦','🐦‍⬛','🦉','🐈‍⬛','🐍','🦂','🦗','🦄','🐼','🚨','🆘','⚠️','‼️','❕','🛑','🚫','⛔','📛','🚩','☢️','☣️','🩹','🩺','🚑','🚒','🔔','📢','📣','☠','☢','☣','🚷','💡','🔋','⚙️','🧪','💻','📱','📷','📶','⏻','🔍','📍','📅','✉️','🛒','⚙','⚗','⚛','⚖','⏼','⏽','⏾','☏','☎','💀','☠️','👻','👹','👺','🧛','🧟','🧌','🦇','🕷️','🕸️','🩸','⚰️','🪦','🏚️','🥀','⛓️','👽','🤡','😈','👿','😱','😨','😰','👁️','🧠','🫀','🌚','🫥','✨','🌟','🕯','⛺','🏙','🏠','📖','📚','🔑','🔒','💎','👑','🌸','☘','🍀','🎸','🎨','🎬','☕','🍕','🍎','🎁','🎈','🧘','🛌','🛁','😀','😂','😍','🤔','🤫','✔️','❌','✖️','♫','♩','♪','♬','♭','♮','♯','𝄞','𝄢'];
+        const baseSymbols = ['♫', '𝄞', '♪', '𝄢', '𝄽', '♬', '♮', '𝄡'];
+        const allSymbolsList = ['🔥', '🌊', '🌧', '⛈', '🌬', '🍃', '🌲', '🌋', '🏔', '🌌', '🌙', '🌑', '☀️', '☁️', '🌫', '❄️', '💨', '🌦', '🌈', '🪐', '☄️', '🏜', '🏝', '🫧', '♨', '☀', '☁', '★', '☆', '☂', '🗡️', '⚔️', '🛡️', '🏹', '🔪', '🪓', '💥', '💣', '🧨', '⚡', '🚀', '🛸', '🚂', '🚗', '✈️', '🏆', '⚽', '🎯', '🆙', '🆒', '💯', '💢', '⏴', '⏵', '⏶', '⏷', '⚓', '🐺', '🐦', '🐦‍⬛', '🦉', '🐈‍⬛', '🐍', '🦂', '🦗', '🦄', '🐼', '🚨', '🆘', '⚠️', '‼️', '❕', '🛑', '🚫', '⛔', '📛', '🚩', '☢️', '☣️', '🩹', '🩺', '🚑', '🚒', '🔔', '📢', '📣', '☠', '☢', '☣', '🚷', '💡', '🔋', '⚙️', '🧪', '💻', '📱', '📷', '📶', '⏻', '🔍', '📍', '📅', '✉️', '🛒', '⚙', '⚗', '⚛', '⚖', '⏼', '⏽', '⏾', '☏', '☎', '💀', '☠️', '👻', '👹', '👺', '🧛', '🧟', '🧌', '🦇', '🕷️', '🕸️', '🩸', '⚰️', '🪦', '🏚️', '🥀', '⛓️', '👽', '🤡', '😈', '👿', '😱', '😨', '😰', '👁️', '🧠', '🫀', '🌚', '🫥', '✨', '🌟', '🕯', '⛺', '🏙', '🏠', '📖', '📚', '🔑', '🔒', '💎', '👑', '🌸', '☘', '🍀', '🎸', '🎨', '🎬', '☕', '🍕', '🍎', '🎁', '🎈', '🧘', '🛌', '🛁', '😀', '😂', '😍', '🤔', '🤫', '✔️', '❌', '✖️', '♫', '♩', '♪', '♬', '♭', '♮', '♯', '𝄞', '𝄢', '♚', '♛', '♜', '♝', '♞', '♟', '♔', '♕', '♖', '♗', '♘', '♙', '♤', '♢', '♧', '♠', '♣', '♥', '♦', '☖', '☗', '☙', '✚', '✜', '✛', '✙', '☯', '☮', '☼', '☾', '☽', '☄', '☉', '☰', '☱', '☲', '☳', '☴', '☵', '☶', '☷', '☐', '☑', '☒', '☋', '☌', '☍', '☚', '☛', '☜', '☝', '☞', '☟', '〰', '≋', '☃', '☇', '☈', '☓', '☹', '☺', '☻'];
         
-        let tracks = []; 
-        let queue = [];  
+        let tracks = []; let queue = [];  
         let colorIndex = 0; let symbolIndex = 0;
-        let timeTrackerInterval = null;
-        let isDashboardOpen = false;
+        let timeTrackerInterval = null; let isDashboardOpen = false;
+        let isEditMode = false;
+
         let pendingImageFile = null; let activeTargetTrackId = null;
 
+        // --- IndexedDB Setup ---
         const DB_NAME = 'SuperSimpleDB';
         let db;
-
         function initDB() {
             return new Promise((resolve, reject) => {
-                const req = indexedDB.open(DB_NAME, 3);
+                const req = indexedDB.open(DB_NAME, 4);
                 req.onupgradeneeded = (e) => {
                     db = e.target.result;
                     if (!db.objectStoreNames.contains('tracks')) db.createObjectStore('tracks', { keyPath: 'id' });
@@ -346,11 +339,11 @@
                 req.onerror = (e) => reject(e);
             });
         }
-
         function saveTrackToDB(track) { db.transaction('tracks', 'readwrite').objectStore('tracks').put(track); }
+        function deleteTrackFromDB(id) { db.transaction('tracks', 'readwrite').objectStore('tracks').delete(id); }
         function saveAllTracksToDB() {
-            const tx = db.transaction('tracks', 'readwrite');
-            tracks.forEach(t => tx.objectStore('tracks').put(t));
+            const store = db.transaction('tracks', 'readwrite').objectStore('tracks');
+            tracks.forEach(t => store.put(t));
         }
         function loadTracksFromDB() {
             return new Promise((resolve) => {
@@ -359,21 +352,23 @@
             });
         }
 
+        // --- LocalStorage Setup ---
         function saveQueueState() {
             const state = queue.map(q => ({
-                queueId: q.queueId, trackId: q.trackId, mediaId: q.mediaId, mediaType: q.mediaType,
+                queueId: q.queueId, trackId: q.trackId, ytId: q.ytId,
                 name: q.name, color: q.color, state: q.state, 
                 duration: q.duration, isLooping: q.isLooping, volume: q.volume, 
-                currentTime: (q.player && q.player.getCurrentTime) ? q.player.getCurrentTime() : q.currentTime
+                currentTime: q.player ? q.player.getCurrentTime() : q.currentTime,
+                audioData: q.audioData // Need this for restored MP3s if base track is missing
             }));
             localStorage.setItem('SuperSimpleQueue', JSON.stringify(state));
         }
-
         function loadQueueState() {
             const data = localStorage.getItem('SuperSimpleQueue');
             return data ? JSON.parse(data) : [];
         }
 
+        // --- Init ---
         async function initApp() {
             await initDB();
             tracks = (await loadTracksFromDB()) || [];
@@ -381,19 +376,29 @@
                 colorIndex = tracks.length % neonColors.length;
                 symbolIndex = tracks.length % allSymbolsList.length;
             }
-            populateSymbolGrid(); renderMasonry();
+            populateSymbolGrid();
+            renderMasonry();
 
             const savedQueue = loadQueueState();
             savedQueue.forEach(q => restoreQueueItem(q));
 
-            setupEventListeners(); startUITracker();
+            setupEventListeners();
+            startUITracker();
             setInterval(saveQueueState, 5000);
+            updateHoverTexts();
         }
-
         function onYouTubeIframeAPIReady() { initApp(); }
 
+        // --- Events ---
         function setupEventListeners() {
-            document.getElementById('uploadBtn').addEventListener('click', handleAddTrack);
+            document.getElementById('uploadBtn').addEventListener('click', handleAddYoutubeTrack);
+            document.getElementById('uploadMp3Btn').addEventListener('click', () => document.getElementById('mp3Input').click());
+            document.getElementById('mp3Input').addEventListener('change', handleAddMp3Track);
+            document.getElementById('editGridBtn').addEventListener('click', () => toggleEditMode());
+            document.getElementById('mainWrapper').addEventListener('click', (e) => {
+                if(isEditMode && e.target === document.getElementById('mainWrapper')) toggleEditMode(false);
+            });
+
             document.getElementById('fab').addEventListener('click', toggleDashboard);
             document.getElementById('toggleDesktopBtn').addEventListener('click', toggleDashboard);
             document.getElementById('closeDashboard').addEventListener('click', toggleDashboard);
@@ -401,15 +406,13 @@
             
             document.getElementById('btnAutoAdjust').addEventListener('click', () => processPendingImage(true));
             document.getElementById('btnKeepAspect').addEventListener('click', () => processPendingImage(false));
-            document.getElementById('btnCancelImg').addEventListener('click', () => hideModal('imageModal'));
             document.getElementById('hiddenFileInput').addEventListener('change', handleFileSelect);
 
-            document.querySelectorAll('.color-swatch').forEach(el => {
-                el.addEventListener('click', (e) => applyColorChange(e.target.dataset.color));
-            });
+            document.getElementById('btnReplaceArt').addEventListener('click', () => { hideModal('artOptionsModal'); document.getElementById('hiddenFileInput').click(); });
+            document.getElementById('btnRemoveArt').addEventListener('click', removeCustomArt);
+
+            document.querySelectorAll('.color-swatch').forEach(el => el.addEventListener('click', (e) => applyColorChange(e.target.dataset.color)));
             document.getElementById('nativeColorPicker').addEventListener('change', (e) => applyColorChange(e.target.value));
-            document.getElementById('btnCancelColor').addEventListener('click', () => hideModal('colorModal'));
-            document.getElementById('btnCancelSymbol').addEventListener('click', () => hideModal('symbolModal'));
 
             setupDragAndDrop(document.getElementById('masonryContainer'), 'track-box', updateTrackOrder);
             setupDragAndDrop(document.getElementById('queueContainer'), 'queue-item', updateQueueOrder);
@@ -419,16 +422,25 @@
 
         function hideModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        // --- Improved Distance-Based Drag & Drop Math ---
+        // --- Grid Drag & Drop (Robust swap logic) ---
         function setupDragAndDrop(container, itemClass, callback) {
             container.addEventListener('dragover', e => {
                 e.preventDefault();
-                const afterElement = getDragAfterElementGrid(container, e.clientX, e.clientY, itemClass);
                 const draggable = document.querySelector('.dragging');
                 if(!draggable) return;
                 
-                if (afterElement == null) container.appendChild(draggable);
-                else container.insertBefore(draggable, afterElement);
+                const elements = [...container.querySelectorAll(`.${itemClass}:not(.dragging)`)];
+                const afterElement = elements.find(child => {
+                    const box = child.getBoundingClientRect();
+                    return (e.clientY < box.bottom && e.clientY > box.top && e.clientX < box.right && e.clientX > box.left);
+                });
+                
+                if (afterElement) {
+                    const currentPos = [...container.children].indexOf(draggable);
+                    const targetPos = [...container.children].indexOf(afterElement);
+                    if (currentPos < targetPos) afterElement.after(draggable);
+                    else container.insertBefore(draggable, afterElement);
+                }
             });
             container.addEventListener('drop', () => {
                 document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
@@ -436,47 +448,57 @@
             });
         }
 
-        function getDragAfterElementGrid(container, x, y, itemClass) {
-            const elements = [...container.querySelectorAll(`.${itemClass}:not(.dragging)`)];
-            return elements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const boxCenterX = box.left + box.width / 2;
-                const boxCenterY = box.top + box.height / 2;
-                const distance = Math.sqrt(Math.pow(x - boxCenterX, 2) + Math.pow(y - boxCenterY, 2));
-
-                if (distance < closest.distance) return { distance: distance, element: child };
-                else return closest;
-            }, { distance: Number.POSITIVE_INFINITY }).element;
+        // --- Title Fetcher ---
+        async function fetchYtTitle(url) {
+            try {
+                let res = await fetch(`https://noembed.com/embed?dataType=json&url=${encodeURIComponent(url)}`);
+                let data = await res.json();
+                return data.title || null;
+            } catch(e) { return null; }
         }
 
-        // --- Media Parsing (YouTube + Spotify) ---
-        function extractMediaInfo(url) {
-            const ytMatch = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-            if (ytMatch && ytMatch[2].length === 11) return { type: 'youtube', id: ytMatch[2] };
-            
-            const spMatch = url.match(/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/);
-            if (spMatch && spMatch[1]) return { type: 'spotify', id: spMatch[1] };
-
-            return null;
-        }
-
-        function handleAddTrack() {
-            const url = document.getElementById('linkInput').value.trim();
+        // --- Add Tracks ---
+        async function handleAddYoutubeTrack() {
+            const input = document.getElementById('youtubeLink');
+            const url = input.value.trim();
             if (!url) return;
-            const media = extractMediaInfo(url);
-            if (!media) return alert('Invalid YouTube or Spotify URL');
+            const ytId = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+            if (!ytId || ytId[2].length !== 11) return alert('Invalid YouTube URL');
 
-            const newTrack = {
-                id: 'track_' + Date.now(), mediaId: media.id, mediaType: media.type,
-                color: neonColors[colorIndex], symbol: allSymbolsList[symbolIndex], 
-                baseName: `Track ${tracks.length + 1}`, customImage: null, autoAdjustImg: true
+            input.value = "Grabbing YouTube Title..."; input.disabled = true;
+            let title = await fetchYtTitle(url);
+            input.value = ''; input.disabled = false;
+
+            createTrackObject('yt', ytId[2], title || `YouTube Track ${tracks.length + 1}`, null);
+        }
+
+        function handleAddMp3Track(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                createTrackObject('mp3', null, file.name.replace(/\.[^/.]+$/, ""), ev.target.result);
             };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        }
 
+        function createTrackObject(type, ytId, name, audioData) {
+            const newTrack = {
+                id: 'track_' + Date.now(), type, ytId, audioData,
+                color: neonColors[colorIndex], symbol: allSymbolsList[symbolIndex],
+                baseName: name, customImage: null, autoAdjustImg: true
+            };
             colorIndex = (colorIndex + 1) % neonColors.length;
             symbolIndex = (symbolIndex + 1) % allSymbolsList.length;
 
             tracks.push(newTrack); saveTrackToDB(newTrack); renderMasonry();
-            document.getElementById('linkInput').value = '';
+        }
+
+        function toggleEditMode(forceState) {
+            isEditMode = forceState !== undefined ? forceState : !isEditMode;
+            if(isEditMode) document.body.classList.add('edit-mode-active');
+            else document.body.classList.remove('edit-mode-active');
         }
 
         function updateTrackOrder() {
@@ -489,13 +511,14 @@
             tracks = newTracks; saveAllTracksToDB();
         }
 
+        // --- Masonry UI ---
         function renderMasonry() {
             const container = document.getElementById('masonryContainer');
             container.innerHTML = '';
 
             tracks.forEach(track => {
                 const box = document.createElement('div');
-                box.className = 'track-box';
+                box.className = `track-box`;
                 box.style.setProperty('--neon-color', track.color);
                 box.dataset.trackId = track.id;
 
@@ -508,11 +531,22 @@
                     if(!box.draggable) e.preventDefault(); else box.classList.add('dragging');
                 });
                 box.addEventListener('dragend', () => box.classList.remove('dragging'));
-                box.appendChild(dragHeader);
+                
+                // Mobile Long Press for Edit Mode
+                let pressTimer;
+                box.addEventListener('touchstart', () => { pressTimer = setTimeout(() => toggleEditMode(true), 800); });
+                box.addEventListener('touchend', () => clearTimeout(pressTimer));
+                box.addEventListener('touchmove', () => clearTimeout(pressTimer));
+
+                const delBadge = document.createElement('div');
+                delBadge.className = 'delete-badge'; delBadge.textContent = 'X';
+                delBadge.onclick = (e) => { e.stopPropagation(); deleteBaseTrack(track.id); };
+
+                box.appendChild(dragHeader); box.appendChild(delBadge);
                 
                 if (track.customImage) {
-                    const img = document.createElement('img'); img.src = track.customImage; 
-                    if(!track.autoAdjustImg) img.style.objectFit = 'contain';
+                    const img = document.createElement('img'); img.src = track.customImage;
+                    if(!track.autoAdjustImg) { box.style.aspectRatio = 'auto'; }
                     box.appendChild(img);
                 } else {
                     const sym = document.createElement('div'); sym.className = 'track-symbol';
@@ -523,93 +557,139 @@
                 hoverTxt.className = 'hover-text'; hoverTxt.textContent = "ADD TO MIX";
                 box.appendChild(hoverTxt);
 
-                // Flash & Toggle Queue Logic
                 box.addEventListener('click', (e) => {
-                    if(e.target === dragHeader) return; 
+                    if(isEditMode || e.target === dragHeader || e.target === delBadge) return; 
                     
-                    const existingInQueue = queue.filter(q => q.trackId === track.id);
-                    if(existingInQueue.length > 0) {
-                        // Delete all duplicates
-                        existingInQueue.forEach(q => removeQueueItem(q.queueId));
+                    const existingCount = queue.filter(q => q.trackId === track.id).length;
+                    if (existingCount > 0) {
+                        // Delete all duplicates of this track
+                        const toRemove = queue.filter(q => q.trackId === track.id);
+                        toRemove.forEach(q => removeQueueItem(q.queueId));
                     } else {
-                        // Add and Flash
-                        box.classList.remove('flash-anim');
-                        void box.offsetWidth; // trigger reflow
-                        box.classList.add('flash-anim');
-                        
+                        box.classList.add('flash-add');
+                        setTimeout(() => box.classList.remove('flash-add'), 400);
                         addToQueue(track);
                         if(!isDashboardOpen) toggleDashboard();
                     }
                 });
                 container.appendChild(box);
             });
+            updateHoverTexts();
         }
 
+        function updateHoverTexts() {
+            document.querySelectorAll('.track-box').forEach(box => {
+                let tId = box.dataset.trackId;
+                let inQ = queue.some(q => q.trackId === tId);
+                let track = tracks.find(t => t.id === tId);
+                let hover = box.querySelector('.hover-text');
+                if(track) {
+                    if(inQ) { hover.textContent = track.baseName; hover.style.color = '#ff4444'; hover.style.textShadow = "0 0 10px black"; }
+                    else { hover.textContent = 'ADD TO MIX'; hover.style.color = 'white'; }
+                }
+            });
+        }
+
+        function deleteBaseTrack(id) {
+            tracks = tracks.filter(t => t.id !== id);
+            deleteTrackFromDB(id);
+            const toRemove = queue.filter(q => q.trackId === id);
+            toRemove.forEach(q => removeQueueItem(q.queueId));
+            renderMasonry();
+        }
+
+        // --- Dashboard & Queue Logic ---
         function toggleDashboard() {
             isDashboardOpen = !isDashboardOpen;
             document.getElementById('dashboard').classList.toggle('open');
             document.getElementById('mainWrapper').classList.toggle('push-active');
         }
 
-        function addToQueue(track) {
+        // Custom Player Wrapper to handle YT + MP3 unified
+        class UniversalPlayer {
+            constructor(qItem, onReady, onStateChange) {
+                this.qItem = qItem; this.onStateChange = onStateChange;
+                const track = tracks.find(t => t.id === qItem.trackId) || {};
+                this.type = track.type || (qItem.audioData ? 'mp3' : 'yt');
+                
+                if(this.type === 'mp3') {
+                    this.audio = new Audio(track.audioData || qItem.audioData);
+                    this.audio.onloadedmetadata = () => { onReady(this.audio.duration); };
+                    this.audio.onended = () => onStateChange(0); // YT.PlayerState.ENDED
+                    this.audio.onplay = () => onStateChange(1);  // YT.PlayerState.PLAYING
+                    this.audio.onpause = () => onStateChange(2); // YT.PlayerState.PAUSED
+                    if(this.audio.readyState >= 1) onReady(this.audio.duration);
+                } else {
+                    const div = document.createElement('div');
+                    div.id = `player_${qItem.queueId}`; document.getElementById('hidden-players').appendChild(div);
+                    this.yt = new YT.Player(div.id, {
+                        height: '0', width: '0', videoId: qItem.ytId, playerVars: { 'autoplay': 0, 'controls': 0 },
+                        events: {
+                            'onReady': (e) => onReady(e.target.getDuration()),
+                            'onStateChange': (e) => onStateChange(e.data)
+                        }
+                    });
+                }
+            }
+            playVideo() { this.audio ? this.audio.play() : this.yt.playVideo(); }
+            pauseVideo() { this.audio ? this.audio.pause() : this.yt.pauseVideo(); }
+            stopVideo() { if(this.audio){ this.audio.pause(); this.audio.currentTime=0; } else this.yt.stopVideo(); }
+            setVolume(v) { if(this.audio) this.audio.volume = v/100; else this.yt.setVolume(v); }
+            seekTo(s) { if(this.audio) this.audio.currentTime = s; else this.yt.seekTo(s, true); }
+            getCurrentTime() { return this.audio ? this.audio.currentTime : (this.yt.getCurrentTime?this.yt.getCurrentTime():0); }
+            destroy() { 
+                if(this.audio) { this.audio.pause(); this.audio.src=''; } 
+                else if(this.yt && this.yt.destroy) { this.yt.destroy(); document.getElementById(`player_${this.qItem.queueId}`).remove(); }
+            }
+        }
+
+        function addToQueue(track, cloneState = null) {
             const count = queue.filter(q => q.trackId === track.id).length;
             const name = count > 0 ? `${track.baseName} (${count + 1})` : track.baseName;
 
             const qItem = {
-                queueId: 'q_' + Date.now() + Math.floor(Math.random() * 1000), 
-                trackId: track.id, mediaId: track.mediaId, mediaType: track.mediaType,
+                queueId: 'q_' + Date.now() + Math.floor(Math.random()*1000), 
+                trackId: track.id, ytId: track.ytId, audioData: track.audioData,
                 name, color: track.color, player: null, state: 'PAUSED',
-                duration: 0, isLooping: false, volume: 50, currentTime: 0, isScrubbing: false
+                duration: cloneState ? cloneState.duration : 0, 
+                isLooping: cloneState ? cloneState.isLooping : false, 
+                volume: cloneState ? cloneState.volume : 50, 
+                currentTime: cloneState ? cloneState.currentTime : 0, 
+                isScrubbing: false
             };
-            queue.push(qItem); renderQueue(); createHiddenPlayer(qItem); saveQueueState();
-        }
-
-        function duplicateQueueItem(qItemToDup) {
-            const track = tracks.find(t => t.id === qItemToDup.trackId);
-            if(track) addToQueue(track);
+            queue.push(qItem); renderQueue(); 
+            initPlayer(qItem, !!cloneState); 
+            saveQueueState(); updateHoverTexts();
         }
 
         function restoreQueueItem(savedQ) {
             const baseTrack = tracks.find(t => t.id === savedQ.trackId);
             const syncedColor = baseTrack ? baseTrack.color : savedQ.color;
             const qItem = { ...savedQ, color: syncedColor, player: null, isScrubbing: false };
-            queue.push(qItem); renderQueue(); createHiddenPlayer(qItem, true);
+            queue.push(qItem); renderQueue(); 
+            initPlayer(qItem, true);
         }
 
-        function createHiddenPlayer(qItem, isRestore = false) {
-            if(qItem.mediaType === 'spotify') return; // Spotify handled directly in render UI
-
-            const div = document.createElement('div');
-            div.id = `player_${qItem.queueId}`;
-            document.getElementById('hidden-players').appendChild(div);
-
-            qItem.player = new YT.Player(`player_${qItem.queueId}`, {
-                height: '0', width: '0', videoId: qItem.mediaId,
-                playerVars: { 'autoplay': 0, 'controls': 0 },
-                events: {
-                    'onReady': (event) => {
-                        qItem.duration = event.target.getDuration() || qItem.duration;
-                        event.target.setVolume(qItem.volume);
-                        if(isRestore) event.target.seekTo(qItem.currentTime);
-                        
-                        setTimeout(() => {
-                            if(qItem.state === 'PLAYING') event.target.playVideo();
-                            else event.target.pauseVideo();
-                        }, 200);
-                        updateQueueUI();
-                    },
-                    'onStateChange': (event) => {
-                        if (event.data === YT.PlayerState.ENDED) {
-                            if (qItem.isLooping) qItem.player.playVideo();
-                            else { qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); }
-                        } else if (event.data === YT.PlayerState.PLAYING) {
-                            qItem.state = 'PLAYING'; updateQueueUI(); saveQueueState();
-                        } else if (event.data === YT.PlayerState.PAUSED && !qItem.isScrubbing) {
-                            qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState();
-                        }
+        function initPlayer(qItem, isRestore) {
+            qItem.player = new UniversalPlayer(qItem, 
+                (duration) => {
+                    qItem.duration = duration || qItem.duration;
+                    qItem.player.setVolume(qItem.volume);
+                    if(isRestore) qItem.player.seekTo(qItem.currentTime);
+                    setTimeout(() => { if(qItem.state === 'PLAYING') qItem.player.playVideo(); else qItem.player.pauseVideo(); }, 200);
+                    updateQueueUI();
+                },
+                (stateCode) => {
+                    if (stateCode === 0) { // ENDED
+                        if (qItem.isLooping) qItem.player.playVideo();
+                        else { qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); }
+                    } else if (stateCode === 1) { // PLAYING
+                        qItem.state = 'PLAYING'; updateQueueUI(); saveQueueState();
+                    } else if (stateCode === 2 && !qItem.isScrubbing) { // PAUSED
+                        qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState();
                     }
                 }
-            });
+            );
         }
 
         function renderQueue() {
@@ -619,137 +699,130 @@
             queue.forEach(qItem => {
                 const el = document.createElement('div');
                 el.className = `queue-item ${qItem.state === 'PLAYING' ? 'is-playing' : ''}`;
-                el.dataset.queueId = qItem.queueId;
-                el.style.setProperty('--neon-color', qItem.color);
+                el.dataset.queueId = qItem.queueId; el.style.setProperty('--neon-color', qItem.color);
+                const track = tracks.find(t => t.id === qItem.trackId);
+                const isYt = track ? track.type === 'yt' : !!qItem.ytId;
 
                 const playIcon = qItem.state === 'PLAYING' ? '⏸' : '▶';
                 const playClass = qItem.state === 'PLAYING' ? 'active' : '';
-                
-                const isSpotify = qItem.mediaType === 'spotify';
-                const disableClass = isSpotify ? 'spotify-disabled' : '';
 
-                let innerHtml = `
+                el.innerHTML = `
                     <div class="queue-item-inner">
                         <div class="q-drag-header"></div>
                         <div class="queue-header">
-                            <span>${qItem.name} ${isSpotify ? '(Spotify)' : ''}</span>
+                            <span>${qItem.name}</span>
                             <span>${qItem.state === 'PLAYING' ? 'Playing' : 'Paused'}</span>
                         </div>
-                `;
-
-                if (isSpotify) {
-                    innerHtml += `<iframe class="spotify-embed" src="https://open.spotify.com/embed/track/${qItem.mediaId}?utm_source=generator" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
-                }
-
-                innerHtml += `
-                        <div class="progress-container ${disableClass}">
-                            <span class="time-text" id="timeTxt_${qItem.queueId}">0:00 / 0:00</span>
+                        <div class="progress-container">
+                            <span class="time-text" id="timeTxt_${qItem.queueId}">${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}</span>
                             <input type="range" class="progress-slider" id="slider_${qItem.queueId}" min="0" max="${qItem.duration}" value="${qItem.currentTime}">
                         </div>
                         <div class="queue-controls">
-                            <button class="control-btn play-pause-btn ${playClass} ${disableClass}">${playIcon}</button>
-                            <button class="control-btn stop-btn ${disableClass}">⏹</button>
-                            <button class="control-btn loop-btn ${qItem.isLooping ? 'active' : ''} ${disableClass}">Loop</button>
+                            <button class="control-btn play-pause-btn ${playClass}">${playIcon}</button>
+                            <button class="control-btn stop-btn">⏹</button>
+                            <button class="control-btn loop-btn ${qItem.isLooping ? 'active' : ''}">Loop</button>
+                            <button class="control-btn fade-btn">Fade</button>
                             <button class="control-btn rename-btn">Rename</button>
-                            <button class="control-btn dup-btn">Dup</button>
-                            <button class="control-btn link-btn">Link</button>
                             <button class="control-btn pic-btn">Art</button>
                             <button class="control-btn color-btn">Color</button>
                             <button class="control-btn sym-btn">Symbol</button>
+                            <button class="control-btn dup-btn">Duplicate</button>
+                            ${isYt ? '<button class="control-btn link-btn">Link</button>' : ''}
                         </div>
-                        <div class="volume-control ${disableClass}">
+                        <div class="volume-control">
                             <span>🔈</span><input type="range" min="0" max="100" value="${qItem.volume}" class="vol-slider"><span>🔊</span>
                         </div>
                     </div>
                     <div class="queue-delete-bar">X</div>
                 `;
-                el.innerHTML = innerHtml;
 
                 const dHeader = el.querySelector('.q-drag-header');
                 dHeader.addEventListener('mousedown', () => el.draggable = true);
                 dHeader.addEventListener('mouseup', () => el.draggable = false);
                 dHeader.addEventListener('mouseleave', () => el.draggable = false);
-                el.addEventListener('dragstart', (e) => {
-                    if(!el.draggable) e.preventDefault(); else el.classList.add('dragging');
-                });
+                el.addEventListener('dragstart', (e) => { if(!el.draggable) e.preventDefault(); else el.classList.add('dragging'); });
                 el.addEventListener('dragend', () => el.classList.remove('dragging'));
 
-                if(!isSpotify) {
-                    el.querySelector('.play-pause-btn').onclick = () => { 
-                        if(!qItem.player) return;
-                        if(qItem.state === 'PLAYING') qItem.player.pauseVideo(); else qItem.player.playVideo();
-                    };
-                    el.querySelector('.stop-btn').onclick = () => { 
-                        if(qItem.player && qItem.player.stopVideo) {
-                            qItem.player.stopVideo(); qItem.player.seekTo(0);
-                            qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState();
-                        }
-                    };
-                    el.querySelector('.loop-btn').onclick = () => { qItem.isLooping = !qItem.isLooping; updateQueueUI(); saveQueueState(); };
-                    
-                    el.querySelector('.vol-slider').oninput = (e) => {
-                        qItem.volume = e.target.value;
-                        if(qItem.player) qItem.player.setVolume(qItem.volume);
-                        saveQueueState();
-                    };
-
-                    const timeTxt = el.querySelector('.time-text');
-                    timeTxt.onclick = () => promptTimeEntry(qItem);
-
-                    const slider = el.querySelector('.progress-slider');
-                    slider.addEventListener('mousedown', () => qItem.isScrubbing = true);
-                    slider.addEventListener('input', (e) => {
-                        qItem.currentTime = e.target.value;
-                        timeTxt.textContent = `${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}`;
-                    });
-                    slider.addEventListener('change', (e) => {
-                        qItem.isScrubbing = false; qItem.currentTime = e.target.value;
-                        if(qItem.player) qItem.player.seekTo(qItem.currentTime, true);
-                        saveQueueState();
-                    });
-                }
-
+                el.querySelector('.play-pause-btn').onclick = () => { 
+                    if(!qItem.player) return;
+                    if(qItem.state === 'PLAYING') qItem.player.pauseVideo(); else qItem.player.playVideo();
+                };
+                el.querySelector('.stop-btn').onclick = () => { 
+                    if(qItem.player) { qItem.player.stopVideo(); qItem.player.seekTo(0); qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); }
+                };
+                el.querySelector('.loop-btn').onclick = () => { qItem.isLooping = !qItem.isLooping; updateQueueUI(); saveQueueState(); };
+                el.querySelector('.fade-btn').onclick = () => startFade(qItem);
+                
                 el.querySelector('.rename-btn').onclick = () => {
                     const newName = prompt("Rename track:", qItem.name);
                     if(newName) { qItem.name = newName; updateQueueUI(); saveQueueState(); }
                 };
-                
-                el.querySelector('.dup-btn').onclick = () => duplicateQueueItem(qItem);
-                
-                el.querySelector('.link-btn').onclick = () => {
-                    const newLink = prompt("Enter new YouTube or Spotify link:");
-                    if(!newLink) return;
-                    const media = extractMediaInfo(newLink);
-                    if(media) {
-                        qItem.mediaId = media.id; qItem.mediaType = media.type;
-                        if(qItem.player && qItem.player.destroy) qItem.player.destroy();
-                        const oldDiv = document.getElementById(`player_${qItem.queueId}`);
-                        if(oldDiv) oldDiv.remove();
-                        createHiddenPlayer(qItem);
-                        updateTrackData(qItem.trackId, { mediaId: media.id, mediaType: media.type });
-                    } else alert("Invalid link.");
-                };
-
-                el.querySelector('.pic-btn').onclick = () => { 
+                el.querySelector('.dup-btn').onclick = () => {
                     const baseTrack = tracks.find(t => t.id === qItem.trackId);
-                    if (baseTrack && baseTrack.customImage) {
-                        if (confirm("Click OK to REPLACE art. Click Cancel to REMOVE art and use a symbol.")) {
-                            activeTargetTrackId = qItem.trackId; document.getElementById('hiddenFileInput').click();
-                        } else {
-                            const randomSym = ['♫', '𝄞', '♪', '𝄢', '𝄽', '♬', '♮', '𝄡'][Math.floor(Math.random() * 8)];
-                            updateTrackData(qItem.trackId, { customImage: null, symbol: randomSym });
-                        }
-                    } else {
-                        activeTargetTrackId = qItem.trackId; document.getElementById('hiddenFileInput').click(); 
-                    }
+                    if(baseTrack) addToQueue(baseTrack, qItem);
                 };
-
+                if(isYt) {
+                    el.querySelector('.link-btn').onclick = () => {
+                        const newUrl = prompt("Enter new YouTube URL:");
+                        if(newUrl) {
+                            const newYtId = newUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+                            if(newYtId && newYtId[2].length === 11) {
+                                updateTrackData(qItem.trackId, { ytId: newYtId[2] });
+                                qItem.ytId = newYtId[2];
+                                if(qItem.player) qItem.player.destroy();
+                                initPlayer(qItem, false);
+                            }
+                        }
+                    };
+                }
+                
+                el.querySelector('.pic-btn').onclick = () => { 
+                    activeTargetTrackId = qItem.trackId; 
+                    if(track && track.customImage) document.getElementById('artOptionsModal').style.display = 'flex';
+                    else document.getElementById('hiddenFileInput').click(); 
+                };
                 el.querySelector('.color-btn').onclick = () => { activeTargetTrackId = qItem.trackId; document.getElementById('colorModal').style.display = 'flex'; };
                 el.querySelector('.sym-btn').onclick = () => { activeTargetTrackId = qItem.trackId; document.getElementById('symbolModal').style.display = 'flex'; };
+                
                 el.querySelector('.queue-delete-bar').onclick = () => removeQueueItem(qItem.queueId);
+                
+                el.querySelector('.vol-slider').oninput = (e) => {
+                    qItem.volume = e.target.value;
+                    if(qItem.player) qItem.player.setVolume(qItem.volume);
+                    saveQueueState();
+                };
+
+                const timeTxt = el.querySelector('.time-text');
+                timeTxt.onclick = () => promptTimeEntry(qItem);
+                const slider = el.querySelector('.progress-slider');
+                slider.addEventListener('mousedown', () => qItem.isScrubbing = true);
+                slider.addEventListener('input', (e) => {
+                    qItem.currentTime = e.target.value;
+                    timeTxt.textContent = `${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}`;
+                });
+                slider.addEventListener('change', (e) => {
+                    qItem.isScrubbing = false; qItem.currentTime = e.target.value;
+                    if(qItem.player) qItem.player.seekTo(qItem.currentTime);
+                    saveQueueState();
+                });
 
                 container.appendChild(el);
             });
+        }
+
+        function startFade(qItem) {
+            if(!qItem.player || qItem.state !== 'PLAYING') return;
+            let currentVol = parseInt(qItem.volume);
+            let fadeInterval = setInterval(() => {
+                currentVol -= 5;
+                if(currentVol <= 0) {
+                    currentVol = 0; clearInterval(fadeInterval);
+                    qItem.player.pauseVideo(); qItem.state = 'PAUSED'; updateQueueUI();
+                }
+                qItem.volume = currentVol; qItem.player.setVolume(currentVol);
+                const slider = document.querySelector(`.queue-item[data-queue-id="${qItem.queueId}"] .vol-slider`);
+                if(slider) slider.value = currentVol;
+            }, 150);
         }
 
         function updateQueueUI() { renderQueue(); }
@@ -767,26 +840,22 @@
         function removeQueueItem(queueId) {
             const index = queue.findIndex(q => q.queueId === queueId);
             if(index > -1) {
-                if(queue[index].player && queue[index].player.destroy) queue[index].player.destroy();
-                const div = document.getElementById(`player_${queueId}`);
-                if(div) div.remove();
-                queue.splice(index, 1); updateQueueUI(); saveQueueState();
+                if(queue[index].player) queue[index].player.destroy();
+                queue.splice(index, 1); updateQueueUI(); saveQueueState(); updateHoverTexts();
             }
         }
 
-        function masterPause() { queue.forEach(q => { if(q.state === 'PLAYING' && q.player && q.mediaType !== 'spotify') q.player.pauseVideo(); }); }
+        function masterPause() { queue.forEach(q => { if(q.state === 'PLAYING' && q.player) q.player.pauseVideo(); }); }
 
         function startUITracker() {
             if(timeTrackerInterval) clearInterval(timeTrackerInterval);
             timeTrackerInterval = setInterval(() => {
                 queue.forEach(qItem => {
-                    if (qItem.state === 'PLAYING' && qItem.player && !qItem.isScrubbing && qItem.mediaType !== 'spotify') {
+                    if (qItem.state === 'PLAYING' && qItem.player && !qItem.isScrubbing) {
                         qItem.currentTime = qItem.player.getCurrentTime() || 0;
                         qItem.duration = qItem.player.getDuration() || qItem.duration;
-                        
                         const timeEl = document.getElementById(`timeTxt_${qItem.queueId}`);
                         const sliderEl = document.getElementById(`slider_${qItem.queueId}`);
-                        
                         if(timeEl) timeEl.textContent = `${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}`;
                         if(sliderEl) { sliderEl.max = qItem.duration; sliderEl.value = qItem.currentTime; }
                     }
@@ -801,22 +870,18 @@
         }
 
         function promptTimeEntry(qItem) {
-            if(qItem.mediaType === 'spotify') return;
             const input = prompt("Enter specific time (MM:SS):", formatTime(qItem.currentTime));
             if(!input) return;
-            
             let seconds = 0; const parts = input.split(':');
             if(parts.length === 2) seconds = (parseInt(parts[0]) * 60) + parseInt(parts[1]);
             else seconds = parseInt(input);
-
             if(isNaN(seconds)) return alert("Invalid time format.");
             if(seconds > qItem.duration) seconds = qItem.duration;
-            
-            qItem.currentTime = seconds;
-            if(qItem.player) qItem.player.seekTo(seconds, true);
+            qItem.currentTime = seconds; if(qItem.player) qItem.player.seekTo(seconds);
             updateQueueUI(); saveQueueState();
         }
 
+        // --- Customization ---
         function handleFileSelect(e) {
             if(!e.target.files[0]) return;
             pendingImageFile = e.target.files[0];
@@ -829,6 +894,13 @@
             const base64Data = await readImageFile(pendingImageFile, autoAdjust);
             updateTrackData(activeTargetTrackId, { customImage: base64Data, autoAdjustImg: autoAdjust });
             hideModal('imageModal');
+        }
+
+        function removeCustomArt() {
+            if(!activeTargetTrackId) return;
+            const randSym = baseSymbols[Math.floor(Math.random() * baseSymbols.length)];
+            updateTrackData(activeTargetTrackId, { customImage: null, symbol: randSym });
+            hideModal('artOptionsModal');
         }
 
         function readImageFile(file, autoAdjust) {
@@ -866,10 +938,7 @@
                 const div = document.createElement('div');
                 div.className = 'sym-item'; div.textContent = sym;
                 div.onclick = () => {
-                    if(activeTargetTrackId) {
-                        updateTrackData(activeTargetTrackId, { symbol: sym, customImage: null });
-                        hideModal('symbolModal');
-                    }
+                    if(activeTargetTrackId) { updateTrackData(activeTargetTrackId, { symbol: sym, customImage: null }); hideModal('symbolModal'); }
                 };
                 grid.appendChild(div);
             });
@@ -877,14 +946,11 @@
 
         function updateTrackData(trackId, updatesObj) {
             const tIndex = tracks.findIndex(t => t.id === trackId);
-            if(tIndex > -1) {
-                tracks[tIndex] = { ...tracks[tIndex], ...updatesObj };
-                saveTrackToDB(tracks[tIndex]);
-            }
+            if(tIndex > -1) { tracks[tIndex] = { ...tracks[tIndex], ...updatesObj }; saveTrackToDB(tracks[tIndex]); }
             queue.forEach(q => {
                 if(q.trackId === trackId) {
                     if(updatesObj.color) q.color = updatesObj.color;
-                    if(updatesObj.mediaId) { q.mediaId = updatesObj.mediaId; q.mediaType = updatesObj.mediaType; }
+                    if(updatesObj.ytId) q.ytId = updatesObj.ytId;
                 }
             });
             renderMasonry(); updateQueueUI(); saveQueueState();
