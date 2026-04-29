@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quick YouTube Soundboard</title>
+    <title>Super Simple Soundboard</title>
     <style>
         :root {
             --bg: #0b0b0b;
@@ -21,7 +21,17 @@
             background-color: var(--bg);
             color: var(--text);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow-x: hidden;
+            overflow: hidden; /* Handled by internal flex layout */
+            display: flex;
+            height: 100vh;
+        }
+
+        /* --- Main Content Area --- */
+        .main-wrapper {
+            flex-grow: 1;
+            overflow-y: auto;
+            transition: padding-right 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
         }
 
         /* --- Input Section --- */
@@ -37,7 +47,7 @@
             display: flex;
             justify-content: center;
             gap: 10px;
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
         }
 
@@ -71,22 +81,35 @@
             box-shadow: 0 0 15px var(--neon-2);
         }
 
-        /* --- Masonry Grid --- */
+        .toggle-desktop-btn {
+            display: none;
+            padding: 12px 24px;
+            background: transparent;
+            color: var(--neon-3);
+            border: 1px solid var(--neon-3);
+            border-radius: 6px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .toggle-desktop-btn:hover {
+            background: var(--neon-3);
+            color: black;
+            box-shadow: 0 0 15px var(--neon-3);
+        }
+
+        /* --- CSS Grid Layout (Halved Sizes) --- */
         .masonry-container {
             padding: 20px;
-            column-count: 4;
-            column-gap: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 15px;
             max-width: 1400px;
             margin: 0 auto;
         }
 
-        @media (max-width: 1024px) { .masonry-container { column-count: 3; } }
-        @media (max-width: 768px) { .masonry-container { column-count: 2; } }
-        @media (max-width: 480px) { .masonry-container { column-count: 1; } }
-
         .track-box {
-            break-inside: avoid;
-            margin-bottom: 20px;
             background: black;
             border-radius: 12px;
             display: flex;
@@ -98,46 +121,71 @@
             overflow: hidden;
             border: 2px solid;
             color: var(--neon-color);
+            aspect-ratio: 1 / 1;
         }
 
         .track-box:hover { transform: scale(1.03); }
+        .track-box.dragging { opacity: 0.4; }
 
-        .track-box.aspect-square { aspect-ratio: 1 / 1; }
+        /* Transparent Drag Header */
+        .drag-header {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 25px;
+            background: transparent;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .drag-header:active { cursor: grabbing; }
+        .drag-header::after {
+            content: "⠿"; /* 6 dots equivalent */
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+        .track-box:hover .drag-header { opacity: 1; }
 
         .track-symbol {
-            font-size: 5rem;
+            font-size: 3.5rem;
             text-shadow: 0 0 10px var(--neon-color);
             z-index: 1;
+            pointer-events: none;
         }
 
         .track-box img {
-            width: 100%;
+            width: 100%; height: 100%;
             display: block;
             object-fit: cover;
             z-index: 0;
             opacity: 0.8;
             transition: opacity 0.3s;
+            pointer-events: none;
         }
         .track-box:hover img { opacity: 0.4; }
         
         .track-box .hover-text {
             position: absolute;
+            top: 30px;
             z-index: 2;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 0.9rem;
             text-transform: uppercase;
             opacity: 0;
             transition: opacity 0.3s;
             text-shadow: 2px 2px 4px black;
+            pointer-events: none;
         }
         .track-box:hover .hover-text { opacity: 1; }
 
         /* --- Dashboard Panel --- */
         .dashboard {
             position: fixed;
-            top: 0;
-            right: 0;
-            width: 450px;
+            top: 0; right: 0;
+            width: 400px;
             height: 100vh;
             background: var(--panel-bg);
             border-left: 1px solid #333;
@@ -148,8 +196,6 @@
             flex-direction: column;
             box-shadow: -5px 0 30px rgba(0,0,0,0.8);
         }
-
-        @media (max-width: 768px) { .dashboard { width: 100%; } }
 
         .dashboard.open { transform: translateX(0); }
 
@@ -163,172 +209,147 @@
         }
 
         .close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 2rem;
-            cursor: pointer;
+            background: none; border: none; color: white;
+            font-size: 2rem; cursor: pointer;
         }
 
         .master-pause {
-            background: transparent;
-            color: var(--neon-1);
-            border: 1px solid var(--neon-1);
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
+            background: transparent; color: var(--neon-1);
+            border: 1px solid var(--neon-1); padding: 8px 16px;
+            border-radius: 4px; cursor: pointer; font-weight: bold;
         }
         .master-pause:hover {
-            background: var(--neon-1);
-            color: black;
-            box-shadow: 0 0 10px var(--neon-1);
+            background: var(--neon-1); color: black; box-shadow: 0 0 10px var(--neon-1);
         }
 
         .queue-container {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 15px;
+            flex-grow: 1; overflow-y: auto; padding: 15px;
         }
 
         /* --- Queue Items --- */
         .queue-item {
             background: #000;
-            border: 1px solid var(--neon-color);
+            border: 1px solid #444;
             border-radius: 8px;
-            padding: 15px;
+            padding: 15px; padding-top: 25px; /* space for drag header */
             margin-bottom: 15px;
             position: relative;
+            transition: all 0.3s;
+        }
+        .queue-item.dragging { opacity: 0.5; }
+
+        .q-drag-header {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 20px;
+            display: flex; align-items: center; justify-content: center;
             cursor: grab;
-            transition: box-shadow 0.3s;
+            background: transparent;
+        }
+        .q-drag-header:active { cursor: grabbing; }
+        .q-drag-header::after {
+            content: "⠿"; color: rgba(255, 255, 255, 0.5); font-size: 1rem;
         }
 
-        .queue-item:active { cursor: grabbing; }
-
-        /* Audio Visualizer Pulse */
+        /* Active Glow */
         .queue-item.is-playing {
-            animation: neon-pulse 1.5s infinite alternate;
-        }
-
-        @keyframes neon-pulse {
-            0% { box-shadow: 0 0 5px var(--neon-color), inset 0 0 5px rgba(0,0,0,0); }
-            100% { box-shadow: 0 0 20px var(--neon-color), inset 0 0 10px var(--neon-color); }
+            border-color: var(--neon-color);
+            box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1);
         }
 
         .queue-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            color: var(--neon-color);
-            font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; color: var(--neon-color); font-weight: bold;
+        }
+
+        /* Progress Bar & Time */
+        .progress-container {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+        }
+        .time-text {
+            font-size: 0.85rem; color: #aaa; cursor: pointer; min-width: 80px;
+        }
+        .time-text:hover { color: white; text-decoration: underline; }
+        .progress-slider {
+            flex-grow: 1; accent-color: var(--neon-color); cursor: pointer;
         }
 
         .queue-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
         
         .control-btn {
-            background: #222;
-            color: white;
-            border: 1px solid #444;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: #222; color: white; border: 1px solid #444;
+            padding: 5px 12px; border-radius: 4px; cursor: pointer;
+            font-size: 0.9rem; font-weight: bold;
         }
         .control-btn:hover { background: #444; border-color: var(--neon-color); }
-        .control-btn.active { background: var(--neon-color); color: black; }
+        .control-btn.active { background: var(--neon-color); color: black; box-shadow: 0 0 10px var(--neon-color); }
+        .control-btn.play-pause-btn { min-width: 40px; }
 
-        .time-tracker { font-size: 0.85rem; color: #aaa; margin-bottom: 10px; }
-        
-        .volume-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.85rem;
-        }
-        .volume-control input[type="range"] {
-            flex-grow: 1;
-            accent-color: var(--neon-color);
+        .volume-control { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+        .volume-control input[type="range"] { flex-grow: 1; accent-color: var(--neon-color); }
+
+        /* --- Responsive Logic --- */
+        @media (min-width: 769px) {
+            .toggle-desktop-btn { display: block; }
+            .fab { display: none !important; }
+            /* Desktop push logic */
+            .main-wrapper.push-active { padding-right: 400px; }
         }
 
-        /* --- FAB --- */
+        @media (max-width: 768px) {
+            .dashboard { width: 100%; border-left: none; }
+            .input-group { flex-direction: column; }
+        }
+
+        /* --- Mobile FAB --- */
         .fab {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: black;
-            border: 2px solid var(--neon-3);
-            color: var(--neon-3);
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 999;
-            box-shadow: 0 0 15px var(--neon-3);
-            transition: all 0.3s;
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            border-radius: 50%; background: black; border: 2px solid var(--neon-3);
+            color: var(--neon-3); font-size: 1.5rem; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; z-index: 999;
+            box-shadow: 0 0 15px var(--neon-3); transition: all 0.3s;
         }
         .fab:hover { background: var(--neon-3); color: black; transform: scale(1.1); }
 
         /* --- Modal for Image Crop --- */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            backdrop-filter: blur(5px);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; align-items: center;
+            justify-content: center; z-index: 2000; backdrop-filter: blur(5px);
         }
         .modal {
-            background: #111;
-            padding: 30px;
-            border-radius: 12px;
-            border: 1px solid var(--neon-4);
-            text-align: center;
-            max-width: 400px;
+            background: #111; padding: 30px; border-radius: 12px;
+            border: 1px solid var(--neon-4); text-align: center; max-width: 400px;
             box-shadow: 0 0 30px var(--neon-4);
         }
         .modal h2 { margin-bottom: 20px; color: var(--neon-4); }
         .modal-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 20px;}
-        .modal-buttons button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .modal-buttons button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
         .btn-auto { background: var(--neon-2); color: black; }
         .btn-keep { background: transparent; border: 1px solid white; color: white; }
 
-        /* Hidden IFRAMES */
         #hidden-players { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="header-container">
-        <h1>Quick YouTube Soundboard</h1>
-        <div class="input-group">
-            <input type="text" id="youtubeLink" placeholder="Paste YouTube link here...">
-            <button class="btn-primary" id="uploadBtn">Add Track</button>
+    <div class="main-wrapper" id="mainWrapper">
+        <div class="header-container">
+            <h1>Super Simple Soundboard</h1>
+            <div class="input-group">
+                <input type="text" id="youtubeLink" placeholder="Paste YouTube link here...">
+                <button class="btn-primary" id="uploadBtn">Add Track</button>
+                <button class="toggle-desktop-btn" id="toggleDesktopBtn">Toggle Queue</button>
+            </div>
         </div>
-    </div>
 
-    <div class="masonry-container" id="masonryContainer"></div>
+        <div class="masonry-container" id="masonryContainer"></div>
+    </div>
 
     <div class="fab" id="fab">☰</div>
 
     <div class="dashboard" id="dashboard">
         <div class="dashboard-header">
-            <button class="master-pause" id="masterPauseBtn">⏸ Master Pause</button>
+            <button class="master-pause" id="masterPauseBtn">⏸ Pause All</button>
             <h2 style="color: white; font-weight: 300;">QUEUE</h2>
             <button class="close-btn" id="closeDashboard">&times;</button>
         </div>
@@ -340,7 +361,6 @@
     <div class="modal-overlay" id="imageModal">
         <div class="modal">
             <h2>Process Album Art</h2>
-            <p style="color:#ccc; font-size:0.9rem;">How would you like to apply this picture?</p>
             <div class="modal-buttons">
                 <button class="btn-auto" id="btnAutoAdjust">Auto Adjust (1:1)</button>
                 <button class="btn-keep" id="btnKeepAspect">Do Not Adjust</button>
@@ -352,127 +372,146 @@
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        // --- Constants & State ---
+        // --- State ---
         const neonColors = ['#fc0e12', '#00fff7', '#ff00fc', '#fff500'];
         const symbols = ['♫', '𝄞', '♪', '𝄢', '𝄽', '♬', '♮', '𝄡'];
         
-        let tracks = []; // Base tracks added to masonry
-        let queue = [];  // Instances in the dashboard
+        let tracks = []; 
+        let queue = [];  
         let colorIndex = 0;
         let symbolIndex = 0;
         let timeTrackerInterval = null;
+        let isDashboardOpen = false;
 
-        // Image Processing State
         let pendingImageFile = null;
         let pendingQueueIdForImage = null;
 
-        // --- IndexedDB Wrapper ---
-        const DB_NAME = 'YTSoundboardDB';
+        // --- IndexedDB Setup (Tracks + Images) ---
+        const DB_NAME = 'SuperSimpleDB';
         let db;
 
         function initDB() {
             return new Promise((resolve, reject) => {
-                const req = indexedDB.open(DB_NAME, 1);
+                const req = indexedDB.open(DB_NAME, 2);
                 req.onupgradeneeded = (e) => {
                     db = e.target.result;
-                    if (!db.objectStoreNames.contains('tracks')) {
-                        db.createObjectStore('tracks', { keyPath: 'id' });
-                    }
+                    if (!db.objectStoreNames.contains('tracks')) db.createObjectStore('tracks', { keyPath: 'id' });
                 };
-                req.onsuccess = (e) => {
-                    db = e.target.result;
-                    resolve(db);
-                };
+                req.onsuccess = (e) => { db = e.target.result; resolve(db); };
                 req.onerror = (e) => reject(e);
             });
         }
 
         function saveTrackToDB(track) {
+            db.transaction('tracks', 'readwrite').objectStore('tracks').put(track);
+        }
+        function saveAllTracksToDB() {
             const tx = db.transaction('tracks', 'readwrite');
-            tx.objectStore('tracks').put(track);
+            tracks.forEach(t => tx.objectStore('tracks').put(t));
         }
 
         function loadTracksFromDB() {
             return new Promise((resolve) => {
-                const tx = db.transaction('tracks', 'readonly');
-                const store = tx.objectStore('tracks');
-                const req = store.getAll();
+                const req = db.transaction('tracks', 'readonly').objectStore('tracks').getAll();
                 req.onsuccess = () => resolve(req.result);
             });
         }
 
-        function deleteTrackFromDB(id) {
-            const tx = db.transaction('tracks', 'readwrite');
-            tx.objectStore('tracks').delete(id);
+        // --- LocalStorage Setup (Queue State Persistence) ---
+        function saveQueueState() {
+            const state = queue.map(q => ({
+                queueId: q.queueId, trackId: q.trackId, ytId: q.ytId,
+                name: q.name, color: q.color, state: q.state, 
+                duration: q.duration, isLooping: q.isLooping, 
+                volume: q.volume, 
+                currentTime: (q.player && q.player.getCurrentTime) ? q.player.getCurrentTime() : q.currentTime
+            }));
+            localStorage.setItem('SuperSimpleQueue', JSON.stringify(state));
+        }
+
+        function loadQueueState() {
+            const data = localStorage.getItem('SuperSimpleQueue');
+            return data ? JSON.parse(data) : [];
         }
 
         // --- Initialization ---
         async function initApp() {
             await initDB();
-            const savedTracks = await loadTracksFromDB();
-            tracks = savedTracks || [];
-            
-            // Re-sync sequence counters based on loaded data length
+            tracks = (await loadTracksFromDB()) || [];
             if(tracks.length > 0) {
                 colorIndex = tracks.length % neonColors.length;
                 symbolIndex = tracks.length % symbols.length;
             }
-
             renderMasonry();
+
+            const savedQueue = loadQueueState();
+            savedQueue.forEach(q => restoreQueueItem(q));
+
             setupEventListeners();
             startUITracker();
+            
+            // Periodically save state in case of sudden exit
+            setInterval(saveQueueState, 5000);
         }
 
-        function onYouTubeIframeAPIReady() {
-            initApp();
-        }
+        function onYouTubeIframeAPIReady() { initApp(); }
 
         // --- Event Listeners ---
         function setupEventListeners() {
             document.getElementById('uploadBtn').addEventListener('click', handleAddTrack);
             document.getElementById('fab').addEventListener('click', toggleDashboard);
+            document.getElementById('toggleDesktopBtn').addEventListener('click', toggleDashboard);
             document.getElementById('closeDashboard').addEventListener('click', toggleDashboard);
             document.getElementById('masterPauseBtn').addEventListener('click', masterPause);
             
-            // Image Modal Listeners
             document.getElementById('btnAutoAdjust').addEventListener('click', () => processPendingImage(true));
             document.getElementById('btnKeepAspect').addEventListener('click', () => processPendingImage(false));
             document.getElementById('btnCancelImg').addEventListener('click', closeImageModal);
             document.getElementById('hiddenFileInput').addEventListener('change', handleFileSelect);
 
-            // Drag and Drop Zone (Queue Container)
-            const qc = document.getElementById('queueContainer');
-            qc.addEventListener('dragover', e => {
+            setupDragAndDrop(document.getElementById('masonryContainer'), 'track-box', updateTrackOrder);
+            setupDragAndDrop(document.getElementById('queueContainer'), 'queue-item', updateQueueOrder);
+
+            window.addEventListener('beforeunload', saveQueueState);
+        }
+
+        // --- Generic Drag & Drop Engine ---
+        function setupDragAndDrop(container, itemClass, callback) {
+            container.addEventListener('dragover', e => {
                 e.preventDefault();
-                const afterElement = getDragAfterElement(qc, e.clientY);
+                const afterElement = getDragAfterElement(container, e.clientY, itemClass);
                 const draggable = document.querySelector('.dragging');
                 if(!draggable) return;
-                if (afterElement == null) {
-                    qc.appendChild(draggable);
-                } else {
-                    qc.insertBefore(draggable, afterElement);
-                }
+                if (afterElement == null) container.appendChild(draggable);
+                else container.insertBefore(draggable, afterElement);
             });
-            qc.addEventListener('drop', updateQueueOrder);
+            container.addEventListener('drop', () => {
+                document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+                callback();
+            });
+        }
+
+        function getDragAfterElement(container, y, itemClass) {
+            const elements = [...container.querySelectorAll(`.${itemClass}:not(.dragging)`)];
+            return elements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) return { offset, element: child };
+                else return closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
         // --- Core Functions ---
         function handleAddTrack() {
-            const input = document.getElementById('youtubeLink');
-            const url = input.value.trim();
+            const url = document.getElementById('youtubeLink').value.trim();
             if (!url) return;
-
             const ytId = extractVideoId(url);
             if (!ytId) return alert('Invalid YouTube URL');
 
             const newTrack = {
-                id: 'track_' + Date.now(),
-                ytId: ytId,
-                color: neonColors[colorIndex],
-                symbol: symbols[symbolIndex],
-                baseName: `Track ${tracks.length + 1}`,
-                customImage: null,
-                autoAdjustImg: true
+                id: 'track_' + Date.now(), ytId, color: neonColors[colorIndex],
+                symbol: symbols[symbolIndex], baseName: `Track ${tracks.length + 1}`,
+                customImage: null, autoAdjustImg: true
             };
 
             colorIndex = (colorIndex + 1) % neonColors.length;
@@ -481,13 +520,23 @@
             tracks.push(newTrack);
             saveTrackToDB(newTrack);
             renderMasonry();
-            input.value = '';
+            document.getElementById('youtubeLink').value = '';
         }
 
         function extractVideoId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
+            const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
             return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function updateTrackOrder() {
+            const domItems = document.querySelectorAll('.track-box');
+            const newTracks = [];
+            domItems.forEach(el => {
+                const t = tracks.find(tr => tr.id === el.dataset.trackId);
+                if(t) newTracks.push(t);
+            });
+            tracks = newTracks;
+            saveAllTracksToDB();
         }
 
         // --- Masonry UI ---
@@ -499,71 +548,91 @@
                 const box = document.createElement('div');
                 box.className = `track-box ${track.autoAdjustImg ? 'aspect-square' : ''}`;
                 box.style.setProperty('--neon-color', track.color);
+                box.dataset.trackId = track.id;
+
+                // Drag Handle
+                const dragHeader = document.createElement('div');
+                dragHeader.className = 'drag-header';
+                dragHeader.addEventListener('mousedown', () => box.draggable = true);
+                dragHeader.addEventListener('mouseup', () => box.draggable = false);
+                dragHeader.addEventListener('mouseleave', () => box.draggable = false);
+                box.addEventListener('dragstart', (e) => {
+                    if(!box.draggable) e.preventDefault();
+                    else box.classList.add('dragging');
+                });
+                box.addEventListener('dragend', () => box.classList.remove('dragging'));
+                box.appendChild(dragHeader);
                 
                 if (track.customImage) {
-                    const img = document.createElement('img');
-                    img.src = track.customImage;
-                    box.appendChild(img);
+                    const img = document.createElement('img'); img.src = track.customImage; box.appendChild(img);
                 } else {
-                    const sym = document.createElement('div');
-                    sym.className = 'track-symbol';
-                    sym.textContent = track.symbol;
-                    box.appendChild(sym);
+                    const sym = document.createElement('div'); sym.className = 'track-symbol';
+                    sym.textContent = track.symbol; box.appendChild(sym);
                 }
 
                 const hoverTxt = document.createElement('div');
-                hoverTxt.className = 'hover-text';
-                hoverTxt.textContent = "ADD TO MIX";
+                hoverTxt.className = 'hover-text'; hoverTxt.textContent = "ADD TO MIX";
                 box.appendChild(hoverTxt);
 
-                box.addEventListener('click', () => addToQueue(track));
+                box.addEventListener('click', (e) => {
+                    if(e.target === dragHeader) return; // Prevent queueing when dragging
+                    addToQueue(track);
+                    if(!isDashboardOpen) toggleDashboard();
+                });
                 container.appendChild(box);
             });
         }
 
-        // --- Dashboard / Queue Logic ---
+        // --- Dashboard & Queue Logic ---
         function toggleDashboard() {
+            isDashboardOpen = !isDashboardOpen;
             document.getElementById('dashboard').classList.toggle('open');
+            document.getElementById('mainWrapper').classList.toggle('push-active');
         }
 
         function addToQueue(track) {
-            // Count existing instances to auto-number
-            const existingCount = queue.filter(q => q.trackId === track.id).length;
-            const displayName = existingCount > 0 ? `${track.baseName} (${existingCount + 1})` : track.baseName;
+            const count = queue.filter(q => q.trackId === track.id).length;
+            const name = count > 0 ? `${track.baseName} (${count + 1})` : track.baseName;
 
             const qItem = {
-                queueId: 'q_' + Date.now() + Math.floor(Math.random() * 1000),
-                trackId: track.id,
-                ytId: track.ytId,
-                name: displayName,
-                color: track.color,
-                player: null,
-                state: 'PAUSED', // PLAYING, PAUSED
-                duration: 0,
-                isLooping: false,
-                volume: 50
+                queueId: 'q_' + Date.now(), trackId: track.id, ytId: track.ytId,
+                name, color: track.color, player: null, state: 'PAUSED',
+                duration: 0, isLooping: false, volume: 50, currentTime: 0, isScrubbing: false
             };
-
             queue.push(qItem);
             renderQueue();
             createHiddenPlayer(qItem);
+            saveQueueState();
         }
 
-        function createHiddenPlayer(qItem) {
-            const container = document.getElementById('hidden-players');
+        function restoreQueueItem(savedQ) {
+            const qItem = { ...savedQ, player: null, isScrubbing: false };
+            queue.push(qItem);
+            renderQueue();
+            createHiddenPlayer(qItem, true);
+        }
+
+        function createHiddenPlayer(qItem, isRestore = false) {
             const div = document.createElement('div');
             div.id = `player_${qItem.queueId}`;
-            container.appendChild(div);
+            document.getElementById('hidden-players').appendChild(div);
 
             qItem.player = new YT.Player(`player_${qItem.queueId}`, {
-                height: '0', width: '0',
-                videoId: qItem.ytId,
+                height: '0', width: '0', videoId: qItem.ytId,
                 playerVars: { 'autoplay': 0, 'controls': 0 },
                 events: {
                     'onReady': (event) => {
-                        qItem.duration = event.target.getDuration();
+                        qItem.duration = event.target.getDuration() || qItem.duration;
                         event.target.setVolume(qItem.volume);
-                        updateQueueUI(qItem);
+                        if(isRestore) event.target.seekTo(qItem.currentTime);
+                        
+                        // Wait for seek, then ensure correct state
+                        setTimeout(() => {
+                            if(qItem.state === 'PLAYING') event.target.playVideo();
+                            else event.target.pauseVideo();
+                        }, 200);
+                        
+                        updateQueueUI();
                     },
                     'onStateChange': (event) => handlePlayerStateChange(event, qItem)
                 }
@@ -572,18 +641,12 @@
 
         function handlePlayerStateChange(event, qItem) {
             if (event.data === YT.PlayerState.ENDED) {
-                if (qItem.isLooping) {
-                    qItem.player.playVideo();
-                } else {
-                    qItem.state = 'PAUSED';
-                    updateQueueUI(qItem);
-                }
+                if (qItem.isLooping) qItem.player.playVideo();
+                else { qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); }
             } else if (event.data === YT.PlayerState.PLAYING) {
-                qItem.state = 'PLAYING';
-                updateQueueUI(qItem);
-            } else if (event.data === YT.PlayerState.PAUSED) {
-                qItem.state = 'PAUSED';
-                updateQueueUI(qItem);
+                qItem.state = 'PLAYING'; updateQueueUI(); saveQueueState();
+            } else if (event.data === YT.PlayerState.PAUSED && !qItem.isScrubbing) {
+                qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState();
             }
         }
 
@@ -596,141 +659,138 @@
                 el.className = `queue-item ${qItem.state === 'PLAYING' ? 'is-playing' : ''}`;
                 el.dataset.queueId = qItem.queueId;
                 el.style.setProperty('--neon-color', qItem.color);
-                el.draggable = true;
 
-                // Drag Events
-                el.addEventListener('dragstart', () => el.classList.add('dragging'));
+                // Setup Queue Drag Header
+                const dHeader = document.createElement('div');
+                dHeader.className = 'q-drag-header';
+                dHeader.addEventListener('mousedown', () => el.draggable = true);
+                dHeader.addEventListener('mouseup', () => el.draggable = false);
+                dHeader.addEventListener('mouseleave', () => el.draggable = false);
+                el.addEventListener('dragstart', (e) => {
+                    if(!el.draggable) e.preventDefault(); else el.classList.add('dragging');
+                });
                 el.addEventListener('dragend', () => el.classList.remove('dragging'));
+                el.appendChild(dHeader);
 
-                el.innerHTML = `
+                // Play/Pause Button State
+                const playIcon = qItem.state === 'PLAYING' ? '⏸' : '▶';
+                const playClass = qItem.state === 'PLAYING' ? 'active' : '';
+
+                el.innerHTML += `
                     <div class="queue-header">
-                        <span class="q-name">${qItem.name}</span>
-                        <span class="q-status">${qItem.state === 'PLAYING' ? '▶ Playing' : '⏸ Paused'}</span>
+                        <span>${qItem.name}</span>
+                        <span>${qItem.state === 'PLAYING' ? 'Playing' : 'Paused'}</span>
                     </div>
-                    <div class="time-tracker" id="time_${qItem.queueId}">0:00 / 0:00</div>
-                    
+                    <div class="progress-container">
+                        <span class="time-text" id="timeTxt_${qItem.queueId}">0:00 / 0:00</span>
+                        <input type="range" class="progress-slider" id="slider_${qItem.queueId}" min="0" max="${qItem.duration}" value="${qItem.currentTime}">
+                    </div>
                     <div class="queue-controls">
-                        <button class="control-btn play-btn">▶</button>
-                        <button class="control-btn pause-btn">⏸</button>
+                        <button class="control-btn play-pause-btn ${playClass}">${playIcon}</button>
                         <button class="control-btn stop-btn">⏹</button>
                         <button class="control-btn loop-btn ${qItem.isLooping ? 'active' : ''}">Loop</button>
                         <button class="control-btn rename-btn">Rename</button>
-                        <button class="control-btn pic-btn">🖼️ Art</button>
+                        <button class="control-btn pic-btn">Art</button>
                         <button class="control-btn del-btn" style="border-color: #ff4444; color: #ff4444;">X</button>
                     </div>
-
                     <div class="volume-control">
-                        <span>🔈</span>
-                        <input type="range" min="0" max="100" value="${qItem.volume}" class="vol-slider">
-                        <span>🔊</span>
+                        <span>🔈</span><input type="range" min="0" max="100" value="${qItem.volume}" class="vol-slider"><span>🔊</span>
                     </div>
                 `;
 
-                // Button Listeners
-                el.querySelector('.play-btn').onclick = () => { if(qItem.player && qItem.player.playVideo) qItem.player.playVideo(); };
-                el.querySelector('.pause-btn').onclick = () => { if(qItem.player && qItem.player.pauseVideo) qItem.player.pauseVideo(); };
+                // Interactive Elements Logic
+                el.querySelector('.play-pause-btn').onclick = () => { 
+                    if(!qItem.player) return;
+                    if(qItem.state === 'PLAYING') qItem.player.pauseVideo();
+                    else qItem.player.playVideo();
+                };
                 el.querySelector('.stop-btn').onclick = () => { 
                     if(qItem.player && qItem.player.stopVideo) {
-                        qItem.player.stopVideo(); 
-                        qItem.player.seekTo(0);
-                        qItem.state = 'PAUSED';
-                        updateQueueUI(qItem);
+                        qItem.player.stopVideo(); qItem.player.seekTo(0);
+                        qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState();
                     }
                 };
-                el.querySelector('.loop-btn').onclick = () => {
-                    qItem.isLooping = !qItem.isLooping;
-                    updateQueueUI(qItem);
-                };
+                el.querySelector('.loop-btn').onclick = () => { qItem.isLooping = !qItem.isLooping; updateQueueUI(); saveQueueState(); };
                 el.querySelector('.rename-btn').onclick = () => {
                     const newName = prompt("Rename track:", qItem.name);
-                    if(newName) {
-                        qItem.name = newName;
-                        // Also update base track name if it's the first instance
-                        const baseTrack = tracks.find(t => t.id === qItem.trackId);
-                        if(baseTrack) {
-                            baseTrack.baseName = newName.replace(/\s\(\d+\)$/, ''); // strip numbers
-                            saveTrackToDB(baseTrack);
-                        }
-                        updateQueueUI(qItem);
-                    }
+                    if(newName) { qItem.name = newName; updateQueueUI(); saveQueueState(); }
                 };
                 el.querySelector('.del-btn').onclick = () => removeQueueItem(qItem.queueId);
                 el.querySelector('.pic-btn').onclick = () => triggerImageUpload(qItem.queueId);
                 
-                // Volume Listener
                 el.querySelector('.vol-slider').oninput = (e) => {
                     qItem.volume = e.target.value;
-                    if(qItem.player && qItem.player.setVolume) qItem.player.setVolume(qItem.volume);
+                    if(qItem.player) qItem.player.setVolume(qItem.volume);
+                    saveQueueState();
                 };
+
+                // Time Entry
+                const timeTxt = el.querySelector('.time-text');
+                timeTxt.onclick = () => promptTimeEntry(qItem);
+
+                // Scrubbing Slider
+                const slider = el.querySelector('.progress-slider');
+                slider.addEventListener('mousedown', () => qItem.isScrubbing = true);
+                slider.addEventListener('input', (e) => {
+                    qItem.currentTime = e.target.value;
+                    timeTxt.textContent = `${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}`;
+                });
+                slider.addEventListener('change', (e) => {
+                    qItem.isScrubbing = false;
+                    qItem.currentTime = e.target.value;
+                    if(qItem.player) qItem.player.seekTo(qItem.currentTime, true);
+                    saveQueueState();
+                });
 
                 container.appendChild(el);
             });
         }
 
-        function updateQueueUI(qItem) {
-            // Render everything to keep state in sync cleanly
-            renderQueue(); 
-        }
-
-        function removeQueueItem(queueId) {
-            const index = queue.findIndex(q => q.queueId === queueId);
-            if(index > -1) {
-                const qItem = queue[index];
-                if(qItem.player && qItem.player.destroy) qItem.player.destroy();
-                
-                // Remove hidden div
-                const div = document.getElementById(`player_${queueId}`);
-                if(div) div.remove();
-
-                queue.splice(index, 1);
-                renderQueue();
-            }
-        }
-
-        function masterPause() {
-            queue.forEach(qItem => {
-                if(qItem.state === 'PLAYING' && qItem.player && qItem.player.pauseVideo) {
-                    qItem.player.pauseVideo();
-                }
-            });
-        }
-
-        // --- Drag and Drop Logic ---
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.queue-item:not(.dragging)')];
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
-                }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
+        function updateQueueUI() { renderQueue(); }
 
         function updateQueueOrder() {
             const domItems = document.querySelectorAll('.queue-item');
             const newQueue = [];
             domItems.forEach(el => {
-                const qId = el.dataset.queueId;
-                const item = queue.find(q => q.queueId === qId);
+                const item = queue.find(q => q.queueId === el.dataset.queueId);
                 if(item) newQueue.push(item);
             });
             queue = newQueue;
+            saveQueueState();
         }
 
-        // --- Time Tracker ---
+        function removeQueueItem(queueId) {
+            const index = queue.findIndex(q => q.queueId === queueId);
+            if(index > -1) {
+                if(queue[index].player && queue[index].player.destroy) queue[index].player.destroy();
+                const div = document.getElementById(`player_${queueId}`);
+                if(div) div.remove();
+                queue.splice(index, 1);
+                updateQueueUI();
+                saveQueueState();
+            }
+        }
+
+        function masterPause() {
+            queue.forEach(q => { if(q.state === 'PLAYING' && q.player) q.player.pauseVideo(); });
+        }
+
+        // --- Time Tracker & Input ---
         function startUITracker() {
             if(timeTrackerInterval) clearInterval(timeTrackerInterval);
             timeTrackerInterval = setInterval(() => {
                 queue.forEach(qItem => {
-                    if (qItem.state === 'PLAYING' && qItem.player && qItem.player.getCurrentTime) {
-                        const cur = qItem.player.getCurrentTime();
-                        const dur = qItem.duration || 0;
-                        const el = document.getElementById(`time_${qItem.queueId}`);
-                        if(el) {
-                            el.textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
+                    if (qItem.state === 'PLAYING' && qItem.player && !qItem.isScrubbing) {
+                        qItem.currentTime = qItem.player.getCurrentTime() || 0;
+                        qItem.duration = qItem.player.getDuration() || qItem.duration;
+                        
+                        const timeEl = document.getElementById(`timeTxt_${qItem.queueId}`);
+                        const sliderEl = document.getElementById(`slider_${qItem.queueId}`);
+                        
+                        if(timeEl) timeEl.textContent = `${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}`;
+                        if(sliderEl) {
+                            sliderEl.max = qItem.duration;
+                            sliderEl.value = qItem.currentTime;
                         }
                     }
                 });
@@ -744,40 +804,55 @@
             return `${min}:${sec < 10 ? '0' : ''}${sec}`;
         }
 
-        // --- Image Upload Logic ---
+        function promptTimeEntry(qItem) {
+            const input = prompt("Enter specific time (MM:SS):", formatTime(qItem.currentTime));
+            if(!input) return;
+            
+            let seconds = 0;
+            const parts = input.split(':');
+            if(parts.length === 2) seconds = (parseInt(parts[0]) * 60) + parseInt(parts[1]);
+            else seconds = parseInt(input);
+
+            if(isNaN(seconds)) return alert("Invalid time format.");
+            if(seconds > qItem.duration) seconds = qItem.duration; // Clamp
+            
+            qItem.currentTime = seconds;
+            if(qItem.player) qItem.player.seekTo(seconds, true);
+            updateQueueUI();
+            saveQueueState();
+        }
+
+        // --- Image Processing ---
         function triggerImageUpload(queueId) {
             pendingQueueIdForImage = queueId;
             document.getElementById('hiddenFileInput').click();
         }
 
         function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-            pendingImageFile = file;
+            if(!e.target.files[0]) return;
+            pendingImageFile = e.target.files[0];
             document.getElementById('imageModal').style.display = 'flex';
-            e.target.value = ''; // Reset input
+            e.target.value = '';
         }
 
         function closeImageModal() {
             document.getElementById('imageModal').style.display = 'none';
-            pendingImageFile = null;
-            pendingQueueIdForImage = null;
+            pendingImageFile = null; pendingQueueIdForImage = null;
         }
 
         async function processPendingImage(autoAdjust) {
             if(!pendingImageFile || !pendingQueueIdForImage) return closeImageModal();
 
             const base64Data = await readImageFile(pendingImageFile, autoAdjust);
-            
-            // Find the queue item to find the base track ID
             const qItem = queue.find(q => q.queueId === pendingQueueIdForImage);
+            
             if(qItem) {
                 const trackIndex = tracks.findIndex(t => t.id === qItem.trackId);
                 if(trackIndex > -1) {
                     tracks[trackIndex].customImage = base64Data;
                     tracks[trackIndex].autoAdjustImg = autoAdjust;
                     saveTrackToDB(tracks[trackIndex]);
-                    renderMasonry(); // Re-render grid to show image
+                    renderMasonry();
                 }
             }
             closeImageModal();
@@ -787,17 +862,14 @@
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    if (!autoAdjust) {
-                        resolve(e.target.result); // return raw base64
-                    } else {
+                    if (!autoAdjust) resolve(e.target.result);
+                    else {
                         const img = new Image();
                         img.onload = () => {
                             const canvas = document.createElement('canvas');
                             const size = Math.min(img.width, img.height);
-                            canvas.width = size;
-                            canvas.height = size;
+                            canvas.width = size; canvas.height = size;
                             const ctx = canvas.getContext('2d');
-                            // Crop to center
                             const x = (img.width - size) / 2;
                             const y = (img.height - size) / 2;
                             ctx.drawImage(img, x, y, size, size, 0, 0, size, size);
