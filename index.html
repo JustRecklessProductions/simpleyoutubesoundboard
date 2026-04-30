@@ -83,14 +83,7 @@
 
         /* --- Delete box btn --- */
         .delete-box-btn { position: absolute; top: -12px; right: -12px; width: 36px; height: 36px; font-family: 'Nunito', sans-serif; background: #ff4444; border: 3px solid var(--bg); border-radius: 50%; color: white; font-weight: bold; font-size: 16px; display: none; align-items: center; justify-content: center; z-index: 30; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
-        @media (min-width: 769px) { body.is-editing .delete-box-btn { display: flex; } }
-        @media (max-width: 768px) {
-            body.is-editing .track-box { animation: jiggle 0.3s infinite; }
-            @keyframes jiggle { 0% {transform: rotate(-1deg);} 50% {transform: rotate(1deg);} 100% {transform: rotate(-1deg);} }
-            .delete-box-btn { top: 0; right: 0; width: 100%; height: 35px; background: rgba(255,68,68,0.95); border: none; border-bottom: 2px solid white; border-radius: 14px 14px 0 0; color: transparent; }
-            .delete-box-btn::after { content: "DELETE"; color: white; position: absolute; font-size: 14px; letter-spacing: 2px; font-weight: bold; font-family: 'Nunito', sans-serif; }
-            body.is-editing .delete-box-btn { display: flex; }
-        }
+        body.is-editing .delete-box-btn { display: flex; }
 
         .track-symbol { font-size: 4rem; text-shadow: 0 0 15px var(--neon-color); filter: drop-shadow(0 0 12px var(--neon-color)); z-index: 1; pointer-events: none; transform: translateZ(0); }
         .track-box img { width: 100%; height: 100%; display: block; object-fit: cover; z-index: 0; opacity: 0.8; transition: opacity 0.3s; pointer-events: none; }
@@ -140,7 +133,7 @@
         .time-text { font-size: 1rem; color: #fff; cursor: pointer; display: block; width: fit-content; margin: 0 auto 16px auto; background: rgba(255,255,255,0.15); padding: 10px 24px; border-radius: 24px; font-weight: 700; transition: background 0.2s; text-align: center; letter-spacing: 1px; }
         .sliders-container { display: flex; flex-direction: column; gap: 16px; width: 100%; }
         input[type="range"] { -webkit-appearance: none; background: rgba(255,255,255,0.15); height: 6px; border-radius: 3px; outline: none; flex-grow: 1; cursor: pointer; width: 100%; transition: background 0.3s, box-shadow 0.3s; }
-        input[type="range"].progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--neon-color) !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8); }
+        input[type="range"].progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--neon-color) !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8); transition: box-shadow 0.3s, background 0.3s; }
         input[type="range"].vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: white !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8); }
         .volume-control { display: flex; align-items: center; gap: 10px; width: 100%; }
         .volume-control span { font-size: 14px; flex-shrink: 0; }
@@ -150,6 +143,10 @@
         .queue-item.is-looping input[type="range"].progress-slider {
             background: var(--neon-color);
             box-shadow: 0 0 10px var(--neon-color);
+        }
+        .queue-item.is-looping input[type="range"].progress-slider::-webkit-slider-thumb {
+            background: var(--neon-color) !important;
+            box-shadow: 0 0 15px var(--neon-color), 0 0 5px white;
         }
 
         /* --- Modals --- */
@@ -350,7 +347,7 @@
         function deleteTrackFromDB(id) { db.transaction('tracks','readwrite').objectStore('tracks').delete(id); }
         function saveAllTracksToDB() { tracks.forEach(t => saveTrackToDB(t)); }
 
-        // Track order persisted in localStorage so IndexedDB insertion order doesn't matter
+        // Track order persisted in localStorage so IndexedDB insertion order doesnt matter
         function saveTrackOrder() { localStorage.setItem('SuperSimpleTrackOrder', JSON.stringify(tracks.map(t => t.id))); }
 
         function loadTracksFromDB() {
@@ -659,8 +656,8 @@
 
                 // Delete button
                 const del=document.createElement('div'); del.className='delete-box-btn';
+                del.textContent='X';
                 del.onclick=(e)=>{ e.stopPropagation(); deleteTrackFromDB(track.id); tracks=tracks.filter(t=>t.id!==track.id); saveTrackOrder(); queue.filter(q=>q.trackId===track.id).forEach(q=>removeQueueItem(q.queueId)); renderGrid(); };
-                if(window.innerWidth>768) del.textContent='X';
                 box.appendChild(del);
 
                 box.onclick=()=>{
@@ -669,7 +666,7 @@
                         if(window.innerWidth<=768){ const q=queue.find(q=>q.trackId===track.id); if(q.state==='PLAYING') q.playerAPI.pause(); else{q.preventGhostPlay=false; q.playerAPI.play();} }
                         else{ removeQueueItem(queue.find(q=>q.trackId===track.id).queueId); }
                     } else {
-                        addToQueue(track);
+                        addToQueue(track, 0, window.innerWidth <= 768);
                         if(!isDashboardOpen&&window.innerWidth>768) toggleDashboard();
                     }
                 };
@@ -681,6 +678,20 @@
 
         function renderQueue() {
             const container=document.getElementById('queueContainer'); container.innerHTML='';
+            
+            // Render mobile Edit Grid button right inside the scrollable container
+            if (window.innerWidth <= 768) {
+                const mEdit = document.createElement('button');
+                mEdit.className = 'action-btn';
+                mEdit.style.cssText = 'margin-bottom: 20px; border-color: white; color: white; display: block;';
+                mEdit.textContent = 'Edit Grid';
+                mEdit.onclick = () => {
+                    toggleDashboard(); // Closes the queue dashboard
+                    if (!isEditing) toggleEditMode(); // Triggers edit mode on the grid behind it
+                };
+                container.appendChild(mEdit);
+            }
+
             queue.forEach((qItem, qIdx) => {
                 const isFirst = qIdx === 0;
                 const isLast  = qIdx === queue.length - 1;
@@ -752,8 +763,8 @@
             initializePlayer(q, base, true);
         }
 
-        function addToQueue(t, startAt=0) {
-            const q={queueId:'q_'+Date.now()+Math.floor(Math.random()*1000),trackId:t.id,type:t.type,platform:t.platform,mediaId:t.mediaId,twitchType:t.twitchType,name:t.baseName,color:t.color,playerAPI:null,state:'PAUSED',duration:0,isLooping:false,volume:50,currentTime:startAt,isScrubbing:false,preventGhostPlay:false};
+        function addToQueue(t, startAt=0, autoPlay=false) {
+            const q={queueId:'q_'+Date.now()+Math.floor(Math.random()*1000),trackId:t.id,type:t.type,platform:t.platform,mediaId:t.mediaId,twitchType:t.twitchType,name:t.baseName,color:t.color,playerAPI:null,state:autoPlay?'PLAYING':'PAUSED',duration:0,isLooping:false,volume:50,currentTime:startAt,isScrubbing:false,preventGhostPlay:!autoPlay};
             queue.push(q); renderQueue(); initializePlayer(q,t);
         }
         function removeQueueItem(id) {
