@@ -82,25 +82,25 @@
         .dragging * { pointer-events: none !important; }
 
         /* Edit Mode Styles */
-        .is-editing .track-box { cursor: grab; }
-        .is-editing .queue-item-wrapper { cursor: grab; }
+        body.is-editing .track-box { cursor: grab; }
+        body.is-editing .queue-item-wrapper { cursor: grab; }
 
         /* Desktop Edit Mode Delete Button */
         @media (min-width: 769px) {
             .delete-box-btn {
-                position: absolute; top: -10px; right: -10px; width: 32px; height: 32px;
+                position: absolute; top: 8px; right: 8px; width: 32px; height: 32px;
                 background: #ff4444; border: 2px solid white; border-radius: 50%;
                 color: white; font-weight: bold; font-size: 16px;
                 display: none; align-items: center; justify-content: center;
                 z-index: 20; cursor: pointer; box-shadow: 0 0 10px rgba(255, 68, 68, 0.8);
             }
-            .is-editing .delete-box-btn { display: flex; }
+            body.is-editing .delete-box-btn { display: flex; }
         }
 
         /* Mobile Edit Mode Animations & Stretched Delete */
         @media (max-width: 768px) {
-            .is-editing .track-box { animation: jiggle 0.3s infinite; }
-            .is-editing .queue-item-wrapper { animation: jiggle 0.3s infinite; }
+            body.is-editing .track-box { animation: jiggle 0.3s infinite; }
+            body.is-editing .queue-item-wrapper { animation: jiggle 0.3s infinite; }
             @keyframes jiggle { 0% {transform: rotate(-1deg);} 50% {transform: rotate(1deg);} 100% {transform: rotate(-1deg);} }
             
             .delete-box-btn {
@@ -112,13 +112,18 @@
             .delete-box-btn::after {
                 content: "DELETE"; color: white; position: absolute; font-size: 14px; letter-spacing: 2px; font-weight: bold;
             }
-            .is-editing .delete-box-btn { display: flex; }
+            body.is-editing .delete-box-btn { display: flex; }
         }
 
         .flash-active { animation: flashAnim 0.3s ease-out; }
         @keyframes flashAnim { 0% { box-shadow: 0 0 40px inset var(--neon-color), 0 0 30px var(--neon-color); } 100% { box-shadow: none; } }
 
-        .track-symbol { font-size: 4rem; text-shadow: 0 0 15px var(--neon-color); z-index: 1; pointer-events: none; }
+        .track-symbol { 
+            font-size: 4rem; 
+            text-shadow: 0 0 15px var(--neon-color); 
+            filter: drop-shadow(0 0 15px var(--neon-color)); /* Ensures emojis glow on mobile */
+            z-index: 1; pointer-events: none; 
+        }
         .track-box img { width: 100%; height: 100%; display: block; object-fit: cover; z-index: 0; opacity: 0.8; transition: opacity 0.3s; pointer-events: none; }
         .track-box:hover img { opacity: 0.4; }
         
@@ -148,15 +153,14 @@
         /* Premium Nav Bar */
         .dashboard-header {
             padding: 16px 20px; border-bottom: 1px solid #222; display: flex;
-            justify-content: space-between; align-items: center; background: #000;
+            justify-content: center; align-items: center; background: #000;
         }
-        .dashboard-header button, .dashboard-header h2 {
+        .dashboard-header button {
             font-size: 1.1rem; font-weight: 600; color: white; text-transform: uppercase;
             letter-spacing: 1px; background: transparent; border: none; cursor: pointer;
             margin: 0; padding: 0;
         }
         .dashboard-header .master-pause { color: var(--neon-1); }
-        .dashboard-header .close-btn { color: #888; font-size: 1.8rem; font-weight: 300; }
 
         .queue-container { flex-grow: 1; overflow-y: auto; padding: 20px; overflow-x: hidden; }
 
@@ -201,33 +205,32 @@
 
         /* Center Track Info */
         .queue-item-center {
-            flex-grow: 1; padding: 12px 16px; display: flex; flex-direction: column; justify-content: center;
-            overflow: hidden; touch-action: pan-y; /* Crucial for swipe-to-dismiss without blocking scroll */
+            flex-grow: 1; padding: 16px; display: flex; flex-direction: column; justify-content: center;
+            overflow: hidden; touch-action: pan-y;
         }
 
         .q-name-container {
-            display: flex; align-items: center; width: 100%; overflow: hidden; white-space: nowrap; margin-bottom: 2px;
+            display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; white-space: nowrap; margin-bottom: 8px;
         }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; flex-shrink: 0; }
-        .status-dot.playing { background: var(--neon-color); box-shadow: 0 0 10px var(--neon-color); animation: pulseDot 1.2s infinite alternate; }
-        .status-dot.paused { background: #555; }
-        @keyframes pulseDot { 0% { opacity: 0.6; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.2); } }
 
-        .q-name { display: inline-block; font-size: 1.1rem; font-weight: bold; color: white; }
+        .q-name { display: inline-block; font-size: 1.1rem; font-weight: bold; color: white; animation: scroll-left-right 8s linear infinite alternate; padding-right: 20px;}
+        @keyframes scroll-left-right { 0%, 15% { transform: translateX(0); } 85%, 100% { transform: translateX(-35%); } }
         
-        .time-text { font-size: 0.85rem; color: #888; margin-left: 20px; margin-bottom: 12px; }
-
-        @media (max-width: 768px) { 
-            .q-name { animation: scroll-left-right 8s linear infinite alternate; padding-right: 20px; }
-            @keyframes scroll-left-right { 0%, 15% { transform: translateX(0); } 85%, 100% { transform: translateX(-35%); } }
+        .time-text { 
+            font-size: 1rem; color: #fff; cursor: pointer; display: block; width: fit-content; margin: 0 auto 12px auto;
+            background: rgba(255,255,255,0.15); padding: 8px 24px; border-radius: 20px;
+            font-weight: bold; transition: background 0.2s; text-align: center;
         }
-        @media (min-width: 769px) { .q-name { text-overflow: ellipsis; overflow: hidden; } }
+        .time-text:hover { background: rgba(255,255,255,0.25); text-decoration: none; }
 
-        /* Touch Friendly Volume Slider */
-        .volume-control { display: flex; align-items: center; gap: 12px; padding-left: 20px; }
+        /* Touch Friendly Volume & Progress Sliders */
+        .sliders-container { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+        .progress-container { width: 100%; }
+        .volume-control { display: flex; align-items: center; gap: 12px; }
+        
         input[type="range"] {
             -webkit-appearance: none; background: rgba(255,255,255,0.15);
-            height: 6px; border-radius: 3px; outline: none; flex-grow: 1; cursor: pointer;
+            height: 6px; border-radius: 3px; outline: none; flex-grow: 1; cursor: pointer; width: 100%;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
@@ -244,7 +247,7 @@
             background: rgba(25, 25, 25, 0.85); backdrop-filter: blur(25px);
             width: 100%; max-width: 500px; border-radius: 24px 24px 0 0;
             padding: 24px; transform: translateY(100%);
-            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1); /* Slight spring feel */
+            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1);
             border-top: 1px solid rgba(255,255,255,0.1);
         }
         .bottom-sheet.open { transform: translateY(0); }
@@ -257,17 +260,30 @@
         }
         .sheet-btn:last-child { border-bottom: none; }
         .sheet-btn:active { background: rgba(255,255,255,0.15); }
-        .sheet-cancel { font-weight: bold; color: #ff4444; }
+        .sheet-cancel { font-weight: bold; }
 
-        /* Mobile FAB */
-        .fab {
-            position: fixed; bottom: 30px; right: 30px; width: 64px; height: 64px;
-            border-radius: 50%; background: black; border: 2px solid var(--neon-3);
-            color: var(--neon-3); font-size: 1.8rem; display: flex; align-items: center;
-            justify-content: center; cursor: pointer; z-index: 999; box-shadow: 0 0 20px var(--neon-3); transition: all 0.3s;
+        /* Floating Action Buttons */
+        .fab, .fab-home {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 64px; height: 64px; border-radius: 50%; background: black;
+            border: 2px solid var(--neon-3); color: var(--neon-3); font-size: 1.8rem;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            z-index: 999; box-shadow: 0 0 20px var(--neon-3); transition: all 0.3s;
         }
-        @media (min-width: 769px) { .fab { display: none; } }
-        .fab:hover { background: var(--neon-3); color: black; transform: scale(1.1); }
+        .fab-home { display: none; border-color: var(--neon-2); color: var(--neon-2); box-shadow: 0 0 20px var(--neon-2); }
+        
+        .fab-stop-edit {
+            position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%);
+            width: 56px; height: 56px; border-radius: 50%; background: black;
+            border: 2px solid var(--neon-4); color: var(--neon-4); font-size: 1.5rem;
+            display: none; align-items: center; justify-content: center; cursor: pointer;
+            z-index: 999; box-shadow: 0 0 15px var(--neon-4); transition: all 0.3s;
+        }
+
+        .fab:hover, .fab-home:hover, .fab-stop-edit:hover { background: currentColor; color: black; transform: translateX(-50%) scale(1.1); }
+        
+        @media (min-width: 769px) { .fab, .fab-home, .fab-stop-edit { display: none !important; } }
+        @media (max-width: 768px) { body.is-editing .fab-stop-edit { display: flex; } }
 
         /* Modals */
         .modal-overlay {
@@ -325,12 +341,12 @@
     </div>
 
     <div class="fab" id="fab">☰</div>
+    <div class="fab-home" id="fabHome">🏠</div>
+    <div class="fab-stop-edit" id="fabStopEdit">👍</div>
 
     <div class="dashboard" id="dashboard">
         <div class="dashboard-header">
             <button class="master-pause" id="masterPauseBtn">Pause All</button>
-            <h2>QUEUE</h2>
-            <button class="close-btn" id="closeDashboard">&times;</button>
         </div>
         <div class="queue-container" id="queueContainer"></div>
     </div>
@@ -355,6 +371,7 @@
             </div>
             <div class="sheet-group">
                 <button class="sheet-btn sheet-cancel" id="bs-cancel">Cancel</button>
+                <button class="sheet-btn sheet-delete" id="bs-delete" style="color: #ff4444; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: none;">Delete Track</button>
             </div>
         </div>
     </div>
@@ -471,9 +488,11 @@
             document.getElementById('triggerMp3Btn').addEventListener('click', () => document.getElementById('mp3Input').click());
             document.getElementById('mp3Input').addEventListener('change', handleAddMP3);
             
+            // FAB and Dashboard Listeners
             document.getElementById('fab').addEventListener('click', toggleDashboard);
+            document.getElementById('fabHome').addEventListener('click', toggleDashboard);
+            document.getElementById('fabStopEdit').addEventListener('click', toggleEditMode);
             document.getElementById('toggleDesktopBtn').addEventListener('click', toggleDashboard);
-            document.getElementById('closeDashboard').addEventListener('click', toggleDashboard);
             document.getElementById('masterPauseBtn').addEventListener('click', masterPause);
             
             // Edit Mode
@@ -562,6 +581,12 @@
                 }
                 closeBottomSheet();
             });
+            document.getElementById('bs-delete').addEventListener('click', () => {
+                if(currentActionQueueId) {
+                    removeQueueItem(currentActionQueueId);
+                }
+                closeBottomSheet();
+            });
 
             // Modals
             document.getElementById('btnAutoAdjust').addEventListener('click', () => processPendingImage(true));
@@ -592,10 +617,12 @@
         
         function toggleEditMode() {
             isEditing = !isEditing;
-            const container = document.getElementById('gridContainer');
-            const qContainer = document.getElementById('queueContainer');
-            if(isEditing) { container.classList.add('is-editing'); qContainer.classList.add('is-editing'); }
-            else { container.classList.remove('is-editing'); qContainer.classList.remove('is-editing'); }
+            
+            if(isEditing) { 
+                document.body.classList.add('is-editing'); 
+            } else { 
+                document.body.classList.remove('is-editing'); 
+            }
             
             document.querySelectorAll('.track-box').forEach(box => box.draggable = isEditing);
             document.querySelectorAll('.queue-item-wrapper').forEach(wrapper => wrapper.draggable = isEditing);
@@ -777,8 +804,6 @@
                     
                     const existing = queue.filter(q => q.trackId === track.id);
                     if(existing.length > 0) {
-                        // Desktop & Mobile now uniformly toggle play/pause as requested by superior UX.
-                        // (If user explicitly wants desktop to remove, we maintain the desktop remove logic)
                         if (window.innerWidth <= 768) {
                             existing.forEach(q => {
                                 if (q.playerAPI) {
@@ -806,6 +831,14 @@
             isDashboardOpen = !isDashboardOpen;
             document.getElementById('dashboard').classList.toggle('open');
             document.getElementById('mainWrapper').classList.toggle('push-active');
+            
+            if(isDashboardOpen) {
+                document.getElementById('fab').style.display = 'none';
+                document.getElementById('fabHome').style.display = 'flex';
+            } else {
+                document.getElementById('fab').style.display = '';
+                document.getElementById('fabHome').style.display = 'none';
+            }
         }
 
         function addToQueue(track, exactCurrentTime = 0) {
@@ -926,18 +959,21 @@
 
                 const playIcon = qItem.state === 'PLAYING' ? '⏸' : '▶';
                 const playClass = qItem.state === 'PLAYING' ? 'active' : '';
-                const dotClass = qItem.state === 'PLAYING' ? 'playing' : 'paused';
 
                 el.innerHTML = `
                     <button class="options-btn">⋮</button>
                     <div class="queue-item-center swipe-zone">
                         <div class="q-name-container">
-                            <span class="status-dot ${dotClass}"></span>
                             <span class="q-name" title="${qItem.name}">${qItem.name}</span>
                         </div>
                         <div class="time-text" id="timeTxt_${qItem.queueId}">${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}</div>
-                        <div class="volume-control">
-                            <input type="range" class="progress-slider vol-slider" min="0" max="100" value="${qItem.volume}">
+                        <div class="sliders-container">
+                            <div class="progress-container">
+                                <input type="range" class="progress-slider" id="slider_${qItem.queueId}" min="0" max="${qItem.duration}" value="${qItem.currentTime}">
+                            </div>
+                            <div class="volume-control">
+                                <span>🔈</span><input type="range" min="0" max="100" value="${qItem.volume}" class="vol-slider"><span>🔊</span>
+                            </div>
                         </div>
                     </div>
                     <button class="play-pause-btn ${playClass}">${playIcon}</button>
@@ -946,7 +982,6 @@
                 wrapper.appendChild(trashBg);
                 wrapper.appendChild(el);
 
-                // Reorder Touch/Drag
                 let pressTimerQ;
                 wrapper.addEventListener('touchstart', (e) => {
                     if(isEditing) { wrapper.draggable = true; }
@@ -979,6 +1014,7 @@
                 const swipeZone = el.querySelector('.swipe-zone');
                 
                 swipeZone.addEventListener('pointerdown', (e) => {
+                    if(window.innerWidth > 768) return; // Disable on desktop
                     if(isEditing || e.target.tagName.toLowerCase() === 'input') return;
                     isSwiping = true; startX = e.clientX;
                     el.style.transition = 'none';
@@ -1041,7 +1077,9 @@
                         qItem.currentTime = qItem.playerAPI.getCurrentTime() || 0;
                         qItem.duration = qItem.playerAPI.getDuration() || qItem.duration;
                         const timeEl = document.getElementById(`timeTxt_${qItem.queueId}`);
+                        const sliderEl = document.getElementById(`slider_${qItem.queueId}`);
                         if(timeEl) timeEl.textContent = `${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}`;
+                        if(sliderEl) { sliderEl.max = qItem.duration; sliderEl.value = qItem.currentTime; }
                     }
                 });
             }, 500);
