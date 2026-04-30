@@ -36,10 +36,12 @@
             border: 1px solid #444; color: white; border-radius: 8px; outline: none; font-size: 16px; text-align: center;
         }
         .input-stack input[type="text"]:focus { border-color: var(--neon-2); }
-
-        .input-buttons {
-            display: flex; gap: 10px; justify-content: center; width: 100%;
+        
+        @media (max-width: 768px) {
+            .input-stack input[type="text"]::placeholder { font-size: 11px; }
         }
+
+        .input-buttons { display: flex; gap: 10px; justify-content: center; width: 100%; }
         button.btn-primary, button.btn-secondary {
             flex: 1; padding: 14px 20px; background: transparent; color: white; font-size: 14px;
             border: 1px solid var(--neon-2); border-radius: 8px; cursor: pointer;
@@ -88,12 +90,15 @@
         
         .track-box:not(.is-editing):hover { transform: scale(1.02); z-index: 5; }
 
-        /* Active Queue Enlargement & Thicker Border */
-        .track-box.in-queue .track-box-content { border-width: 6px; }
-        
+        /* Active Queue Enlargement */
         @media (min-width: 769px) {
             .track-box.in-queue { transform: scale(1.08); z-index: 10; }
             .track-box.in-queue:not(.is-editing):hover { transform: scale(1.10); z-index: 11; }
+        }
+
+        /* Thicker Border ONLY when Playing */
+        .track-box.is-playing-glow .track-box-content {
+            border-width: 6px; box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); border-color: var(--neon-color);
         }
 
         /* Native Drag "Lift" Physics */
@@ -158,9 +163,6 @@
         }
         .track-box:not(.is-editing):hover .hover-text { opacity: 1; }
         .track-box.in-queue .hover-text { display: none !important; }
-        .track-box.is-playing-glow .track-box-content {
-            box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); border-color: var(--neon-color);
-        }
 
         /* --- Unified Dashboard Panel (True Flex Push) --- */
         .dashboard {
@@ -262,9 +264,12 @@
             display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; white-space: nowrap; margin-bottom: 12px;
         }
 
-        /* Universally Scrolling Title */
-        .q-name { display: inline-block; font-size: 1.1rem; font-weight: bold; color: var(--neon-color); animation: scroll-left-right 8s linear infinite alternate; padding-right: 20px;}
-        @keyframes scroll-left-right { 0%, 15% { transform: translateX(0); } 85%, 100% { transform: translateX(-35%); } }
+        /* Permanently Centered & Scrolling Title */
+        .q-name { 
+            display: inline-block; font-size: 1.1rem; font-weight: bold; color: var(--neon-color); 
+            animation: scroll-left-right 8s linear infinite alternate; 
+        }
+        @keyframes scroll-left-right { 0%, 10% { transform: translateX(15%); } 90%, 100% { transform: translateX(-15%); } }
         
         .time-text { 
             font-size: 1rem; color: #fff; cursor: pointer; display: block; width: fit-content; margin: 0 auto 16px auto;
@@ -283,7 +288,6 @@
             height: 6px; border-radius: 3px; outline: none; flex-grow: 1; cursor: pointer; width: 100%;
         }
         
-        /* Neon Thumb for Progress, White for Volume */
         input[type="range"].progress-slider::-webkit-slider-thumb {
             -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
             background: var(--neon-color) !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8);
@@ -293,7 +297,7 @@
             background: white !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8);
         }
 
-        /* --- Frosted Bottom Sheet (iOS Style) --- */
+        /* --- Frosted Bottom Sheet --- */
         .bottom-sheet-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100dvh;
             background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
@@ -367,6 +371,13 @@
         }
         .sym-item { font-size: 1.8rem; cursor: pointer; padding: 5px; border-radius: 8px; transition: background 0.2s; }
         .sym-item:hover { background: #333; }
+        
+        #timeInput { 
+            width: 100%; padding: 15px; font-size: 28px; text-align: center; background: #222; 
+            border: 1px solid var(--neon-2); color: white; border-radius: 12px; outline: none; margin-bottom: 10px; letter-spacing: 2px;
+        }
+        #timeInput:focus { box-shadow: 0 0 15px var(--neon-2); }
+
         #hidden-players { display: none; }
     </style>
 </head>
@@ -376,7 +387,7 @@
         <div class="header-container">
             <h1>Super Simple Soundboard</h1>
             <div class="input-stack">
-                <input type="text" id="mediaLink" placeholder="Paste Link Here...">
+                <input type="text" id="mediaLink" placeholder="Paste YouTube, SoundCloud, Twitch, or Vimeo link Here...">
                 <div class="input-buttons">
                     <button class="btn-primary" id="uploadLinkBtn">Add Link</button>
                     <button class="btn-secondary" id="triggerMp3Btn">Upload MP3</button>
@@ -443,6 +454,19 @@
             <button class="btn-cancel" onclick="hideModal('artSourceModal')">Cancel</button>
         </div>
     </div>
+    
+    <div class="modal-overlay" id="timeModal">
+        <div class="modal">
+            <h2>Set Time</h2>
+            <p style="color: #888; font-size: 12px; margin-bottom: 15px;">Type digits to format time (e.g. 123 for 1:23)</p>
+            <input type="text" id="timeInput" inputmode="numeric" pattern="[0-9]*" placeholder="0:00">
+            <div class="modal-buttons">
+                <button class="btn-auto" id="btnConfirmTime" style="width: 100%;">Jump to Time</button>
+            </div>
+            <button class="btn-cancel" onclick="hideModal('timeModal')">Cancel</button>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="replaceArtModal">
         <div class="modal">
             <h2>Manage Art</h2>
@@ -453,6 +477,8 @@
             <button class="btn-cancel" onclick="hideModal('replaceArtModal')">Cancel</button>
         </div>
     </div>
+    <input type="file" id="hiddenFileInput" accept="image/*, image/gif" style="display: none;">
+
     <div class="modal-overlay" id="colorModal">
         <div class="modal">
             <h2>Select Color</h2>
@@ -488,13 +514,13 @@
         let tracks = []; let queue = [];  
         let colorIndex = 0; let symbolIndex = 0;
         let timeTrackerInterval = null; let isDashboardOpen = false; let isEditing = false;
-        let activeTargetTrackId = null; let currentActionQueueId = null;
+        let activeTargetTrackId = null; let currentActionQueueId = null; let activeTimeQueueId = null;
 
         // --- IndexedDB Setup ---
         const DB_NAME = 'SuperSimpleDB'; let db;
         function initDB() {
             return new Promise((resolve, reject) => {
-                const req = indexedDB.open(DB_NAME, 5); // Incremented version for structure change
+                const req = indexedDB.open(DB_NAME, 5);
                 req.onupgradeneeded = (e) => {
                     db = e.target.result;
                     if (!db.objectStoreNames.contains('tracks')) db.createObjectStore('tracks', { keyPath: 'id' });
@@ -519,7 +545,7 @@
                 queueId: q.queueId, trackId: q.trackId, type: q.type, mediaId: q.mediaId, platform: q.platform,
                 name: q.name, color: q.color, state: q.state, duration: q.duration,
                 isLooping: q.isLooping, volume: q.volume,
-                currentTime: (q.playerAPI && !q.isScrubbing) ? q.playerAPI.getCurrentTime() : q.currentTime
+                currentTime: (q.playerAPI && !q.isScrubbing && q.platform === 'youtube') ? q.playerAPI.getCurrentTime() : q.currentTime
             }));
             localStorage.setItem('SuperSimpleQueue', JSON.stringify(state));
         }
@@ -546,35 +572,25 @@
             document.getElementById('triggerMp3Btn').addEventListener('click', () => document.getElementById('mp3Input').click());
             document.getElementById('mp3Input').addEventListener('change', handleAddMP3);
             
-            // FAB and Dashboard Listeners
             document.getElementById('fab').addEventListener('click', toggleDashboard);
             document.getElementById('closeDashboardBtn').addEventListener('click', toggleDashboard);
             document.getElementById('fabStopEdit').addEventListener('click', toggleEditMode);
             document.getElementById('toggleDesktopBtn').addEventListener('click', toggleDashboard);
             
-            // Master Toggle Logic
             document.getElementById('masterToggleBtn').addEventListener('click', () => {
                 const isAnyPlaying = queue.some(q => q.state === 'PLAYING');
-                if(isAnyPlaying) {
-                    queue.forEach(q => { if(q.state === 'PLAYING' && q.playerAPI) q.playerAPI.pause(); });
-                } else {
-                    queue.forEach(q => { if(q.state === 'PAUSED' && q.playerAPI) { q.preventGhostPlay = false; q.playerAPI.play(); } });
-                }
+                if(isAnyPlaying) queue.forEach(q => { if(q.state === 'PLAYING' && q.playerAPI) q.playerAPI.pause(); });
+                else queue.forEach(q => { if(q.state === 'PAUSED' && q.playerAPI) { q.preventGhostPlay = false; q.playerAPI.play(); } });
             });
             
-            // Edit Mode
             document.getElementById('editGridBtn').addEventListener('click', toggleEditMode);
             document.getElementById('mainWrapper').addEventListener('click', (e) => {
                 if(isEditing && e.target.id === 'mainWrapper') toggleEditMode();
             });
 
-            // Bottom Sheet Modals
-            document.getElementById('bottomSheetOverlay').addEventListener('click', (e) => {
-                if(e.target.id === 'bottomSheetOverlay') closeBottomSheet();
-            });
+            document.getElementById('bottomSheetOverlay').addEventListener('click', (e) => { if(e.target.id === 'bottomSheetOverlay') closeBottomSheet(); });
             document.getElementById('bs-cancel').addEventListener('click', closeBottomSheet);
             
-            // Bottom Sheet Actions
             document.getElementById('bs-loop').addEventListener('click', () => {
                 if(currentActionQueueId) {
                     const qItem = queue.find(q => q.queueId === currentActionQueueId);
@@ -600,17 +616,15 @@
             document.getElementById('bs-link').addEventListener('click', async () => {
                 if(currentActionQueueId) {
                     const qItem = queue.find(q => q.queueId === currentActionQueueId);
-                    const newLink = prompt("Paste new link:");
-                    if(newLink) {
+                    const currentUrl = `https://youtu.be/${qItem.ytId}`;
+                    const newLink = prompt("Paste new link:", currentUrl);
+                    if(newLink && newLink !== currentUrl) {
                         const parsed = parseMediaUrl(newLink);
                         if(!parsed) alert("Invalid or unsupported link");
                         else {
                             if(qItem.playerAPI) qItem.playerAPI.destroy();
                             const div = document.getElementById(`player_${qItem.queueId}`); if(div) div.remove();
-                            
-                            qItem.platform = parsed.platform;
-                            qItem.mediaId = parsed.id;
-                            qItem.playerAPI = null;
+                            qItem.platform = parsed.platform; qItem.mediaId = parsed.id; qItem.playerAPI = null;
                             const baseTrack = tracks.find(t => t.id === qItem.trackId);
                             if(baseTrack) initializePlayer(qItem, baseTrack, false);
                             qItem.name = await fetchMediaTitle(newLink, parsed.platform, parsed.id); 
@@ -653,37 +667,63 @@
                 closeBottomSheet();
             });
             document.getElementById('bs-delete').addEventListener('click', () => {
-                if(currentActionQueueId) {
-                    removeQueueItem(currentActionQueueId);
-                    closeBottomSheet();
-                }
+                if(currentActionQueueId) { removeQueueItem(currentActionQueueId); closeBottomSheet(); }
             });
 
-            // Art Source Modal Logic
+            // Smart Time Entry Modal Logic
+            document.getElementById('timeInput').addEventListener('input', (e) => {
+                let val = e.target.value.replace(/\D/g, '');
+                if(val === '') { e.target.value = ''; return; }
+                if(val.length > 2) {
+                    let sec = val.slice(-2);
+                    let min = val.slice(0, -2);
+                    e.target.value = `${min}:${sec}`;
+                } else {
+                    e.target.value = val;
+                }
+            });
+            
+            document.getElementById('btnConfirmTime').addEventListener('click', () => {
+                if(!activeTimeQueueId) return;
+                const qItem = queue.find(q => q.queueId === activeTimeQueueId);
+                const val = document.getElementById('timeInput').value.replace(/\D/g, '');
+                if(!val) { hideModal('timeModal'); return; }
+                
+                let seconds = 0;
+                if (val.length > 2) seconds = parseInt(val.slice(0, -2)) * 60 + parseInt(val.slice(-2));
+                else seconds = parseInt(val);
+                
+                if(seconds > qItem.duration) seconds = qItem.duration;
+                
+                qItem.currentTime = seconds;
+                if(qItem.playerAPI) {
+                    qItem.preventGhostPlay = false;
+                    qItem.playerAPI.seekTo(seconds);
+                }
+                updateQueueUI(); saveQueueState(); hideModal('timeModal');
+            });
+            
+            // Custom Input triggers 'Enter'
+            document.getElementById('timeInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') document.getElementById('btnConfirmTime').click();
+            });
+
             document.getElementById('btnArtUploadChoice').addEventListener('click', () => {
-                hideModal('artSourceModal');
-                document.getElementById('hiddenFileInput').click();
+                hideModal('artSourceModal'); document.getElementById('hiddenFileInput').click();
             });
             document.getElementById('btnArtLinkChoice').addEventListener('click', () => {
-                hideModal('artSourceModal');
-                const url = prompt("Paste Image or GIF URL:");
+                hideModal('artSourceModal'); const url = prompt("Paste Image or GIF URL:");
                 if(url) updateTrackData(activeTargetTrackId, { customImage: url });
             });
             document.getElementById('hiddenFileInput').addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if(!file) return;
-                const reader = new FileReader();
+                const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
                 reader.onload = (ev) => { updateTrackData(activeTargetTrackId, { customImage: ev.target.result }); };
-                reader.readAsDataURL(file);
-                e.target.value = '';
+                reader.readAsDataURL(file); e.target.value = '';
             });
             
-            document.getElementById('btnReplaceArt').addEventListener('click', () => { 
-                hideModal('replaceArtModal'); document.getElementById('artSourceModal').style.display = 'flex'; 
-            });
+            document.getElementById('btnReplaceArt').addEventListener('click', () => { hideModal('replaceArtModal'); document.getElementById('artSourceModal').style.display = 'flex'; });
             document.getElementById('btnRemoveArt').addEventListener('click', () => {
-                hideModal('replaceArtModal');
-                const randSym = defaultMusicSymbols[Math.floor(Math.random() * defaultMusicSymbols.length)];
+                hideModal('replaceArtModal'); const randSym = defaultMusicSymbols[Math.floor(Math.random() * defaultMusicSymbols.length)];
                 updateTrackData(activeTargetTrackId, { customImage: null, symbol: randSym });
             });
 
@@ -698,6 +738,12 @@
 
         function hideModal(id) { document.getElementById(id).style.display = 'none'; }
         
+        function openTimeModal(queueId) {
+            activeTimeQueueId = queueId;
+            const input = document.getElementById('timeInput');
+            input.value = ''; document.getElementById('timeModal').style.display = 'flex'; input.focus();
+        }
+        
         function toggleEditMode() {
             isEditing = !isEditing;
             if(isEditing) document.body.classList.add('is-editing'); 
@@ -707,7 +753,6 @@
             document.querySelectorAll('.queue-item-wrapper').forEach(wrapper => wrapper.draggable = isEditing);
         }
 
-        // --- Bottom Sheet ---
         function openBottomSheet(queueId, type, isLooping) {
             currentActionQueueId = queueId;
             document.getElementById('bs-link').style.display = type === 'mp3' ? 'none' : 'block';
@@ -722,10 +767,7 @@
         function closeBottomSheet() {
             const sheet = document.getElementById('bottomSheet');
             sheet.classList.remove('open');
-            setTimeout(() => {
-                document.getElementById('bottomSheetOverlay').style.display = 'none';
-                currentActionQueueId = null;
-            }, 350);
+            setTimeout(() => { document.getElementById('bottomSheetOverlay').style.display = 'none'; currentActionQueueId = null; }, 350);
         }
 
         // --- Drag & Drop Core ---
@@ -739,8 +781,7 @@
                 else container.insertBefore(draggable, afterElement);
             });
             container.addEventListener('drop', () => {
-                document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
-                callback();
+                document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging')); callback();
             });
         }
         function getDragAfterElement(container, x, y, itemClass) {
@@ -865,83 +906,55 @@
             const btn = document.getElementById('masterToggleBtn');
             const isAnyPlaying = queue.some(q => q.state === 'PLAYING');
             if(isAnyPlaying) {
-                btn.textContent = 'Pause All';
-                btn.className = 'master-pause';
+                btn.textContent = 'Pause All'; btn.className = 'master-pause';
             } else {
-                btn.textContent = 'Play All';
-                btn.className = 'master-play';
+                btn.textContent = 'Play All'; btn.className = 'master-play';
             }
         }
 
         // --- Main Grid UI ---
         function renderGrid() {
-            const container = document.getElementById('gridContainer');
-            container.innerHTML = '';
-
+            const container = document.getElementById('gridContainer'); container.innerHTML = '';
             tracks.forEach(track => {
-                const box = document.createElement('div');
-                box.className = 'track-box';
-                box.dataset.trackId = track.id;
-                
-                const boxContent = document.createElement('div');
-                boxContent.className = 'track-box-content';
-                boxContent.style.setProperty('--neon-color', track.color);
+                const box = document.createElement('div'); box.className = 'track-box'; box.dataset.trackId = track.id;
+                const boxContent = document.createElement('div'); boxContent.className = 'track-box-content'; boxContent.style.setProperty('--neon-color', track.color);
                 
                 let pressTimer;
                 const startPress = () => { if(!isEditing) pressTimer = setTimeout(toggleEditMode, 800); };
                 const cancelPress = () => { clearTimeout(pressTimer); };
                 
-                box.addEventListener('touchstart', (e) => {
-                    if(isEditing) { box.draggable = true; } else { startPress(); }
-                }, {passive: true});
-                box.addEventListener('touchend', cancelPress);
-                box.addEventListener('touchmove', cancelPress);
-                
+                box.addEventListener('touchstart', (e) => { if(isEditing) { box.draggable = true; } else { startPress(); } }, {passive: true});
+                box.addEventListener('touchend', cancelPress); box.addEventListener('touchmove', cancelPress);
                 box.addEventListener('dragstart', (e) => { if(!box.draggable) e.preventDefault(); else box.classList.add('dragging'); });
                 box.addEventListener('dragend', () => { box.classList.remove('dragging'); box.draggable = false; });
                 
                 if (track.customImage) {
                     const img = document.createElement('img'); img.src = track.customImage; boxContent.appendChild(img);
                 } else {
-                    const sym = document.createElement('div'); sym.className = 'track-symbol';
-                    sym.textContent = track.symbol; boxContent.appendChild(sym);
+                    const sym = document.createElement('div'); sym.className = 'track-symbol'; sym.textContent = track.symbol; boxContent.appendChild(sym);
                 }
 
-                const hoverTxt = document.createElement('div');
-                hoverTxt.className = 'hover-text'; hoverTxt.textContent = track.baseName;
-                boxContent.appendChild(hoverTxt);
-
-                const delBtn = document.createElement('div');
-                delBtn.className = 'delete-box-btn';
+                const hoverTxt = document.createElement('div'); hoverTxt.className = 'hover-text'; hoverTxt.textContent = track.baseName; boxContent.appendChild(hoverTxt);
+                const delBtn = document.createElement('div'); delBtn.className = 'delete-box-btn';
                 delBtn.onclick = (e) => {
-                    e.stopPropagation(); deleteTrackFromDB(track.id);
-                    tracks = tracks.filter(t => t.id !== track.id);
-                    queue.filter(q => q.trackId === track.id).forEach(q => removeQueueItem(q.queueId));
-                    renderGrid();
+                    e.stopPropagation(); deleteTrackFromDB(track.id); tracks = tracks.filter(t => t.id !== track.id);
+                    queue.filter(q => q.trackId === track.id).forEach(q => removeQueueItem(q.queueId)); renderGrid();
                 };
+                if(window.innerWidth > 768) delBtn.textContent = 'X';
                 
-                box.appendChild(boxContent);
-                box.appendChild(delBtn);
+                box.appendChild(boxContent); box.appendChild(delBtn);
 
                 box.addEventListener('click', (e) => {
                     if(isEditing || e.target === delBtn) return; 
-                    
                     const existing = queue.filter(q => q.trackId === track.id);
                     if(existing.length > 0) {
                         if (window.innerWidth <= 768) {
                             existing.forEach(q => {
-                                if (q.playerAPI) {
-                                    if (q.state === 'PLAYING') q.playerAPI.pause();
-                                    else { q.preventGhostPlay = false; q.playerAPI.play(); }
-                                }
+                                if (q.playerAPI) { if (q.state === 'PLAYING') q.playerAPI.pause(); else { q.preventGhostPlay = false; q.playerAPI.play(); } }
                             });
-                        } else {
-                            existing.forEach(q => removeQueueItem(q.queueId));
-                        }
+                        } else { existing.forEach(q => removeQueueItem(q.queueId)); }
                     } else {
-                        addToQueue(track);
-                        box.classList.add('flash-active');
-                        setTimeout(() => box.classList.remove('flash-active'), 300);
+                        addToQueue(track); box.classList.add('flash-active'); setTimeout(() => box.classList.remove('flash-active'), 300);
                         if(!isDashboardOpen && window.innerWidth > 768) toggleDashboard();
                     }
                 });
@@ -967,8 +980,7 @@
                 queueId: 'q_' + Date.now() + Math.floor(Math.random() * 1000), 
                 trackId: track.id, type: track.type, platform: track.platform, mediaId: track.mediaId, twitchType: track.twitchType,
                 name, color: track.color, playerAPI: null, state: startState,
-                duration: 0, isLooping: false, volume: 50, currentTime: exactCurrentTime, isScrubbing: false,
-                preventGhostPlay: false
+                duration: 0, isLooping: false, volume: 50, currentTime: exactCurrentTime, isScrubbing: false, preventGhostPlay: false
             };
             queue.push(qItem); renderQueue(); initializePlayer(qItem, track); saveQueueState();
         }
@@ -986,18 +998,15 @@
             if(qItem.type === 'mp3') {
                 const audio = new Audio(baseTrack.localAudio);
                 qItem.playerAPI = {
-                    play: () => audio.play(), pause: () => audio.pause(),
-                    stop: () => { audio.pause(); audio.currentTime = 0; },
+                    play: () => audio.play(), pause: () => audio.pause(), stop: () => { audio.pause(); audio.currentTime = 0; },
                     seekTo: (s) => audio.currentTime = s, setVolume: (v) => audio.volume = v / 100,
-                    getDuration: () => audio.duration, getCurrentTime: () => audio.currentTime,
-                    destroy: () => { audio.pause(); audio.src = ''; }
+                    getDuration: () => audio.duration, getCurrentTime: () => audio.currentTime, destroy: () => { audio.pause(); audio.src = ''; }
                 };
-                
                 audio.onloadedmetadata = () => {
                     qItem.duration = audio.duration; audio.volume = qItem.volume / 100;
-                    if(qItem.currentTime > 0) audio.currentTime = qItem.currentTime;
-                    updateQueueUI();
+                    if(qItem.currentTime > 0) audio.currentTime = qItem.currentTime; updateQueueUI();
                 };
+                audio.ontimeupdate = () => { if(!qItem.isScrubbing) qItem.currentTime = audio.currentTime; };
                 audio.onended = () => { if (qItem.isLooping) audio.play(); else { qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); } };
                 audio.onplay = () => { qItem.state = 'PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow();};
                 audio.onpause = () => { if(!qItem.isScrubbing) { qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow();} };
@@ -1010,13 +1019,12 @@
                     events: {
                         'onReady': (event) => {
                             qItem.playerAPI = {
-                                play: () => ytPlayer.playVideo(), pause: () => ytPlayer.pauseVideo(),
-                                stop: () => { ytPlayer.stopVideo(); ytPlayer.seekTo(0); },
+                                play: () => ytPlayer.playVideo(), pause: () => ytPlayer.pauseVideo(), stop: () => { ytPlayer.stopVideo(); ytPlayer.seekTo(0); },
                                 seekTo: (s) => ytPlayer.seekTo(s, true), setVolume: (v) => ytPlayer.setVolume(v),
-                                getDuration: () => ytPlayer.getDuration(), getCurrentTime: () => ytPlayer.getCurrentTime(),
-                                destroy: () => ytPlayer.destroy()
+                                getDuration: () => ytPlayer.getDuration(), getCurrentTime: () => ytPlayer.getCurrentTime(), destroy: () => ytPlayer.destroy()
                             };
                             qItem.duration = ytPlayer.getDuration() || qItem.duration; ytPlayer.setVolume(qItem.volume);
+                            
                             if(qItem.currentTime > 0) ytPlayer.seekTo(qItem.currentTime, true);
                             if(qItem.state === 'PAUSED') setTimeout(() => ytPlayer.pauseVideo(), 50); else if (!isRestore) setTimeout(() => ytPlayer.playVideo(), 200);
                             updateQueueUI();
@@ -1037,11 +1045,9 @@
                 const div = document.createElement('div'); div.id = `player_${qItem.queueId}`; container.appendChild(div);
                 const vimPlayer = new Vimeo.Player(div, { id: qItem.mediaId, width: 0, height: 0, autoplay: false });
                 qItem.playerAPI = {
-                    play: () => vimPlayer.play(), pause: () => vimPlayer.pause(),
-                    stop: () => { vimPlayer.pause(); vimPlayer.setCurrentTime(0); },
+                    play: () => vimPlayer.play(), pause: () => vimPlayer.pause(), stop: () => { vimPlayer.pause(); vimPlayer.setCurrentTime(0); },
                     seekTo: (s) => vimPlayer.setCurrentTime(s), setVolume: (v) => vimPlayer.setVolume(v / 100),
-                    getDuration: () => qItem.duration, getCurrentTime: () => qItem.currentTime,
-                    destroy: () => vimPlayer.destroy()
+                    getDuration: () => qItem.duration, getCurrentTime: () => qItem.currentTime, destroy: () => vimPlayer.destroy()
                 };
                 vimPlayer.getDuration().then(d => { qItem.duration = d; updateQueueUI(); });
                 vimPlayer.setVolume(qItem.volume / 100);
@@ -1058,11 +1064,9 @@
                 iframe.width = "0"; iframe.height = "0"; container.appendChild(iframe);
                 const scPlayer = SC.Widget(iframe);
                 qItem.playerAPI = {
-                    play: () => scPlayer.play(), pause: () => scPlayer.pause(),
-                    stop: () => { scPlayer.pause(); scPlayer.seekTo(0); },
+                    play: () => scPlayer.play(), pause: () => scPlayer.pause(), stop: () => { scPlayer.pause(); scPlayer.seekTo(0); },
                     seekTo: (s) => scPlayer.seekTo(s * 1000), setVolume: (v) => scPlayer.setVolume(v),
-                    getDuration: () => qItem.duration, getCurrentTime: () => qItem.currentTime,
-                    destroy: () => iframe.remove()
+                    getDuration: () => qItem.duration, getCurrentTime: () => qItem.currentTime, destroy: () => iframe.remove()
                 };
                 scPlayer.bind(SC.Widget.Events.READY, () => {
                     scPlayer.getDuration(d => { qItem.duration = d / 1000; updateQueueUI(); });
@@ -1079,14 +1083,11 @@
                 const div = document.createElement('div'); div.id = `player_${qItem.queueId}`; container.appendChild(div);
                 const options = { width: 0, height: 0, autoplay: false };
                 if(qItem.twitchType === 'clip') options.clip = qItem.mediaId; else options.video = qItem.mediaId;
-                
                 const twPlayer = new Twitch.Player(`player_${qItem.queueId}`, options);
                 qItem.playerAPI = {
-                    play: () => twPlayer.play(), pause: () => twPlayer.pause(),
-                    stop: () => { twPlayer.pause(); twPlayer.seek(0); },
+                    play: () => twPlayer.play(), pause: () => twPlayer.pause(), stop: () => { twPlayer.pause(); twPlayer.seek(0); },
                     seekTo: (s) => twPlayer.seek(s), setVolume: (v) => twPlayer.setVolume(v / 100),
-                    getDuration: () => twPlayer.getDuration(), getCurrentTime: () => twPlayer.getCurrentTime(),
-                    destroy: () => div.remove()
+                    getDuration: () => twPlayer.getDuration(), getCurrentTime: () => twPlayer.getCurrentTime(), destroy: () => div.remove()
                 };
                 twPlayer.addEventListener(Twitch.Player.READY, () => {
                     qItem.duration = twPlayer.getDuration() || qItem.duration; twPlayer.setVolume(qItem.volume / 100);
@@ -1120,15 +1121,9 @@
         function renderQueue() {
             const container = document.getElementById('queueContainer'); container.innerHTML = '';
             queue.forEach(qItem => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'queue-item-wrapper';
-                wrapper.dataset.queueId = qItem.queueId;
-                
-                const trashBg = document.createElement('div');
-                trashBg.className = 'trash-bg'; trashBg.innerHTML = '<span>🗑️</span><span>🗑️</span>';
-                
-                const el = document.createElement('div');
-                el.className = `queue-item ${qItem.state === 'PLAYING' ? 'is-playing' : ''}`;
+                const wrapper = document.createElement('div'); wrapper.className = 'queue-item-wrapper'; wrapper.dataset.queueId = qItem.queueId;
+                const trashBg = document.createElement('div'); trashBg.className = 'trash-bg'; trashBg.innerHTML = '<span>🗑️</span><span>🗑️</span>';
+                const el = document.createElement('div'); el.className = `queue-item ${qItem.state === 'PLAYING' ? 'is-playing' : ''}`;
                 el.style.setProperty('--neon-color', qItem.color);
 
                 const playIcon = qItem.state === 'PLAYING' ? '⏸' : '▶';
@@ -1156,17 +1151,14 @@
                     <button class="play-pause-btn ${playClass}">${playIcon}</button>
                 `;
 
-                wrapper.appendChild(trashBg);
-                wrapper.appendChild(el);
+                wrapper.appendChild(trashBg); wrapper.appendChild(el);
 
                 let pressTimerQ;
                 wrapper.addEventListener('touchstart', (e) => {
-                    if(isEditing) { wrapper.draggable = true; }
-                    else { pressTimerQ = setTimeout(toggleEditMode, 800); }
+                    if(isEditing) { wrapper.draggable = true; } else { pressTimerQ = setTimeout(toggleEditMode, 800); }
                 }, {passive: true});
                 wrapper.addEventListener('touchend', () => clearTimeout(pressTimerQ));
                 wrapper.addEventListener('touchmove', () => clearTimeout(pressTimerQ));
-
                 wrapper.addEventListener('dragstart', (e) => { if(!wrapper.draggable) e.preventDefault(); else wrapper.classList.add('dragging'); });
                 wrapper.addEventListener('dragend', () => { wrapper.classList.remove('dragging'); wrapper.draggable = false; });
 
@@ -1175,19 +1167,14 @@
                 if(delBtnDesktop) delBtnDesktop.onclick = () => removeQueueItem(qItem.queueId);
 
                 el.querySelector('.play-pause-btn').onclick = () => { 
-                    if(!qItem.playerAPI) return;
-                    qItem.preventGhostPlay = false;
+                    if(!qItem.playerAPI) return; qItem.preventGhostPlay = false;
                     if(qItem.state === 'PLAYING') qItem.playerAPI.pause(); else qItem.playerAPI.play();
                 };
                 
-                el.querySelector('.vol-slider').oninput = (e) => {
-                    qItem.volume = e.target.value;
-                    if(qItem.playerAPI) qItem.playerAPI.setVolume(qItem.volume);
-                    saveQueueState();
-                };
+                el.querySelector('.vol-slider').oninput = (e) => { qItem.volume = e.target.value; if(qItem.playerAPI) qItem.playerAPI.setVolume(qItem.volume); saveQueueState(); };
 
                 const timeTxt = el.querySelector('.time-text');
-                timeTxt.onclick = () => promptTimeEntry(qItem);
+                timeTxt.onclick = () => openTimeModal(qItem.queueId);
 
                 const slider = el.querySelector('.progress-slider');
                 slider.addEventListener('mousedown', () => qItem.isScrubbing = true);
@@ -1222,8 +1209,7 @@
                     }
                     currentX = 0;
                 };
-                swipeZone.addEventListener('pointerup', handleSwipeEnd);
-                swipeZone.addEventListener('pointercancel', handleSwipeEnd);
+                swipeZone.addEventListener('pointerup', handleSwipeEnd); swipeZone.addEventListener('pointercancel', handleSwipeEnd);
 
                 container.appendChild(wrapper);
             });
@@ -1254,8 +1240,10 @@
             timeTrackerInterval = setInterval(() => {
                 queue.forEach(qItem => {
                     if (qItem.state === 'PLAYING' && qItem.playerAPI && !qItem.isScrubbing) {
-                        qItem.currentTime = qItem.playerAPI.getCurrentTime() || 0;
-                        qItem.duration = qItem.playerAPI.getDuration() || qItem.duration;
+                        if(qItem.platform === 'youtube' || qItem.platform === 'twitch') {
+                            const ct = qItem.playerAPI.getCurrentTime();
+                            if(ct !== undefined && ct !== null) qItem.currentTime = ct;
+                        }
                         const timeEl = document.getElementById(`timeTxt_${qItem.queueId}`);
                         const sliderEl = document.getElementById(`slider_${qItem.queueId}`);
                         if(timeEl) timeEl.textContent = `${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}`;
@@ -1269,21 +1257,6 @@
             if(!seconds) return "0:00";
             const min = Math.floor(seconds / 60); const sec = Math.floor(seconds % 60);
             return `${min}:${sec < 10 ? '0' : ''}${sec}`;
-        }
-
-        function promptTimeEntry(qItem) {
-            const input = prompt("Enter specific time (MM:SS):", formatTime(qItem.currentTime));
-            if(!input) return;
-            let seconds = 0; const parts = input.split(':');
-            if(parts.length === 2) seconds = (parseInt(parts[0]) * 60) + parseInt(parts[1]);
-            else seconds = parseInt(input);
-
-            if(isNaN(seconds)) return alert("Invalid time format.");
-            if(seconds > qItem.duration) seconds = qItem.duration;
-            
-            qItem.currentTime = seconds;
-            if(qItem.playerAPI) { qItem.preventGhostPlay = false; qItem.playerAPI.seekTo(seconds); }
-            updateQueueUI(); saveQueueState();
         }
 
         function applyColorChange(hexColor) {
