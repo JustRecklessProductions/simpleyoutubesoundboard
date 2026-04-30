@@ -160,6 +160,11 @@
         input[type="range"].progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--neon-color) !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8); }
         input[type="range"].vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: white !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8); }
 
+        /* FIX: Volume control row layout */
+        .volume-control { display: flex; align-items: center; gap: 10px; width: 100%; }
+        .volume-control span { font-size: 14px; flex-shrink: 0; }
+        .volume-control input[type="range"] { width: auto; }
+
         /* --- Modals --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(5px); }
         .modal { background: #111; padding: 30px; border-radius: 16px; border: 1px solid var(--neon-4); text-align: center; max-width: 400px; width: 90%; box-shadow: 0 0 30px var(--neon-4); }
@@ -177,6 +182,12 @@
         input[type="color"]::-webkit-color-swatch { border-radius: 50%; border: 2px solid #fff; }
         #colorPreview { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 15px auto; border: 3px solid white; }
         #timeInput { width: 100%; padding: 15px; font-size: 28px; font-family: 'Nunito', sans-serif; font-weight: 700; text-align: center; background: #222; border: 1px solid var(--neon-2); color: white; border-radius: 12px; outline: none; margin-bottom: 10px; letter-spacing: 2px; }
+
+        /* FIX: Symbol modal grid */
+        .symbol-modal { max-width: 520px !important; }
+        .symbol-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; max-height: 300px; overflow-y: auto; margin-bottom: 20px; padding: 4px; }
+        .sym-item { font-size: 1.4rem; text-align: center; cursor: pointer; padding: 8px 4px; border-radius: 8px; transition: background 0.15s; }
+        .sym-item:hover { background: rgba(255,255,255,0.12); }
         
         .bottom-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; z-index: 3000; }
         .bottom-sheet { background: rgba(25, 25, 25, 0.85); backdrop-filter: blur(25px); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 24px; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1); border-top: 1px solid rgba(255,255,255,0.1); }
@@ -185,9 +196,13 @@
         .sheet-btn { width: 100%; padding: 18px; font-family: 'Nunito', sans-serif; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.05); color: white; font-size: 1.1rem; text-align: center; cursor: pointer; font-weight: 600; }
         .sheet-cancel { font-weight: 700; color: #ff4444 !important; }
         .sheet-delete { background: #ff4444 !important; color: white !important; font-weight: 700;}
-        
+
+        /* FIX: fabStopEdit visibility */
         .fab, .fab-stop-edit { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 64px; height: 64px; border-radius: 50%; background: black; border: 2px solid var(--neon-3); color: var(--neon-3); font-size: 1.8rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 999; box-shadow: 0 0 20px var(--neon-3); transition: all 0.3s; }
-        .fab-stop-edit { display: none; bottom: 110px; border-color: var(--neon-4); color: var(--neon-4); width: 56px; height: 56px; font-size: 1.5rem;}
+        .fab-stop-edit { display: none; bottom: 110px; border-color: var(--neon-4); color: var(--neon-4); box-shadow: 0 0 20px var(--neon-4); width: 56px; height: 56px; font-size: 1.5rem; }
+        body.is-editing .fab-stop-edit { display: flex; }
+        body.is-editing .fab { display: none; }
+
         #hidden-players { display: none; }
     </style>
 </head>
@@ -313,7 +328,7 @@
         const defaultMusicSymbols = ['♫', '𝄞', '♪', '𝄢', '𝄽', '♬', '♮', '𝄡'];
         const allSymbolsList = ['🔥', '🌊', '🌧', '⛈', '🌬', '🍃', '🌲', '🌋', '🏔', '🌌', '🌙', '🌑', '☀️', '☁️', '🌫', '❄️', '💨', '🌦', '🌈', '🪐', '☄️', '🏜', '🏝', '🫧', '♨', '☀', '☁', '★', '☆', '☂', '🗡️', '⚔️', '🛡️', '🏹', '🔪', '🪓', '💥', '💣', '🧨', '⚡', '🚀', '🛸', '🚂', '🚗', '✈️', '🏆', '⚽', '🎯', '🆙', '🆒', '💯', '💢', '⚓', '🐺', '🐦', '🦉', '🐍', '🦂', '🦄', '🐼', '🚨', '🆘', '⚠️', '‼️', '❕', '🛑', '🚫', '⛔', '📛', '🚩', '☢️', '☣️', '🩹', '🩺', '🚑', '🚒', '🔔', '📢', '📣', '☠', '☢', '☣', '🚷', '💡', '🔋', '⚙️', '🧪', '💻', '📱', '📷', '📶', '⏻', '🔍', '📍', '📅', '✉️', '🛒', '⚙', '⚗', '⚛', '⚖', '⏼', '⏽', '⏾', '☏', '☎', '💀', '☠️', '👻', '👹', '👺', '🧛', '🧟', '🧌', '🦇', '🕷️', '🕸️', '🩸', '⚰️', '🪦', '🏚️', '🥀', '⛓️', '👽', '🤡', '😈', '👿', '😱', '😨', '😰', '👁️', '🧠', '🌚', '✨', '🌟', '🕯', '⛺', '🏙', '🏠', '📖', '📚', '🔑', '🔒', '💎', '👑', '🌸', '☘', '🍀', '🎸', '🎨', '🎬', '☕', '🍕', '🍎', '🎁', '🎈', '🧘', '🛌', '🛁', '😀', '😂', '😍', '🤔', '🤫', '✔️', '❌', '✖️', ...defaultMusicSymbols];
         
-        let tracks = []; let queue = []; let colorIndex = 0; let timeTrackerInterval = null; let isDashboardOpen = false; let isEditing = false;
+        let tracks = []; let queue = []; let colorIndex = 0; let isDashboardOpen = false; let isEditing = false;
         let activeTargetTrackId = null; let currentActionQueueId = null; let activeTimeQueueId = null; let tempSelectedColor = '#ffffff';
 
         const DB_NAME = 'SuperSimpleDB'; let db;
@@ -321,6 +336,10 @@
         function saveTrackToDB(track) { db.transaction('tracks', 'readwrite').objectStore('tracks').put(track); }
         function deleteTrackFromDB(id) { db.transaction('tracks', 'readwrite').objectStore('tracks').delete(id); }
         function loadTracksFromDB() { return new Promise((resolve) => { const req = db.transaction('tracks', 'readonly').objectStore('tracks').getAll(); req.onsuccess = () => resolve(req.result); }); }
+
+        // FIX: saveAllTracksToDB was called but never defined
+        function saveAllTracksToDB() { tracks.forEach(t => saveTrackToDB(t)); }
+
         function saveQueueState() { const state = queue.map(q => ({ queueId: q.queueId, trackId: q.trackId, type: q.type, mediaId: q.mediaId, platform: q.platform, name: q.name, color: q.color, state: q.state, duration: q.duration, isLooping: q.isLooping, volume: q.volume, currentTime: q.currentTime })); localStorage.setItem('SuperSimpleQueue', JSON.stringify(state)); }
         function loadQueueState() { const data = localStorage.getItem('SuperSimpleQueue'); return data ? JSON.parse(data) : []; }
 
@@ -336,9 +355,13 @@
                 tracks = (await loadTracksFromDB()) || []; 
                 if(tracks.length > 0) colorIndex = tracks.length % neonColors.length; 
                 populateSymbolGrid(); 
-                renderGrid(); 
-                const savedQueue = loadQueueState(); 
-                savedQueue.forEach(q => { try { restoreQueueItem(q); } catch(e) { console.warn("Flushed corrupt track", e); } }); 
+                renderGrid();
+
+                // FIX: push all queue items first, then render once — not once per item
+                const savedQueue = loadQueueState();
+                savedQueue.forEach(s => { try { restoreQueueItem(s); } catch(e) { console.warn("Flushed corrupt track", e); } });
+                if(savedQueue.length > 0) renderQueue();
+
                 startUITracker(); 
                 setInterval(saveQueueState, 5000); 
             } catch(e) { console.error("Initialization Error", e); }
@@ -347,6 +370,11 @@
         document.addEventListener('DOMContentLoaded', initApp);
         function onYouTubeIframeAPIReady() { initApp(); }
         setTimeout(initApp, 1000); 
+
+        function toggleDashboard() {
+            isDashboardOpen = !isDashboardOpen;
+            document.getElementById('dashboard').classList.toggle('open', isDashboardOpen);
+        }
 
         function setupEventListeners() {
             safeBind('uploadLinkBtn', 'click', handleAddMediaLink);
@@ -367,6 +395,14 @@
             safeBind('bs-dup', 'click', () => { const qItem = queue.find(q => q.queueId === currentActionQueueId); const baseTrack = tracks.find(t => t.id === qItem.trackId); if(baseTrack) addToQueue(baseTrack, qItem.currentTime); closeBottomSheet(); });
             safeBind('bs-rename', 'click', () => { const qItem = queue.find(q => q.queueId === currentActionQueueId); const newName = prompt("Rename track:", qItem.name); if(newName) { qItem.name = newName; updateQueueUI(); saveQueueState(); } closeBottomSheet(); });
             safeBind('bs-delete', 'click', () => { removeQueueItem(currentActionQueueId); closeBottomSheet(); });
+
+            // FIX: bs-symbol was never bound
+            safeBind('bs-symbol', 'click', () => {
+                const qItem = queue.find(q => q.queueId === currentActionQueueId);
+                if(qItem) activeTargetTrackId = qItem.trackId;
+                document.getElementById('symbolModal').style.display = 'flex';
+                closeBottomSheet();
+            });
             
             safeBind('bs-link', 'click', () => {
                 const qItem = queue.find(q => q.queueId === currentActionQueueId);
@@ -400,6 +436,9 @@
             safeBind('btnArtUploadChoice', 'click', () => { hideModal('artSourceModal'); document.getElementById('hiddenFileInput').click(); });
             safeBind('btnArtLinkChoice', 'click', () => { hideModal('artSourceModal'); const url = prompt("Paste Image/GIF URL:"); if(url) updateTrackData(activeTargetTrackId, { customImage: url }); });
             safeBind('hiddenFileInput', 'change', (e) => { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (ev) => updateTrackData(activeTargetTrackId, { customImage: ev.target.result }); reader.readAsDataURL(file); e.target.value = ''; });
+
+            // FIX: btnReplaceArt was never bound
+            safeBind('btnReplaceArt', 'click', () => { hideModal('replaceArtModal'); document.getElementById('artSourceModal').style.display = 'flex'; });
             safeBind('btnRemoveArt', 'click', () => { updateTrackData(activeTargetTrackId, { customImage: null, symbol: '♫' }); hideModal('replaceArtModal'); });
 
             window.addEventListener('resize', updateGridGlow);
@@ -434,7 +473,6 @@
             currentActionQueueId = queueId;
             document.getElementById('bs-link').style.display = type === 'mp3' ? 'none' : 'block';
             document.getElementById('bs-loop').textContent = isLooping ? 'Unloop Track' : 'Loop Track';
-            
             const overlay = document.getElementById('bottomSheetOverlay');
             const sheet = document.getElementById('bottomSheet');
             overlay.style.display = 'flex';
@@ -483,10 +521,8 @@
             if(!url) return; 
             const parsed = parseMediaUrl(url); 
             if(!parsed) return alert('Unsupported Link');
-            
             const defaultSym = '♫';
             const track = { id: 'track_'+Date.now(), type: 'embed', platform: parsed.platform, mediaId: parsed.id, baseName: defaultSym, color: neonColors[colorIndex], symbol: defaultSym, twitchType: parsed.type || null };
-            
             colorIndex = (colorIndex+1)%neonColors.length;
             tracks.push(track); saveTrackToDB(track); renderGrid(); document.getElementById('mediaLink').value = '';
         }
@@ -523,17 +559,12 @@
                 if(window.innerWidth > 768) delBtn.textContent = 'X'; box.append(boxContent, delBtn);
                 
                 let pressTimer;
-                box.addEventListener('touchstart', (e) => {
-                    if(isEditing) { box.draggable = true; } else { pressTimer = setTimeout(() => { toggleEditMode(); pressTimer = null; }, 800); }
-                }, {passive: true});
+                box.addEventListener('touchstart', (e) => { if(isEditing) { box.draggable = true; } else { pressTimer = setTimeout(() => { toggleEditMode(); pressTimer = null; }, 800); } }, {passive: true});
                 box.addEventListener('touchend', () => { if(pressTimer) clearTimeout(pressTimer); });
                 box.addEventListener('touchcancel', () => { if(pressTimer) clearTimeout(pressTimer); });
-                box.addEventListener('mousedown', () => {
-                    if(isEditing) { box.draggable = true; } else { pressTimer = setTimeout(() => { toggleEditMode(); pressTimer = null; }, 800); }
-                });
+                box.addEventListener('mousedown', () => { if(isEditing) { box.draggable = true; } else { pressTimer = setTimeout(() => { toggleEditMode(); pressTimer = null; }, 800); } });
                 box.addEventListener('mouseup', () => { if(pressTimer) clearTimeout(pressTimer); });
                 box.addEventListener('mouseleave', () => { if(pressTimer) clearTimeout(pressTimer); });
-
                 box.ondragstart = (e) => { if(!box.draggable) e.preventDefault(); else box.classList.add('dragging'); };
                 box.ondragend = () => { box.classList.remove('dragging'); box.draggable = false; };
 
@@ -567,17 +598,12 @@
                 const scrub = el.querySelector('.progress-slider'); scrub.onmousedown = scrub.ontouchstart = () => qItem.isScrubbing = true; scrub.oninput = (e) => { qItem.currentTime = e.target.value; el.querySelector('.time-text').textContent = formatTime(qItem.currentTime) + ' / ' + formatTime(qItem.duration); }; scrub.onchange = (e) => { qItem.isScrubbing = false; if(qItem.playerAPI) { qItem.preventGhostPlay = false; qItem.playerAPI.seekTo(parseFloat(e.target.value)); } };
                 
                 let pressTimer;
-                wrapper.addEventListener('touchstart', (e) => {
-                    if(isEditing) { wrapper.draggable = true; } else { pressTimer = setTimeout(() => { toggleEditMode(); pressTimer = null; }, 800); }
-                }, {passive: true});
+                wrapper.addEventListener('touchstart', (e) => { if(isEditing) { wrapper.draggable = true; } else { pressTimer = setTimeout(() => { toggleEditMode(); pressTimer = null; }, 800); } }, {passive: true});
                 wrapper.addEventListener('touchend', () => { if(pressTimer) clearTimeout(pressTimer); });
                 wrapper.addEventListener('touchcancel', () => { if(pressTimer) clearTimeout(pressTimer); });
-                wrapper.addEventListener('mousedown', () => {
-                    if(isEditing) { wrapper.draggable = true; } else { pressTimer = setTimeout(() => { toggleEditMode(); pressTimer = null; }, 800); }
-                });
+                wrapper.addEventListener('mousedown', () => { if(isEditing) { wrapper.draggable = true; } else { pressTimer = setTimeout(() => { toggleEditMode(); pressTimer = null; }, 800); } });
                 wrapper.addEventListener('mouseup', () => { if(pressTimer) clearTimeout(pressTimer); });
                 wrapper.addEventListener('mouseleave', () => { if(pressTimer) clearTimeout(pressTimer); });
-
                 wrapper.ondragstart = (e) => { if(!wrapper.draggable) e.preventDefault(); else wrapper.classList.add('dragging'); };
                 wrapper.ondragend = () => { wrapper.classList.remove('dragging'); wrapper.draggable = false; };
 
@@ -590,24 +616,49 @@
             }); updateMasterButton(); updateGridGlow();
         }
 
+        // FIX: updateQueueUI was called everywhere but never defined.
+        // Lightweight targeted DOM patching — does not rebuild the queue, just updates what changed.
+        function updateQueueUI() {
+            queue.forEach(q => {
+                const wrapper = document.querySelector(`.queue-item-wrapper[data-queue-id="${q.queueId}"]`);
+                if(!wrapper) return;
+                const el = wrapper.querySelector('.queue-item');
+                if(!el) return;
+                el.style.setProperty('--neon-color', q.color);
+                el.classList.toggle('is-playing', q.state === 'PLAYING');
+                const ppBtn = el.querySelector('.play-pause-btn');
+                if(ppBtn) { ppBtn.textContent = q.state === 'PLAYING' ? '⏸' : '▶'; ppBtn.classList.toggle('active', q.state === 'PLAYING'); }
+                const timeEl = el.querySelector('.time-text');
+                if(timeEl) timeEl.textContent = formatTime(q.currentTime) + ' / ' + formatTime(q.duration);
+                const scrub = el.querySelector('.progress-slider');
+                if(scrub) { scrub.max = q.duration; if(!q.isScrubbing) scrub.value = q.currentTime; }
+                const volSlider = el.querySelector('.vol-slider');
+                if(volSlider && !q.isScrubbing) volSlider.value = q.volume;
+            });
+            updateMasterButton();
+            updateGridGlow();
+        }
+
         function updateQueueOrder() {
             const domItems = document.querySelectorAll('.queue-item-wrapper'); const newQueue = [];
-            domItems.forEach(el => {
-                const item = queue.find(q => q.queueId === el.dataset.queueId);
-                if(item) newQueue.push(item);
-            });
+            domItems.forEach(el => { const item = queue.find(q => q.queueId === el.dataset.queueId); if(item) newQueue.push(item); });
             if(newQueue.length > 0) { queue = newQueue; saveQueueState(); }
         }
         function updateTrackOrder() {
             const domItems = document.querySelectorAll('.track-box'); const newTracks = [];
-            domItems.forEach(el => {
-                const t = tracks.find(tr => tr.id === el.dataset.trackId);
-                if(t) newTracks.push(t);
-            });
+            domItems.forEach(el => { const t = tracks.find(tr => tr.id === el.dataset.trackId); if(t) newTracks.push(t); });
             if(newTracks.length > 0) { tracks = newTracks; saveAllTracksToDB(); }
         }
 
-        function restoreQueueItem(s) { const base = tracks.find(t=>t.id===s.trackId); if(!base) return; const q = {...s, state: 'PAUSED', color: base.color, playerAPI: null, isScrubbing: false, preventGhostPlay: true}; queue.push(q); renderQueue(); initializePlayer(q, base, true); }
+        // FIX: restoreQueueItem no longer calls renderQueue — initApp renders once after all items are loaded
+        function restoreQueueItem(s) {
+            const base = tracks.find(t => t.id === s.trackId);
+            if(!base) return;
+            const q = {...s, state: 'PAUSED', color: base.color, playerAPI: null, isScrubbing: false, preventGhostPlay: true};
+            queue.push(q);
+            initializePlayer(q, base, true);
+        }
+
         function addToQueue(t, startAt=0) { const q = { queueId: 'q_'+Date.now()+Math.floor(Math.random()*1000), trackId: t.id, type: t.type, platform: t.platform, mediaId: t.mediaId, twitchType: t.twitchType, name: t.baseName, color: t.color, playerAPI: null, state: 'PAUSED', duration: 0, isLooping: false, volume: 50, currentTime: startAt, isScrubbing: false, preventGhostPlay: false }; queue.push(q); renderQueue(); initializePlayer(q, t); }
         function removeQueueItem(id) { const i = queue.findIndex(q=>q.queueId===id); if(i>-1) { if(queue[i].playerAPI) queue[i].playerAPI.destroy(); const div=document.getElementById(`player_${id}`); if(div) div.remove(); queue.splice(i,1); renderQueue(); renderGrid(); } }
         function formatTime(s) { if(!s) return "0:00"; const m = Math.floor(s/60); const sec = Math.floor(s%60); return `${m}:${sec<10?'0':''}${sec}`; }
@@ -622,8 +673,8 @@
                     a.onloadedmetadata = () => { q.duration = a.duration; a.volume = q.volume/100; if(q.currentTime > 0) a.currentTime = q.currentTime; updateQueueUI(); };
                     a.ontimeupdate = () => { if(!q.isScrubbing) q.currentTime = a.currentTime; };
                     a.onended = () => { if (q.isLooping) a.play(); else { q.state = 'PAUSED'; updateQueueUI(); saveQueueState(); } };
-                    a.onplay = () => { q.state = 'PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow();};
-                    a.onpause = () => { if(!q.isScrubbing) { q.state = 'PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow();} };
+                    a.onplay = () => { q.state = 'PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow(); };
+                    a.onpause = () => { if(!q.isScrubbing) { q.state = 'PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } };
                     if(!isRestore && q.state === 'PLAYING') a.play();
 
                 } else if (q.platform === 'youtube') {
@@ -633,6 +684,7 @@
                         'onReady': (e) => { q.playerAPI = { play: ()=>yt.playVideo(), pause: ()=>yt.pauseVideo(), stop: ()=>{yt.stopVideo(); yt.seekTo(0);}, seekTo: (s)=>yt.seekTo(s, true), setVolume: (v)=>yt.setVolume(v), getDuration: ()=>yt.getDuration(), getCurrentTime: ()=>yt.getCurrentTime(), destroy: ()=>yt.destroy() }; q.duration = yt.getDuration() || q.duration; yt.setVolume(q.volume); if(q.currentTime>0) yt.seekTo(q.currentTime, true); if(q.state==='PAUSED') setTimeout(()=>yt.pauseVideo(), 50); else if(!isRestore) setTimeout(()=>yt.playVideo(), 200); updateQueueUI(); },
                         'onStateChange': (e) => { if(e.data === YT.PlayerState.PLAYING) { if(q.preventGhostPlay && q.state==='PAUSED') { yt.pauseVideo(); q.preventGhostPlay=false; return; } q.preventGhostPlay=false; q.state='PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow(); } else if(e.data === YT.PlayerState.PAUSED && !q.isScrubbing) { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } else if(e.data === YT.PlayerState.ENDED) { if(q.isLooping) yt.playVideo(); else { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } } }
                     }});
+
                 } else if (q.platform === 'vimeo') {
                     if (typeof Vimeo === 'undefined' || !Vimeo.Player) { setTimeout(() => initializePlayer(q, base, isRestore), 500); return; }
                     const div = document.createElement('div'); div.id = `player_${q.queueId}`; h.appendChild(div);
@@ -658,7 +710,10 @@
                 } else if (q.platform === 'twitch') {
                     if (typeof Twitch === 'undefined' || !Twitch.Player) { setTimeout(() => initializePlayer(q, base, isRestore), 500); return; }
                     const div = document.createElement('div'); div.id = `player_${q.queueId}`; h.appendChild(div);
-                    const opt = { width:0, height:0, autoplay:false }; if(q.twitchType==='clip') opt.clip=q.mediaId; else opt.video=q.mediaId;
+                    // FIX: Twitch requires a parent domain or it refuses to load
+                    const twitchParent = window.location.hostname || 'localhost';
+                    const opt = { width: 0, height: 0, autoplay: false, parent: [twitchParent] };
+                    if(q.twitchType==='clip') opt.clip=q.mediaId; else opt.video=q.mediaId;
                     const tw = new Twitch.Player(div.id, opt); q.playerAPI = { play: ()=>tw.play(), pause: ()=>tw.pause(), stop: ()=>{tw.pause(); tw.seek(0);}, seekTo: (s)=>tw.seek(s), setVolume: (v)=>tw.setVolume(v/100), getDuration: ()=>tw.getDuration(), getCurrentTime: ()=>tw.getCurrentTime(), destroy: ()=>div.remove() };
                     tw.addEventListener(Twitch.Player.READY, () => { q.duration = tw.getDuration() || q.duration; tw.setVolume(q.volume/100); if(q.currentTime>0) tw.seek(q.currentTime); if(!isRestore && q.state==='PLAYING') tw.play(); updateQueueUI(); });
                     tw.addEventListener(Twitch.Player.PLAYING, () => { q.state='PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow(); });
@@ -687,10 +742,6 @@
                 div.onclick = () => { if(activeTargetTrackId) { updateTrackData(activeTargetTrackId, { symbol: sym, customImage: null }); hideModal('symbolModal'); } };
                 grid.appendChild(div);
             });
-        }
-
-        function applyColorChange(hexColor) {
-            if(!activeTargetTrackId) return; updateTrackData(activeTargetTrackId, { color: hexColor }); hideModal('colorModal');
         }
 
         function startUITracker() {
