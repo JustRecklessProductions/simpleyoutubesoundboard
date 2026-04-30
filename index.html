@@ -41,7 +41,7 @@
         .action-btn:hover { background: var(--neon-3); color: black; box-shadow: 0 0 15px var(--neon-3); }
         #editGridBtn { border-color: white; color: white; }
         #editGridBtn:hover { background: white; color: black; box-shadow: 0 0 15px white; }
-        @media (max-width: 768px) { .desktop-only { display: none; } }
+        @media (max-width: 768px) { .desktop-only { display: none !important; } }
 
         /* --- Grid & Boxes --- */
         .grid-container { padding: 20px; display: grid; gap: 20px; max-width: 1400px; margin: 0 auto; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
@@ -49,10 +49,18 @@
 
         .track-box { background: transparent; border-radius: 16px; position: relative; aspect-ratio: 1 / 1; width: 100%; touch-action: manipulation; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s; }
         .track-box-content { background: black; border-radius: 16px; position: absolute; top:0; left:0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--neon-color); cursor: pointer; z-index: 1; transition: border-width 0.2s, border-color 0.2s; }
-        .track-box:not(.is-editing):hover { transform: scale(1.02); z-index: 5; }
+        
+        /* Apply standard hover states ONLY to devices with a physical mouse */
+        @media (hover: hover) and (pointer: fine) {
+            .track-box:not(.is-editing):hover { transform: scale(1.02); z-index: 5; }
+            .track-box:not(.is-editing):hover .hover-text { opacity: 1; }
+        }
+        
         @media (min-width: 769px) {
             .track-box.in-queue { transform: scale(1.08); z-index: 10; }
-            .track-box.in-queue:not(.is-editing):hover { transform: scale(1.10); z-index: 11; }
+            @media (hover: hover) and (pointer: fine) {
+                .track-box.in-queue:not(.is-editing):hover { transform: scale(1.10); z-index: 11; }
+            }
         }
         .track-box.is-playing-glow .track-box-content { border-width: 6px; box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); }
 
@@ -86,9 +94,10 @@
 
         .track-symbol { font-size: 4rem; text-shadow: 0 0 15px var(--neon-color); filter: drop-shadow(0 0 12px var(--neon-color)); z-index: 1; pointer-events: none; transform: translateZ(0); }
         .track-box img { width: 100%; height: 100%; display: block; object-fit: cover; z-index: 0; opacity: 0.8; transition: opacity 0.3s; pointer-events: none; }
-        .track-box:hover img { opacity: 0.4; }
+        @media (hover: hover) and (pointer: fine) { .track-box:hover img { opacity: 0.4; } }
+        
         .track-box .hover-text { position: absolute; top: 50%; left: 0; transform: translateY(-50%); z-index: 2; font-weight: bold; font-size: 1rem; text-transform: uppercase; opacity: 0; transition: opacity 0.3s; text-shadow: 1px 1px 3px black; background: rgba(0,0,0,0.7); pointer-events: none; width: 100%; text-align: center; padding: 10px; }
-        .track-box:not(.is-editing):hover .hover-text { opacity: 1; }
+        .track-box.in-queue .hover-text { display: none !important; }
 
         /* --- Dashboard --- */
         .dashboard { display: flex; flex-direction: column; background: var(--panel-bg); z-index: 1000; width: 450px; flex-shrink: 0; margin-right: -450px; border-left: 1px solid #333; box-shadow: -10px 0 30px rgba(0,0,0,0.8); transition: margin-right 0.4s cubic-bezier(0.25, 1, 0.5, 1); height: 100dvh; }
@@ -130,12 +139,18 @@
         @keyframes scroll-left-right { 0%, 10% { transform: translateX(15%); } 90%, 100% { transform: translateX(-15%); } }
         .time-text { font-size: 1rem; color: #fff; cursor: pointer; display: block; width: fit-content; margin: 0 auto 16px auto; background: rgba(255,255,255,0.15); padding: 10px 24px; border-radius: 24px; font-weight: 700; transition: background 0.2s; text-align: center; letter-spacing: 1px; }
         .sliders-container { display: flex; flex-direction: column; gap: 16px; width: 100%; }
-        input[type="range"] { -webkit-appearance: none; background: rgba(255,255,255,0.15); height: 6px; border-radius: 3px; outline: none; flex-grow: 1; cursor: pointer; width: 100%; }
+        input[type="range"] { -webkit-appearance: none; background: rgba(255,255,255,0.15); height: 6px; border-radius: 3px; outline: none; flex-grow: 1; cursor: pointer; width: 100%; transition: background 0.3s, box-shadow 0.3s; }
         input[type="range"].progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--neon-color) !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8); }
         input[type="range"].vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: white !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8); }
         .volume-control { display: flex; align-items: center; gap: 10px; width: 100%; }
         .volume-control span { font-size: 14px; flex-shrink: 0; }
         .volume-control input[type="range"] { width: auto; }
+
+        /* LOOPING TRACK LINE GLOW */
+        .queue-item.is-looping input[type="range"].progress-slider {
+            background: var(--neon-color);
+            box-shadow: 0 0 10px var(--neon-color);
+        }
 
         /* --- Modals --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(5px); }
@@ -204,8 +219,8 @@
                     <input type="file" id="mp3Input" accept="audio/mp3, audio/mpeg" style="display: none;">
                 </div>
             </div>
-            <div class="header-controls desktop-only">
-                <button class="action-btn" id="toggleDesktopBtn">Toggle Queue</button>
+            <div class="header-controls">
+                <button class="action-btn desktop-only" id="toggleDesktopBtn">Toggle Queue</button>
                 <button class="action-btn" id="editGridBtn">Edit Grid</button>
             </div>
         </div>
@@ -467,7 +482,6 @@
             safeBind('bs-loop', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); if(q) { q.isLooping=!q.isLooping; updateQueueUI(); saveQueueState(); } closeBottomSheet(); });
             safeBind('bs-dup', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); const t = tracks.find(t=>t.id===q.trackId); if(t) addToQueue(t, q.currentTime); closeBottomSheet(); });
             
-            // --- FIXED RENAME FUNCTIONALITY ---
             safeBind('bs-rename', 'click', () => { 
                 const q = queue.find(q=>q.queueId===currentActionQueueId); 
                 const n = prompt('Rename track:', q.name); 
@@ -655,7 +669,10 @@
                 const isFirst = qIdx === 0;
                 const isLast  = qIdx === queue.length - 1;
                 const wrapper=document.createElement('div'); wrapper.className='queue-item-wrapper'; wrapper.dataset.queueId=qItem.queueId;
-                const el=document.createElement('div'); el.className=`queue-item ${qItem.state==='PLAYING'?'is-playing':''}`; el.style.setProperty('--neon-color',qItem.color);
+                
+                // Add the .is-looping class condition here
+                const el=document.createElement('div'); el.className=`queue-item ${qItem.state==='PLAYING'?'is-playing':''} ${qItem.isLooping?'is-looping':''}`; el.style.setProperty('--neon-color',qItem.color);
+                
                 el.innerHTML=`
                     <div class="queue-left-actions">
                         <button class="queue-move-btn" style="visibility:${isFirst?'hidden':'visible'}" onclick="moveQueueItem('${qItem.queueId}','up')">▲</button>
@@ -694,10 +711,13 @@
                 const el=wrapper.querySelector('.queue-item'); if(!el) return;
                 el.style.setProperty('--neon-color', q.color);
                 el.classList.toggle('is-playing', q.state==='PLAYING');
+                
+                // Toggle loop CSS class dynamically
+                el.classList.toggle('is-looping', q.isLooping);
+
                 const ppBtn=el.querySelector('.play-pause-btn');
                 if(ppBtn){ ppBtn.textContent=q.state==='PLAYING'?'⏸':'▶'; ppBtn.classList.toggle('active',q.state==='PLAYING'); }
                 
-                // --- FIXED TEXT UPDATE ---
                 const nameEl = el.querySelector('.q-name');
                 if (nameEl) nameEl.textContent = q.name;
 
