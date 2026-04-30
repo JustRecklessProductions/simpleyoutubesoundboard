@@ -84,6 +84,8 @@
             .track-box.in-queue { transform: scale(1.08); z-index: 10; }
             .track-box.in-queue:not(.is-editing):hover { transform: scale(1.10); z-index: 11; }
         }
+        
+        /* Thicker Border ONLY when Playing */
         .track-box.is-playing-glow .track-box-content {
             border-width: 6px; box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); border-color: var(--neon-color);
         }
@@ -102,6 +104,9 @@
             .delete-box-btn::after { content: "DELETE"; color: white; position: absolute; font-size: 14px; letter-spacing: 2px; font-weight: bold; font-family: 'Nunito', sans-serif; }
             body.is-editing .delete-box-btn { display: flex; }
         }
+
+        .dragging { transform: scale(1.05) !important; box-shadow: 0 20px 40px rgba(0,0,0,0.6) !important; opacity: 1 !important; z-index: 50 !important; transition: transform 0.15s ease, box-shadow 0.15s ease !important; }
+        .dragging * { pointer-events: none !important; }
 
         .track-symbol { font-size: 4rem; text-shadow: 0 0 15px var(--neon-color); filter: drop-shadow(0 0 12px var(--neon-color)); z-index: 1; pointer-events: none; transform: translateZ(0); }
         .track-box img { width: 100%; height: 100%; display: block; object-fit: cover; z-index: 0; opacity: 0.8; transition: opacity 0.3s; pointer-events: none; }
@@ -259,7 +264,7 @@
         <div class="modal">
             <h2>Set Time</h2>
             <p style="color: #888; font-size: 12px; margin-bottom: 15px;">Type digits to format time (e.g. 123 for 1:23)</p>
-            <input type="text" id="timeInput" inputmode="numeric" pattern="[0-9]*" placeholder="0:00">
+            <input type="tel" id="timeInput" inputmode="numeric" pattern="[0-9]*" placeholder="0:00">
             <button class="btn-auto" id="btnConfirmTime" style="width:100%">Jump to Time</button>
             <button class="btn-cancel" onclick="hideModal('timeModal')">Cancel</button>
         </div>
@@ -308,7 +313,7 @@
         const defaultMusicSymbols = ['♫', '𝄞', '♪', '𝄢', '𝄽', '♬', '♮', '𝄡'];
         const allSymbolsList = ['🔥', '🌊', '🌧', '⛈', '🌬', '🍃', '🌲', '🌋', '🏔', '🌌', '🌙', '🌑', '☀️', '☁️', '🌫', '❄️', '💨', '🌦', '🌈', '🪐', '☄️', '🏜', '🏝', '🫧', '♨', '☀', '☁', '★', '☆', '☂', '🗡️', '⚔️', '🛡️', '🏹', '🔪', '🪓', '💥', '💣', '🧨', '⚡', '🚀', '🛸', '🚂', '🚗', '✈️', '🏆', '⚽', '🎯', '🆙', '🆒', '💯', '💢', '⚓', '🐺', '🐦', '🦉', '🐍', '🦂', '🦄', '🐼', '🚨', '🆘', '⚠️', '‼️', '❕', '🛑', '🚫', '⛔', '📛', '🚩', '☢️', '☣️', '🩹', '🩺', '🚑', '🚒', '🔔', '📢', '📣', '☠', '☢', '☣', '🚷', '💡', '🔋', '⚙️', '🧪', '💻', '📱', '📷', '📶', '⏻', '🔍', '📍', '📅', '✉️', '🛒', '⚙', '⚗', '⚛', '⚖', '⏼', '⏽', '⏾', '☏', '☎', '💀', '☠️', '👻', '👹', '👺', '🧛', '🧟', '🧌', '🦇', '🕷️', '🕸️', '🩸', '⚰️', '🪦', '🏚️', '🥀', '⛓️', '👽', '🤡', '😈', '👿', '😱', '😨', '😰', '👁️', '🧠', '🌚', '✨', '🌟', '🕯', '⛺', '🏙', '🏠', '📖', '📚', '🔑', '🔒', '💎', '👑', '🌸', '☘', '🍀', '🎸', '🎨', '🎬', '☕', '🍕', '🍎', '🎁', '🎈', '🧘', '🛌', '🛁', '😀', '😂', '😍', '🤔', '🤫', '✔️', '❌', '✖️', ...defaultMusicSymbols];
         
-        let tracks = []; let queue = []; let colorIndex = 0; let symbolIndex = 0; let timeTrackerInterval = null; let isDashboardOpen = false; let isEditing = false;
+        let tracks = []; let queue = []; let colorIndex = 0; let timeTrackerInterval = null; let isDashboardOpen = false; let isEditing = false;
         let activeTargetTrackId = null; let currentActionQueueId = null; let activeTimeQueueId = null; let tempSelectedColor = '#ffffff';
 
         const DB_NAME = 'SuperSimpleDB'; let db;
@@ -319,8 +324,13 @@
         function saveQueueState() { const state = queue.map(q => ({ queueId: q.queueId, trackId: q.trackId, type: q.type, mediaId: q.mediaId, platform: q.platform, name: q.name, color: q.color, state: q.state, duration: q.duration, isLooping: q.isLooping, volume: q.volume, currentTime: q.currentTime })); localStorage.setItem('SuperSimpleQueue', JSON.stringify(state)); }
         function loadQueueState() { const data = localStorage.getItem('SuperSimpleQueue'); return data ? JSON.parse(data) : []; }
 
-        async function initApp() { await initDB(); tracks = (await loadTracksFromDB()) || []; if(tracks.length > 0) { colorIndex = tracks.length % neonColors.length; symbolIndex = tracks.length % allSymbolsList.length; } populateSymbolGrid(); renderGrid(); const savedQueue = loadQueueState(); savedQueue.forEach(q => restoreQueueItem(q)); setupEventListeners(); startUITracker(); setInterval(saveQueueState, 5000); }
+        let isAppInitialized = false;
+        async function initApp() { 
+            if(isAppInitialized) return; isAppInitialized = true;
+            await initDB(); tracks = (await loadTracksFromDB()) || []; if(tracks.length > 0) colorIndex = tracks.length % neonColors.length; populateSymbolGrid(); renderGrid(); const savedQueue = loadQueueState(); savedQueue.forEach(q => restoreQueueItem(q)); setupEventListeners(); startUITracker(); setInterval(saveQueueState, 5000); 
+        }
         function onYouTubeIframeAPIReady() { initApp(); }
+        setTimeout(initApp, 1000); // Safety fallback if YT API is blocked
 
         function setupEventListeners() {
             document.getElementById('uploadLinkBtn').addEventListener('click', handleAddMediaLink);
@@ -346,7 +356,18 @@
                 const qItem = queue.find(q => q.queueId === currentActionQueueId);
                 let currentFullUrl = qItem.platform === 'soundcloud' ? qItem.mediaId : (qItem.platform === 'youtube' ? `https://youtu.be/${qItem.mediaId}` : (qItem.platform === 'vimeo' ? `https://vimeo.com/${qItem.mediaId}` : qItem.mediaId));
                 const newLink = prompt("Paste new link:", currentFullUrl);
-                if(newLink) handleLinkChange(qItem, newLink);
+                if(newLink && newLink !== currentFullUrl) {
+                    const parsed = parseMediaUrl(newLink);
+                    if(!parsed) alert("Invalid or unsupported link");
+                    else {
+                        if(qItem.playerAPI) qItem.playerAPI.destroy();
+                        const div = document.getElementById(`player_${qItem.queueId}`); if(div) div.remove();
+                        qItem.platform = parsed.platform; qItem.mediaId = parsed.id; qItem.twitchType = parsed.type || null; qItem.playerAPI = null;
+                        const baseTrack = tracks.find(t => t.id === qItem.trackId);
+                        if(baseTrack) initializePlayer(qItem, baseTrack, false);
+                        updateQueueUI(); saveQueueState();
+                    }
+                }
                 closeBottomSheet();
             };
 
@@ -363,7 +384,7 @@
             document.getElementById('btnArtUploadChoice').onclick = () => { hideModal('artSourceModal'); document.getElementById('hiddenFileInput').click(); };
             document.getElementById('btnArtLinkChoice').onclick = () => { hideModal('artSourceModal'); const url = prompt("Paste Image/GIF URL:"); if(url) updateTrackData(activeTargetTrackId, { customImage: url }); };
             document.getElementById('hiddenFileInput').onchange = (e) => { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (ev) => updateTrackData(activeTargetTrackId, { customImage: ev.target.result }); reader.readAsDataURL(file); e.target.value = ''; };
-            document.getElementById('btnRemoveArt').onclick = () => { updateTrackData(activeTargetTrackId, { customImage: null }); hideModal('replaceArtModal'); };
+            document.getElementById('btnRemoveArt').onclick = () => { updateTrackData(activeTargetTrackId, { customImage: null, symbol: '♫' }); hideModal('replaceArtModal'); };
 
             window.addEventListener('resize', updateGridGlow);
         }
@@ -434,23 +455,26 @@
         }
 
         function handleAddMediaLink() {
-            const url = document.getElementById('mediaLink').value.trim(); const parsed = parseMediaUrl(url); if(!parsed) return alert('Unsupported Link');
+            const url = document.getElementById('mediaLink').value.trim(); 
+            if(!url) return; 
+            const parsed = parseMediaUrl(url); 
+            if(!parsed) return alert('Unsupported Link');
             
-            // Instantly use the assigned symbol as the default name instead of fetching
-            const sym = allSymbolsList[symbolIndex];
-            const track = { id: 'track_'+Date.now(), type: 'embed', platform: parsed.platform, mediaId: parsed.id, baseName: sym, color: neonColors[colorIndex], symbol: sym, twitchType: parsed.type || null };
+            const defaultSym = '♫';
+            const track = { id: 'track_'+Date.now(), type: 'embed', platform: parsed.platform, mediaId: parsed.id, baseName: defaultSym, color: neonColors[colorIndex], symbol: defaultSym, twitchType: parsed.type || null };
             
-            colorIndex = (colorIndex+1)%neonColors.length; symbolIndex = (symbolIndex+1)%allSymbolsList.length;
+            colorIndex = (colorIndex+1)%neonColors.length;
             tracks.push(track); saveTrackToDB(track); renderGrid(); document.getElementById('mediaLink').value = '';
         }
 
         function handleAddMP3(e) {
             const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
             reader.onload = (ev) => {
-                const track = { id: 'track_'+Date.now(), type: 'mp3', platform: 'local', baseName: file.name.replace(/\.[^/.]+$/, ""), color: neonColors[colorIndex], symbol: allSymbolsList[symbolIndex], localAudio: ev.target.result };
-                colorIndex = (colorIndex+1)%neonColors.length; symbolIndex = (symbolIndex+1)%allSymbolsList.length;
+                const defaultSym = '♫';
+                const track = { id: 'track_'+Date.now(), type: 'mp3', platform: 'local', baseName: file.name.replace(/\.[^/.]+$/, ""), color: neonColors[colorIndex], symbol: defaultSym, localAudio: ev.target.result };
+                colorIndex = (colorIndex+1)%neonColors.length;
                 tracks.push(track); saveTrackToDB(track); renderGrid();
-            }; reader.readAsDataURL(file);
+            }; reader.readAsDataURL(file); e.target.value = '';
         }
 
         function fadeIn(qItem) {
@@ -497,6 +521,15 @@
             }); updateMasterButton(); updateGridGlow();
         }
 
+        function updateQueueOrder() {
+            const domItems = document.querySelectorAll('.queue-item-wrapper'); const newQueue = [];
+            domItems.forEach(el => {
+                const item = queue.find(q => q.queueId === el.dataset.queueId);
+                if(item) newQueue.push(item);
+            });
+            queue = newQueue; saveQueueState();
+        }
+
         function restoreQueueItem(s) { const base = tracks.find(t=>t.id===s.trackId); if(!base) return; const q = {...s, state: 'PAUSED', color: base.color, playerAPI: null, isScrubbing: false, preventGhostPlay: true}; queue.push(q); renderQueue(); initializePlayer(q, base, true); }
         function addToQueue(t, startAt=0) { const q = { queueId: 'q_'+Date.now()+Math.floor(Math.random()*1000), trackId: t.id, type: t.type, platform: t.platform, mediaId: t.mediaId, twitchType: t.twitchType, name: t.baseName, color: t.color, playerAPI: null, state: 'PAUSED', duration: 0, isLooping: false, volume: 50, currentTime: startAt, isScrubbing: false, preventGhostPlay: false }; queue.push(q); renderQueue(); initializePlayer(q, t); }
         function removeQueueItem(id) { const i = queue.findIndex(q=>q.queueId===id); if(i>-1) { if(queue[i].playerAPI) queue[i].playerAPI.destroy(); const div=document.getElementById(`player_${id}`); if(div) div.remove(); queue.splice(i,1); renderQueue(); renderGrid(); } }
@@ -509,42 +542,79 @@
             if(q.type === 'mp3') {
                 const a = new Audio(base.localAudio); q.playerAPI = { play: ()=>a.play(), pause: ()=>a.pause(), stop: ()=>{a.pause(); a.currentTime=0;}, seekTo: (s)=>a.currentTime=s, setVolume: (v)=>a.volume=v/100, getDuration: ()=>a.duration, getCurrentTime: ()=>a.currentTime, destroy: ()=>{a.pause(); a.src='';} };
                 a.onloadedmetadata = () => { q.duration = a.duration; a.volume = q.volume/100; if(q.currentTime > 0) a.currentTime = q.currentTime; updateQueueUI(); };
-                a.onplay = () => { q.state = 'PLAYING'; updateQueueUI(); }; a.onpause = () => { if(!q.isScrubbing) { q.state = 'PAUSED'; updateQueueUI(); } };
-                a.onended = () => { if(q.isLooping) a.play(); else { q.state = 'PAUSED'; updateQueueUI(); } };
+                a.ontimeupdate = () => { if(!q.isScrubbing) q.currentTime = a.currentTime; };
+                a.onended = () => { if (q.isLooping) a.play(); else { q.state = 'PAUSED'; updateQueueUI(); saveQueueState(); } };
+                a.onplay = () => { q.state = 'PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow();};
+                a.onpause = () => { if(!q.isScrubbing) { q.state = 'PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow();} };
+                if(!isRestore && q.state === 'PLAYING') a.play();
+
             } else if (q.platform === 'youtube') {
                 const div = document.createElement('div'); div.id = `player_${q.queueId}`; h.appendChild(div);
                 const yt = new YT.Player(div.id, { height: '0', width: '0', videoId: q.mediaId, playerVars: { 'autoplay': 0, 'controls': 0 }, events: {
                     'onReady': (e) => { q.playerAPI = { play: ()=>yt.playVideo(), pause: ()=>yt.pauseVideo(), stop: ()=>{yt.stopVideo(); yt.seekTo(0);}, seekTo: (s)=>yt.seekTo(s, true), setVolume: (v)=>yt.setVolume(v), getDuration: ()=>yt.getDuration(), getCurrentTime: ()=>yt.getCurrentTime(), destroy: ()=>yt.destroy() }; q.duration = yt.getDuration() || q.duration; yt.setVolume(q.volume); if(q.currentTime>0) yt.seekTo(q.currentTime, true); if(q.state==='PAUSED') setTimeout(()=>yt.pauseVideo(), 50); else if(!isRestore) setTimeout(()=>yt.playVideo(), 200); updateQueueUI(); },
-                    'onStateChange': (e) => { if(e.data === YT.PlayerState.PLAYING) { if(q.preventGhostPlay && q.state==='PAUSED') { yt.pauseVideo(); q.preventGhostPlay=false; return; } q.preventGhostPlay=false; q.state='PLAYING'; updateQueueUI(); } else if(e.data === YT.PlayerState.PAUSED && !q.isScrubbing) { q.state='PAUSED'; updateQueueUI(); } else if(e.data === YT.PlayerState.ENDED) { if(q.isLooping) yt.playVideo(); else { q.state='PAUSED'; updateQueueUI(); } } }
+                    'onStateChange': (e) => { if(e.data === YT.PlayerState.PLAYING) { if(q.preventGhostPlay && q.state==='PAUSED') { yt.pauseVideo(); q.preventGhostPlay=false; return; } q.preventGhostPlay=false; q.state='PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow(); } else if(e.data === YT.PlayerState.PAUSED && !q.isScrubbing) { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } else if(e.data === YT.PlayerState.ENDED) { if(q.isLooping) yt.playVideo(); else { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } } }
                 }});
             } else if (q.platform === 'vimeo') {
                 const div = document.createElement('div'); div.id = `player_${q.queueId}`; h.appendChild(div);
                 const vim = new Vimeo.Player(div, { id: q.mediaId, width: 0, height: 0 });
                 q.playerAPI = { play: ()=>vim.play(), pause: ()=>vim.pause(), stop: ()=>{vim.pause(); vim.setCurrentTime(0);}, seekTo: (s)=>vim.setCurrentTime(s), setVolume: (v)=>vim.setVolume(v/100), getDuration: ()=>q.duration, getCurrentTime: ()=>q.currentTime, destroy: ()=>vim.destroy() };
                 vim.getDuration().then(d => { q.duration = d; updateQueueUI(); }); vim.setVolume(q.volume/100); if(q.currentTime > 0) vim.setCurrentTime(q.currentTime);
-                vim.on('play', () => { q.state='PLAYING'; updateQueueUI(); }); vim.on('pause', () => { if(!q.isScrubbing) { q.state='PAUSED'; updateQueueUI(); } });
+                vim.on('play', () => { q.state='PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow(); });
+                vim.on('pause', () => { if(!q.isScrubbing) { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } });
                 vim.on('timeupdate', (d) => { if(!q.isScrubbing) q.currentTime = d.seconds; });
+                vim.on('ended', () => { if(q.isLooping) vim.play(); else { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } });
+                if(!isRestore && q.state === 'PLAYING') vim.play();
+
             } else if (q.platform === 'soundcloud') {
                 const frame = document.createElement('iframe'); frame.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(q.mediaId)}&auto_play=false`; frame.width="0"; frame.height="0"; h.appendChild(frame);
                 const sc = SC.Widget(frame); q.playerAPI = { play: ()=>sc.play(), pause: ()=>sc.pause(), stop: ()=>{sc.pause(); sc.seekTo(0);}, seekTo: (s)=>sc.seekTo(s*1000), setVolume: (v)=>sc.setVolume(v), getDuration: ()=>q.duration, getCurrentTime: ()=>q.currentTime, destroy: ()=>frame.remove() };
-                sc.bind(SC.Widget.Events.READY, () => { sc.getDuration(d => { q.duration = d/1000; updateQueueUI(); }); sc.setVolume(q.volume); if(q.currentTime>0) sc.seekTo(q.currentTime*1000); });
-                sc.bind(SC.Widget.Events.PLAY, () => { q.state='PLAYING'; updateQueueUI(); }); sc.bind(SC.Widget.Events.PAUSE, () => { if(!q.isScrubbing) { q.state='PAUSED'; updateQueueUI(); } });
+                sc.bind(SC.Widget.Events.READY, () => { sc.getDuration(d => { q.duration = d/1000; updateQueueUI(); }); sc.setVolume(q.volume); if(q.currentTime>0) sc.seekTo(q.currentTime*1000); if(!isRestore && q.state==='PLAYING') sc.play(); });
+                sc.bind(SC.Widget.Events.PLAY, () => { q.state='PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow(); });
+                sc.bind(SC.Widget.Events.PAUSE, () => { if(!q.isScrubbing) { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } });
                 sc.bind(SC.Widget.Events.PLAY_PROGRESS, (d) => { if(!q.isScrubbing) q.currentTime = d.currentPosition/1000; });
+                sc.bind(SC.Widget.Events.FINISH, () => { if(q.isLooping) sc.play(); else { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } });
+
             } else if (q.platform === 'twitch') {
                 const div = document.createElement('div'); div.id = `player_${q.queueId}`; h.appendChild(div);
                 const opt = { width:0, height:0, autoplay:false }; if(q.twitchType==='clip') opt.clip=q.mediaId; else opt.video=q.mediaId;
                 const tw = new Twitch.Player(div.id, opt); q.playerAPI = { play: ()=>tw.play(), pause: ()=>tw.pause(), stop: ()=>{tw.pause(); tw.seek(0);}, seekTo: (s)=>tw.seek(s), setVolume: (v)=>tw.setVolume(v/100), getDuration: ()=>tw.getDuration(), getCurrentTime: ()=>tw.getCurrentTime(), destroy: ()=>div.remove() };
-                tw.addEventListener(Twitch.Player.READY, () => { q.duration = tw.getDuration(); tw.setVolume(q.volume/100); if(q.currentTime>0) tw.seek(q.currentTime); updateQueueUI(); });
-                tw.addEventListener(Twitch.Player.PLAYING, () => { q.state='PLAYING'; updateQueueUI(); });
+                tw.addEventListener(Twitch.Player.READY, () => { q.duration = tw.getDuration() || q.duration; tw.setVolume(q.volume/100); if(q.currentTime>0) tw.seek(q.currentTime); if(!isRestore && q.state==='PLAYING') tw.play(); updateQueueUI(); });
+                tw.addEventListener(Twitch.Player.PLAYING, () => { q.state='PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow(); });
+                tw.addEventListener(Twitch.Player.PAUSE, () => { if(!q.isScrubbing) { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } });
+                tw.addEventListener(Twitch.Player.ENDED, () => { if(q.isLooping) tw.play(); else { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } });
             }
         }
 
         function updateQueueUI() { renderQueue(); }
-        function updateTrackData(id, upd) { 
-            const i = tracks.findIndex(t=>t.id===id); 
-            if(i>-1) { tracks[i] = {...tracks[i], ...upd}; saveTrackToDB(tracks[i]); } 
-            queue.forEach(q => { if(q.trackId===id) { if(upd.color) q.color = upd.color; if(upd.baseName) q.name = upd.baseName; } }); 
-            renderGrid(); renderQueue(); saveQueueState(); 
+        
+        function updateTrackData(trackId, updatesObj) {
+            const i = tracks.findIndex(t=>t.id===trackId);
+            if(i>-1) {
+                let oldSymbol = tracks[i].symbol;
+                tracks[i] = {...tracks[i], ...updatesObj};
+                saveTrackToDB(tracks[i]);
+                queue.forEach(q => {
+                    if(q.trackId===trackId) {
+                        if(updatesObj.color) q.color = updatesObj.color;
+                        if(updatesObj.baseName) q.name = updatesObj.baseName;
+                        if(updatesObj.symbol && q.name === oldSymbol) q.name = updatesObj.symbol;
+                    }
+                });
+            }
+            renderGrid(); renderQueue(); saveQueueState();
+        }
+
+        function populateSymbolGrid() {
+            const grid = document.getElementById('symbolGrid');
+            allSymbolsList.forEach(sym => {
+                const div = document.createElement('div'); div.className = 'sym-item'; div.textContent = sym;
+                div.onclick = () => { if(activeTargetTrackId) { updateTrackData(activeTargetTrackId, { symbol: sym, customImage: null }); hideModal('symbolModal'); } };
+                grid.appendChild(div);
+            });
+        }
+
+        function applyColorChange(hexColor) {
+            if(!activeTargetTrackId) return; updateTrackData(activeTargetTrackId, { color: hexColor }); hideModal('colorModal');
         }
 
         function startUITracker() {
@@ -560,8 +630,6 @@
                 });
             }, 500);
         }
-
-        initApp();
     </script>
 </body>
 </html>
