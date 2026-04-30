@@ -145,7 +145,6 @@
         .modal-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 20px; flex-wrap: wrap; flex-direction: column; }
         .modal-buttons button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; font-family: 'Nunito', sans-serif; }
 
-        /* --- btn-auto: self-contained so it looks great anywhere, not just inside .modal-buttons --- */
         button.btn-auto {
             background: var(--neon-2); color: black;
             font-weight: 700; font-size: 15px; padding: 16px 20px;
@@ -387,7 +386,7 @@
                 const right = box.querySelector('.arrow-right');
                 if (up)    up.style.visibility    = idx < cols              ? 'hidden' : 'visible';
                 if (down)  down.style.visibility  = idx + cols >= total     ? 'hidden' : 'visible';
-                if (left)  left.style.visibility  = col === 0              ? 'hidden' : 'visible';
+                if (left)  left.style.visibility  = col === 0               ? 'hidden' : 'visible';
                 if (right) right.style.visibility = (col === cols - 1 || idx + 1 >= total) ? 'hidden' : 'visible';
             });
         }
@@ -467,7 +466,17 @@
             safeBind('bs-fadeout', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); if(q) fadeOut(q); closeBottomSheet(); });
             safeBind('bs-loop', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); if(q) { q.isLooping=!q.isLooping; updateQueueUI(); saveQueueState(); } closeBottomSheet(); });
             safeBind('bs-dup', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); const t = tracks.find(t=>t.id===q.trackId); if(t) addToQueue(t, q.currentTime); closeBottomSheet(); });
-            safeBind('bs-rename', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); const n = prompt('Rename track:', q.name); if(n) { q.name=n; updateQueueUI(); saveQueueState(); } closeBottomSheet(); });
+            
+            // --- FIXED RENAME FUNCTIONALITY ---
+            safeBind('bs-rename', 'click', () => { 
+                const q = queue.find(q=>q.queueId===currentActionQueueId); 
+                const n = prompt('Rename track:', q.name); 
+                if(n) { 
+                    updateTrackData(q.trackId, { baseName: n });
+                } 
+                closeBottomSheet(); 
+            });
+
             safeBind('bs-delete', 'click', () => { removeQueueItem(currentActionQueueId); closeBottomSheet(); });
             safeBind('bs-symbol', 'click', () => {
                 const q = queue.find(q=>q.queueId===currentActionQueueId);
@@ -620,17 +629,6 @@
                 if(window.innerWidth>768) del.textContent='X';
                 box.appendChild(del);
 
-                // Long press to enter edit mode
-                let pressTimer;
-                const startPress=()=>{ if(!isEditing) pressTimer=setTimeout(()=>{ toggleEditMode(); pressTimer=null; },800); };
-                const endPress=()=>{ if(pressTimer) clearTimeout(pressTimer); };
-                box.addEventListener('touchstart', startPress, {passive:true});
-                box.addEventListener('touchend', endPress);
-                box.addEventListener('touchcancel', endPress);
-                box.addEventListener('mousedown', startPress);
-                box.addEventListener('mouseup', endPress);
-                box.addEventListener('mouseleave', endPress);
-
                 box.onclick=()=>{
                     if(isEditing) return;
                     if(queue.some(q=>q.trackId===track.id)){
@@ -679,25 +677,6 @@
                 scrub.oninput=(e)=>{ qItem.currentTime=e.target.value; el.querySelector('.time-text').textContent=formatTime(qItem.currentTime)+' / '+formatTime(qItem.duration); };
                 scrub.onchange=(e)=>{ qItem.isScrubbing=false; if(qItem.playerAPI){qItem.preventGhostPlay=false; qItem.playerAPI.seekTo(parseFloat(e.target.value));} };
 
-                // Long press to enter edit mode
-                let pressTimer;
-                const startPress=()=>{ if(!isEditing) pressTimer=setTimeout(()=>{ toggleEditMode(); pressTimer=null; },800); };
-                const endPress=()=>{ if(pressTimer) clearTimeout(pressTimer); };
-                wrapper.addEventListener('touchstart', startPress, {passive:true});
-                wrapper.addEventListener('touchend', endPress);
-                wrapper.addEventListener('touchcancel', endPress);
-                wrapper.addEventListener('mousedown', startPress);
-                wrapper.addEventListener('mouseup', endPress);
-                wrapper.addEventListener('mouseleave', endPress);
-
-                // Swipe to dismiss (mobile)
-                let startX=0, currentX=0, isSwiping=false;
-                const swipeZone=el.querySelector('.swipe-zone');
-                swipeZone.onpointerdown=(e)=>{ if(window.innerWidth>768||isEditing||e.target.tagName.toLowerCase()==='input') return; isSwiping=true; startX=e.clientX; el.style.transition='none'; swipeZone.setPointerCapture(e.pointerId); };
-                swipeZone.onpointermove=(e)=>{ if(!isSwiping) return; currentX=e.clientX-startX; el.style.transform=`translateX(${currentX}px)`; };
-                const handleSwipeEnd=(e)=>{ if(!isSwiping) return; isSwiping=false; swipeZone.releasePointerCapture(e.pointerId); if(Math.abs(currentX)>el.offsetWidth*0.4){el.style.transition='transform 0.2s ease-out'; el.style.transform=`translateX(${currentX>0?100:-100}%)`; setTimeout(()=>removeQueueItem(qItem.queueId),200);} else{el.style.transition='transform 0.2s ease-out'; el.style.transform='translateX(0)';} currentX=0; };
-                swipeZone.onpointerup=handleSwipeEnd; swipeZone.onpointercancel=handleSwipeEnd;
-
                 container.appendChild(wrapper);
             });
             updateMasterButton();
@@ -713,6 +692,11 @@
                 el.classList.toggle('is-playing', q.state==='PLAYING');
                 const ppBtn=el.querySelector('.play-pause-btn');
                 if(ppBtn){ ppBtn.textContent=q.state==='PLAYING'?'⏸':'▶'; ppBtn.classList.toggle('active',q.state==='PLAYING'); }
+                
+                // --- FIXED TEXT UPDATE ---
+                const nameEl = el.querySelector('.q-name');
+                if (nameEl) nameEl.textContent = q.name;
+
                 const timeEl=el.querySelector('.time-text'); if(timeEl) timeEl.textContent=formatTime(q.currentTime)+' / '+formatTime(q.duration);
                 const scrub=el.querySelector('.progress-slider'); if(scrub){scrub.max=q.duration; if(!q.isScrubbing) scrub.value=q.currentTime;}
                 const vol=el.querySelector('.vol-slider'); if(vol&&!q.isScrubbing) vol.value=q.volume;
