@@ -75,7 +75,8 @@
         .dragging * { pointer-events: none !important; }
 
         /* Jiggle Edit Mode */
-        .is-editing .track-box { animation: jiggle 0.3s infinite; }
+        .is-editing .track-box { animation: jiggle 0.3s infinite; touch-action: none; cursor: grab;}
+        .is-editing .queue-item { animation: jiggle 0.3s infinite; touch-action: none; cursor: grab;}
         .is-editing .track-box:hover { transform: scale(1); }
         @keyframes jiggle { 0% {transform: rotate(-1deg);} 50% {transform: rotate(1deg);} 100% {transform: rotate(-1deg);} }
         
@@ -146,7 +147,7 @@
         .queue-item.dragging { opacity: 0.5; }
         .queue-item.is-playing { border-color: var(--neon-color); box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); }
 
-        .queue-item-inner { flex-grow: 1; padding: 15px; padding-top: 25px; display: flex; flex-direction: column; }
+        .queue-item-inner { flex-grow: 1; padding: 15px; padding-top: 25px; display: flex; flex-direction: column; overflow: hidden; }
 
         .q-drag-header {
             position: absolute; top: 0; left: 0; width: calc(100% - 30px); height: 20px;
@@ -157,23 +158,28 @@
 
         .queue-delete-bar {
             width: 30px; background: #220000; border-left: 1px solid #444;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.2s; color: #ff4444; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            cursor: pointer; transition: 0.2s; color: #ff4444; font-weight: bold; z-index: 2;
         }
         .queue-delete-bar:hover { background: #ff4444; color: white; }
 
         .queue-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 10px; color: var(--neon-color); font-weight: bold;
+            margin-bottom: 10px; color: var(--neon-color); font-weight: bold; width: 100%;
         }
-        .q-name { font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%; }
+        
+        .q-name-container { flex-grow: 1; overflow: hidden; white-space: nowrap; margin-right: 15px; position: relative; }
+        .q-name { display: inline-block; font-size: 0.95rem; }
 
         .progress-container { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
         .time-text { font-size: 0.85rem; color: #aaa; cursor: pointer; min-width: 85px; }
         .time-text:hover { color: white; text-decoration: underline; }
         .progress-slider { flex-grow: 1; accent-color: var(--neon-color); cursor: pointer; }
 
-        .queue-controls { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+        .queue-controls-wrapper { width: 100%; display: flex; flex-direction: column; }
+        .primary-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .secondary-controls { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+        
         .control-btn {
             background: #222; color: white; border: 1px solid #444;
             padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold;
@@ -181,22 +187,23 @@
         .control-btn:hover { background: #444; border-color: var(--neon-color); }
         .control-btn.active { background: var(--neon-color); color: black; box-shadow: 0 0 10px var(--neon-color); }
 
+        .menu-toggle-btn { display: none; } /* Hidden on desktop */
+
         .volume-control { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
         .volume-control input[type="range"] { flex-grow: 1; accent-color: var(--neon-color); }
 
         /* Responsive Desktop */
-        @media (min-width: 769px) { .main-wrapper.push-active { padding-right: 450px; } }
+        @media (min-width: 769px) { 
+            .main-wrapper.push-active { padding-right: 450px; } 
+            .q-name-container { text-overflow: ellipsis; }
+        }
         
         /* --- MOBILE SPECIFIC OVERRIDES --- */
         @media (max-width: 768px) { 
             .dashboard { width: 100%; border-left: none; } 
             
-            /* Hide Default Drag Headers */
+            /* Hide Default Drag Headers - Wiggle mode makes whole box draggable */
             .drag-header, .q-drag-header { display: none !important; }
-            
-            /* Mobile Wiggle UI styling */
-            .is-editing .track-box { cursor: grab; }
-            .is-editing .queue-item { animation: jiggle 0.3s infinite; cursor: grab; }
             
             /* Stretched Delete Button Header */
             .delete-box-btn {
@@ -214,6 +221,31 @@
             .track-box.is-playing-glow {
                 box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1);
                 border-color: var(--neon-color);
+            }
+
+            /* Mobile Queue Layout: Dropdown & Giant Play */
+            .play-pause-btn { 
+                width: 60px; height: 60px; border-radius: 50%; font-size: 1.8rem; flex-shrink: 0; 
+                display: flex; align-items: center; justify-content: center;
+            }
+            .menu-toggle-btn { 
+                display: flex !important; align-items: center; justify-content: center;
+                width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;
+            }
+            .menu-toggle-btn.active { background: var(--neon-color); color: black; }
+            
+            .secondary-controls { 
+                display: none; border-top: 1px solid #333; padding-top: 10px; margin-bottom: 10px;
+                transition: max-height 0.3s ease-out;
+            }
+            .secondary-controls.expanded { display: flex; }
+            .volume-control { margin-top: 5px; }
+
+            /* Marquee Animation for long titles */
+            .q-name { animation: scroll-left-right 8s ease-in-out infinite alternate; padding-right: 20px;}
+            @keyframes scroll-left-right {
+                0%, 15% { transform: translateX(0); }
+                85%, 100% { transform: translateX(-40%); }
             }
         }
 
@@ -618,7 +650,18 @@
                     
                     const existing = queue.filter(q => q.trackId === track.id);
                     if(existing.length > 0) {
-                        existing.forEach(q => removeQueueItem(q.queueId));
+                        // MOBILE: Toggle Pause/Play
+                        if (window.innerWidth <= 768) {
+                            existing.forEach(q => {
+                                if (q.playerAPI) {
+                                    if (q.state === 'PLAYING') q.playerAPI.pause();
+                                    else q.playerAPI.play();
+                                }
+                            });
+                        } else {
+                            // DESKTOP: Remove from Queue
+                            existing.forEach(q => removeQueueItem(q.queueId));
+                        }
                     } else {
                         addToQueue(track);
                         box.classList.add('flash-active');
@@ -681,8 +724,8 @@
                     if (qItem.isLooping) audio.play();
                     else { qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); }
                 };
-                audio.onplay = () => { qItem.state = 'PLAYING'; updateQueueUI(); saveQueueState(); };
-                audio.onpause = () => { if(!qItem.isScrubbing) { qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); }};
+                audio.onplay = () => { qItem.state = 'PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow();};
+                audio.onpause = () => { if(!qItem.isScrubbing) { qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow();} };
                 
                 if(isRestore && qItem.state === 'PLAYING') audio.play();
                 if(!isRestore && qItem.state === 'PLAYING') audio.play(); // Initial Autoplay Mobile
@@ -715,9 +758,9 @@
                                 if (qItem.isLooping) ytPlayer.playVideo();
                                 else { qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); }
                             } else if (event.data === YT.PlayerState.PLAYING) {
-                                qItem.state = 'PLAYING'; updateQueueUI(); saveQueueState();
+                                qItem.state = 'PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow();
                             } else if (event.data === YT.PlayerState.PAUSED && !qItem.isScrubbing) {
-                                qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState();
+                                qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow();
                             }
                         }
                     }
@@ -756,24 +799,31 @@
                     <div class="queue-item-inner">
                         <div class="q-drag-header"></div>
                         <div class="queue-header">
-                            <span class="q-name" title="${qItem.name}">${qItem.name}</span>
+                            <div class="q-name-container">
+                                <span class="q-name" title="${qItem.name}">${qItem.name}</span>
+                            </div>
                             <span>${qItem.state === 'PLAYING' ? 'Playing' : 'Paused'}</span>
                         </div>
                         <div class="progress-container">
                             <span class="time-text" id="timeTxt_${qItem.queueId}">${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}</span>
                             <input type="range" class="progress-slider" id="slider_${qItem.queueId}" min="0" max="${qItem.duration}" value="${qItem.currentTime}">
                         </div>
-                        <div class="queue-controls">
-                            <button class="control-btn play-pause-btn ${playClass}">${playIcon}</button>
-                            <button class="control-btn stop-btn">⏹</button>
-                            <button class="control-btn loop-btn ${qItem.isLooping ? 'active' : ''}">Loop</button>
-                            <button class="control-btn fade-btn">Fade</button>
-                            <button class="control-btn dup-btn">Dup</button>
-                            <button class="control-btn link-btn" ${qItem.type === 'mp3' ? 'style="display:none;"' : ''}>Link</button>
-                            <button class="control-btn rename-btn">Rename</button>
-                            <button class="control-btn pic-btn">Art</button>
-                            <button class="control-btn color-btn">Color</button>
-                            <button class="control-btn sym-btn">Symbol</button>
+                        <div class="queue-controls-wrapper">
+                            <div class="primary-row">
+                                <button class="control-btn play-pause-btn ${playClass}">${playIcon}</button>
+                                <button class="control-btn menu-toggle-btn">⋮</button>
+                            </div>
+                            <div class="secondary-controls">
+                                <button class="control-btn stop-btn">⏹ Stop</button>
+                                <button class="control-btn loop-btn ${qItem.isLooping ? 'active' : ''}">Loop</button>
+                                <button class="control-btn fade-btn">Fade</button>
+                                <button class="control-btn dup-btn">Dup</button>
+                                <button class="control-btn link-btn" ${qItem.type === 'mp3' ? 'style="display:none;"' : ''}>Link</button>
+                                <button class="control-btn rename-btn">Rename</button>
+                                <button class="control-btn pic-btn">Art</button>
+                                <button class="control-btn color-btn">Color</button>
+                                <button class="control-btn sym-btn">Symbol</button>
+                            </div>
                         </div>
                         <div class="volume-control">
                             <span>🔈</span><input type="range" min="0" max="100" value="${qItem.volume}" class="vol-slider"><span>🔊</span>
@@ -797,6 +847,14 @@
 
                 el.addEventListener('dragstart', (e) => { if(!el.draggable) e.preventDefault(); else el.classList.add('dragging'); });
                 el.addEventListener('dragend', () => { el.classList.remove('dragging'); el.draggable = false; });
+
+                // Mobile Menu Toggle
+                el.querySelector('.menu-toggle-btn').onclick = () => {
+                    const secMenu = el.querySelector('.secondary-controls');
+                    const btn = el.querySelector('.menu-toggle-btn');
+                    secMenu.classList.toggle('expanded');
+                    btn.classList.toggle('active');
+                };
 
                 el.querySelector('.play-pause-btn').onclick = () => { 
                     if(!qItem.playerAPI) return;
@@ -887,7 +945,7 @@
             if(index > -1) {
                 if(queue[index].playerAPI) queue[index].playerAPI.destroy();
                 const div = document.getElementById(`player_${queueId}`); if(div) div.remove();
-                queue.splice(index, 1); updateQueueUI(); saveQueueState();
+                queue.splice(index, 1); updateQueueUI(); saveQueueState(); updateGridGlow();
             }
         }
 
