@@ -15,15 +15,13 @@
         body {
             background-color: var(--bg); color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden; display: flex; height: 100vh;
+            overflow: hidden; display: flex; height: 100vh; width: 100vw;
         }
 
         /* --- Fluid Resizing Wrapper --- */
         .main-wrapper {
-            flex-grow: 1; overflow-y: auto; transition: width 0.4s ease;
-            position: relative; width: 100%;
+            flex-grow: 1; min-width: 0; overflow-y: auto; position: relative;
         }
-        @media (min-width: 769px) { .main-wrapper.push-active { width: calc(100% - 450px); } }
 
         /* --- Input Section --- */
         .header-container { padding: 20px; text-align: center; border-bottom: 1px solid #222; }
@@ -69,14 +67,21 @@
         /* --- Track Boxes --- */
         .track-box {
             background: transparent; border-radius: 16px; position: relative; aspect-ratio: 1 / 1;
-            width: 100%; height: 100%; touch-action: manipulation; transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%; height: 100%; touch-action: manipulation; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
         }
         .track-box-content {
             background: black; border-radius: 16px; position: absolute; top:0; left:0; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center; overflow: hidden;
             border: 2px solid var(--neon-color); cursor: pointer; z-index: 1; transition: border-color 0.2s;
         }
-        .track-box:not(.is-editing):hover { transform: scale(1.02); }
+        
+        .track-box:not(.is-editing):hover { transform: scale(1.02); z-index: 5; }
+
+        /* Active Queue Enlargement (Desktop Only) */
+        @media (min-width: 769px) {
+            .track-box.in-queue { transform: scale(1.08); z-index: 10; }
+            .track-box.in-queue:not(.is-editing):hover { transform: scale(1.10); z-index: 11; }
+        }
 
         /* Native Drag "Lift" Physics */
         .dragging { 
@@ -144,43 +149,41 @@
             box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); border-color: var(--neon-color);
         }
 
-        /* --- Unified Dashboard Panel --- */
+        /* --- Unified Dashboard Panel (True Flex Push) --- */
         .dashboard {
-            position: fixed; top: 0; right: 0; width: 450px; height: 100vh;
-            background: var(--panel-bg); border-left: 1px solid #333;
-            transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            z-index: 1000; display: flex; flex-direction: column;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; background: var(--panel-bg); z-index: 1000;
+            width: 450px; flex-shrink: 0; margin-right: -450px; border-left: 1px solid #333; box-shadow: -10px 0 30px rgba(0,0,0,0.8);
+            transition: margin-right 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        .dashboard.open { transform: translateX(0); }
-        @media (max-width: 768px) { .dashboard { width: 100%; border-left: none; } }
+        .dashboard.open { margin-right: 0; }
+        
+        @media (max-width: 768px) { 
+            .dashboard { 
+                position: fixed; top: 0; right: 0; width: 100%; height: 100vh; margin-right: 0; border-left: none;
+                transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            }
+            .dashboard.open { transform: translateX(0); }
+        }
 
-        /* Premium Nav Bar */
-        .dashboard-header {
-            padding: 20px; border-bottom: 1px solid #222; display: flex;
-            justify-content: center; align-items: center; background: #000; flex-shrink: 0;
+        /* Premium Nav Bar & Footer */
+        .dashboard-header, .dashboard-footer {
+            padding: 20px; background: #000; display: flex; justify-content: center; align-items: center; flex-shrink: 0;
         }
-        .dashboard-header button {
+        .dashboard-header { border-bottom: 1px solid #222; }
+        .dashboard-footer { border-top: 1px solid #222; }
+
+        .dashboard-header button, .dashboard-footer button {
             font-size: 1.2rem; font-weight: 600; text-transform: uppercase;
             letter-spacing: 1px; background: transparent; border: none; cursor: pointer; margin: 0; padding: 0;
             transition: color 0.3s, text-shadow 0.3s;
         }
+        
         .master-pause { color: var(--neon-1); }
         .master-play { color: #39ff14; text-shadow: 0 0 10px #39ff14; }
+        .close-dashboard-btn { color: #888; }
+        .close-dashboard-btn:hover { color: white; }
 
         .queue-container { flex-grow: 1; overflow-y: auto; padding: 20px; overflow-x: hidden; }
-
-        /* Sticky Mobile Back Button */
-        .dashboard-footer {
-            display: none; padding: 15px 20px; background: #000; border-top: 1px solid #222; flex-shrink: 0; width: 100%;
-        }
-        .dashboard-footer-btn {
-            width: 100%; padding: 16px; background: #222; color: white; border: none;
-            border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        .dashboard-footer-btn:active { background: #333; }
-        @media (max-width: 768px) { .dashboard-footer { display: block; } }
 
         /* --- Premium Queue Cards --- */
         .queue-item-wrapper {
@@ -205,7 +208,7 @@
         /* Full Height Edge Buttons */
         .options-btn {
             width: 48px; flex-shrink: 0; background: transparent; border: none;
-            border-right: 1px solid #222; color: white; font-size: 24px; font-weight: bold;
+            border-right: 1px solid #222; color: var(--neon-color); font-size: 24px; font-weight: bold;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             border-radius: 16px 0 0 16px; transition: background 0.2s;
         }
@@ -230,8 +233,8 @@
             display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; white-space: nowrap; margin-bottom: 12px;
         }
 
-        /* Universally Scrolling Title */
-        .q-name { display: inline-block; font-size: 1.1rem; font-weight: bold; color: white; animation: scroll-left-right 8s linear infinite alternate; padding-right: 20px;}
+        /* Universally Scrolling Title (Tinted with Track Color) */
+        .q-name { display: inline-block; font-size: 1.1rem; font-weight: bold; color: var(--neon-color); animation: scroll-left-right 8s linear infinite alternate; padding-right: 20px;}
         @keyframes scroll-left-right { 0%, 15% { transform: translateX(0); } 85%, 100% { transform: translateX(-35%); } }
         
         .time-text { 
@@ -251,7 +254,11 @@
             height: 6px; border-radius: 3px; outline: none; flex-grow: 1; cursor: pointer; width: 100%;
         }
         
-        input[type="range"].progress-slider::-webkit-slider-thumb, 
+        /* Neon Thumb for Progress, White for Volume */
+        input[type="range"].progress-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+            background: var(--neon-color) !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+        }
         input[type="range"].vol-slider::-webkit-slider-thumb {
             -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
             background: white !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8);
@@ -363,7 +370,7 @@
         </div>
         <div class="queue-container" id="queueContainer"></div>
         <div class="dashboard-footer">
-            <button class="dashboard-footer-btn" id="closeDashboardBtn">Back to Main Page</button>
+            <button class="close-dashboard-btn" id="closeDashboardBtn">Close</button>
         </div>
     </div>
 
@@ -890,7 +897,12 @@
         function toggleDashboard() {
             isDashboardOpen = !isDashboardOpen;
             document.getElementById('dashboard').classList.toggle('open');
-            document.getElementById('mainWrapper').classList.toggle('push-active');
+            
+            if(isDashboardOpen) {
+                document.getElementById('fab').style.display = 'none';
+            } else {
+                document.getElementById('fab').style.display = '';
+            }
         }
 
         function addToQueue(track, exactCurrentTime = 0) {
