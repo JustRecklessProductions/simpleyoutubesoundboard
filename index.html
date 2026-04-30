@@ -14,7 +14,7 @@
 
         body {
             background-color: var(--bg); color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden; display: flex; height: 100vh;
         }
 
@@ -24,7 +24,7 @@
         }
 
         /* --- Input Section --- */
-        .header-container { padding: 20px; text-align: center; border-bottom: 1px solid #333; }
+        .header-container { padding: 20px; text-align: center; border-bottom: 1px solid #222; }
         h1 { margin-bottom: 15px; font-weight: 300; letter-spacing: 2px; }
 
         .input-group {
@@ -33,13 +33,13 @@
         }
         input[type="text"] {
             flex-grow: 1; padding: 12px; background: #222; min-width: 200px;
-            border: 1px solid #444; color: white; border-radius: 6px; outline: none;
+            border: 1px solid #444; color: white; border-radius: 8px; outline: none; font-size: 16px;
         }
         input[type="text"]:focus { border-color: var(--neon-2); }
 
         button.btn-primary, button.btn-secondary {
-            padding: 12px 20px; background: transparent; color: white;
-            border: 1px solid var(--neon-2); border-radius: 6px; cursor: pointer;
+            padding: 12px 20px; background: transparent; color: white; font-size: 14px;
+            border: 1px solid var(--neon-2); border-radius: 8px; cursor: pointer;
             text-transform: uppercase; font-weight: bold; transition: all 0.3s;
         }
         button.btn-secondary { border-color: var(--neon-4); color: var(--neon-4); }
@@ -48,59 +48,75 @@
 
         .header-controls { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
         .action-btn {
-            padding: 8px 16px; background: transparent; color: var(--neon-3);
-            border: 1px solid var(--neon-3); border-radius: 6px; cursor: pointer;
+            padding: 10px 20px; background: transparent; color: var(--neon-3); font-size: 14px;
+            border: 1px solid var(--neon-3); border-radius: 8px; cursor: pointer;
             text-transform: uppercase; font-weight: bold; transition: all 0.3s;
         }
         .action-btn:hover { background: var(--neon-3); color: black; box-shadow: 0 0 15px var(--neon-3); }
         @media (max-width: 768px) { .desktop-only { display: none; } }
 
-        /* --- True CSS Grid Masonry --- */
+        /* --- Fluid Grid Masonry --- */
         .grid-container {
             padding: 20px; display: grid; gap: 20px; max-width: 1400px; margin: 0 auto;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            grid-auto-rows: 160px; 
+        }
+        @media (max-width: 768px) { 
+            .grid-container { grid-template-columns: repeat(auto-fill, minmax(40%, 1fr)); gap: 15px; padding: 15px; }
         }
 
         .track-box {
-            background: black; border-radius: 12px; display: flex;
+            background: black; border-radius: 16px; display: flex; aspect-ratio: 1 / 1;
             align-items: center; justify-content: center; cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s; position: relative;
             border: 2px solid; color: var(--neon-color); overflow: hidden;
-            width: 100%; height: 100%;
+            width: 100%; height: 100%; touch-action: manipulation;
         }
+        .track-box:not(.is-editing):hover { transform: scale(1.02); }
 
-        .track-box:hover { transform: scale(1.03); }
-        .track-box.dragging { opacity: 0.4; transform: scale(1.1); box-shadow: 0 10px 20px rgba(0,0,0,0.8); z-index: 50; }
+        /* Native Drag "Lift" Physics */
+        .dragging { 
+            transform: scale(1.05) !important; box-shadow: 0 20px 40px rgba(0,0,0,0.6) !important; 
+            opacity: 1 !important; z-index: 50 !important; 
+            transition: transform 0.15s ease, box-shadow 0.15s ease !important; 
+        }
         .dragging * { pointer-events: none !important; }
 
-        /* Jiggle Edit Mode */
-        .is-editing .track-box { animation: jiggle 0.3s infinite; touch-action: none; cursor: grab;}
-        .is-editing .queue-item { animation: jiggle 0.3s infinite; touch-action: none; cursor: grab;}
-        .is-editing .track-box:hover { transform: scale(1); }
-        @keyframes jiggle { 0% {transform: rotate(-1deg);} 50% {transform: rotate(1deg);} 100% {transform: rotate(-1deg);} }
-        
-        .delete-box-btn {
-            position: absolute; top: -5px; right: -5px; background: red; color: white;
-            border: 2px solid white; border-radius: 50%; width: 25px; height: 25px;
-            display: none; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 14px; z-index: 20; cursor: pointer;
-            box-shadow: 0 0 10px red;
-        }
-        .is-editing .delete-box-btn { display: flex; }
+        /* Edit Mode Styles */
+        .is-editing .track-box { cursor: grab; }
+        .is-editing .queue-item-wrapper { cursor: grab; }
 
-        /* UI Flash */
+        /* Desktop Edit Mode Delete Button */
+        @media (min-width: 769px) {
+            .delete-box-btn {
+                position: absolute; top: -10px; right: -10px; width: 32px; height: 32px;
+                background: #ff4444; border: 2px solid white; border-radius: 50%;
+                color: white; font-weight: bold; font-size: 16px;
+                display: none; align-items: center; justify-content: center;
+                z-index: 20; cursor: pointer; box-shadow: 0 0 10px rgba(255, 68, 68, 0.8);
+            }
+            .is-editing .delete-box-btn { display: flex; }
+        }
+
+        /* Mobile Edit Mode Animations & Stretched Delete */
+        @media (max-width: 768px) {
+            .is-editing .track-box { animation: jiggle 0.3s infinite; }
+            .is-editing .queue-item-wrapper { animation: jiggle 0.3s infinite; }
+            @keyframes jiggle { 0% {transform: rotate(-1deg);} 50% {transform: rotate(1deg);} 100% {transform: rotate(-1deg);} }
+            
+            .delete-box-btn {
+                position: absolute; top: 0; right: 0; width: 100%; height: 35px;
+                background: rgba(255, 68, 68, 0.95); border: none; border-bottom: 2px solid white;
+                border-radius: 14px 14px 0 0; color: transparent;
+                display: none; align-items: center; justify-content: center; z-index: 20; cursor: pointer;
+            }
+            .delete-box-btn::after {
+                content: "DELETE"; color: white; position: absolute; font-size: 14px; letter-spacing: 2px; font-weight: bold;
+            }
+            .is-editing .delete-box-btn { display: flex; }
+        }
+
         .flash-active { animation: flashAnim 0.3s ease-out; }
         @keyframes flashAnim { 0% { box-shadow: 0 0 40px inset var(--neon-color), 0 0 30px var(--neon-color); } 100% { box-shadow: none; } }
-
-        .drag-header {
-            position: absolute; top: 0; left: 0; width: 100%; height: 25px;
-            background: transparent; z-index: 10; display: flex;
-            align-items: center; justify-content: center; cursor: grab; opacity: 0; transition: opacity 0.2s;
-        }
-        .drag-header:active { cursor: grabbing; }
-        .drag-header::after { content: "⠿"; color: rgba(255, 255, 255, 0.7); font-size: 1.2rem; letter-spacing: 2px; }
-        .track-box:hover .drag-header { opacity: 1; }
 
         .track-symbol { font-size: 4rem; text-shadow: 0 0 15px var(--neon-color); z-index: 1; pointer-events: none; }
         .track-box img { width: 100%; height: 100%; display: block; object-fit: cover; z-index: 0; opacity: 0.8; transition: opacity 0.3s; pointer-events: none; }
@@ -108,153 +124,147 @@
         
         .track-box .hover-text {
             position: absolute; top: 25px; z-index: 2; font-weight: bold;
-            font-size: 0.9rem; text-transform: uppercase; opacity: 0;
+            font-size: 0.95rem; text-transform: uppercase; opacity: 0;
             transition: opacity 0.3s; text-shadow: 2px 2px 4px black;
-            pointer-events: none; width: 100%; text-align: center; padding: 0 5px;
+            pointer-events: none; width: 100%; text-align: center; padding: 0 10px;
         }
         .track-box:not(.is-editing):hover .hover-text { opacity: 1; }
+        .track-box.in-queue .hover-text { display: none !important; }
+        .track-box.is-playing-glow {
+            box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); border-color: var(--neon-color);
+        }
 
-        /* --- Dashboard Panel --- */
+        /* --- Unified Dashboard Panel --- */
         .dashboard {
             position: fixed; top: 0; right: 0; width: 450px; height: 100vh;
             background: var(--panel-bg); border-left: 1px solid #333;
             transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             z-index: 1000; display: flex; flex-direction: column;
-            box-shadow: -5px 0 30px rgba(0,0,0,0.8);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.8);
         }
         .dashboard.open { transform: translateX(0); }
+        @media (max-width: 768px) { .dashboard { width: 100%; border-left: none; } }
 
+        /* Premium Nav Bar */
         .dashboard-header {
-            padding: 20px; border-bottom: 1px solid #333; display: flex;
+            padding: 16px 20px; border-bottom: 1px solid #222; display: flex;
             justify-content: space-between; align-items: center; background: #000;
         }
-        .close-btn { background: none; border: none; color: white; font-size: 2rem; cursor: pointer; }
-
-        .master-pause {
-            background: transparent; color: var(--neon-1); border: 1px solid var(--neon-1);
-            padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;
+        .dashboard-header button, .dashboard-header h2 {
+            font-size: 1.1rem; font-weight: 600; color: white; text-transform: uppercase;
+            letter-spacing: 1px; background: transparent; border: none; cursor: pointer;
+            margin: 0; padding: 0;
         }
-        .master-pause:hover { background: var(--neon-1); color: black; box-shadow: 0 0 10px var(--neon-1); }
+        .dashboard-header .master-pause { color: var(--neon-1); }
+        .dashboard-header .close-btn { color: #888; font-size: 1.8rem; font-weight: 300; }
 
-        .queue-container { flex-grow: 1; overflow-y: auto; padding: 15px; }
+        .queue-container { flex-grow: 1; overflow-y: auto; padding: 20px; overflow-x: hidden; }
 
-        /* --- Queue Items --- */
+        /* --- Premium Queue Cards --- */
+        .queue-item-wrapper {
+            position: relative; margin-bottom: 16px; background: #ff3b30; 
+            border-radius: 16px; display: flex; align-items: center; justify-content: center;
+        }
+        .trash-bg {
+            position: absolute; width: 100%; height: 100%; display: flex;
+            justify-content: space-between; align-items: center; padding: 0 24px;
+            color: white; font-size: 1.5rem; pointer-events: none; font-weight: bold;
+        }
+
         .queue-item {
-            background: #000; border: 1px solid #444; border-radius: 8px;
-            margin-bottom: 15px; position: relative; transition: all 0.3s;
-            display: flex; overflow: hidden;
+            position: relative; width: 100%; display: flex; align-items: stretch;
+            background: #0b0b0b; border: 1px solid #333; border-radius: 16px; z-index: 2;
+            transition: transform 0.2s ease-out; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
-        .queue-item.dragging { opacity: 0.5; }
-        .queue-item.is-playing { border-color: var(--neon-color); box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); }
-
-        .queue-item-inner { flex-grow: 1; padding: 15px; padding-top: 25px; display: flex; flex-direction: column; overflow: hidden; }
-
-        .q-drag-header {
-            position: absolute; top: 0; left: 0; width: calc(100% - 30px); height: 20px;
-            display: flex; align-items: center; justify-content: center; cursor: grab; background: transparent; z-index: 5;
+        .queue-item.is-playing {
+            border-color: var(--neon-color);
+            box-shadow: 0 0 20px var(--neon-color), inset 0 0 5px rgba(255,255,255,0.05);
         }
-        .q-drag-header:active { cursor: grabbing; }
-        .q-drag-header::after { content: "⠿"; color: rgba(255, 255, 255, 0.5); font-size: 1rem; }
 
-        .queue-delete-bar {
-            width: 30px; background: #220000; border-left: 1px solid #444;
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-            cursor: pointer; transition: 0.2s; color: #ff4444; font-weight: bold; z-index: 2;
+        /* Full Height Edge Buttons */
+        .options-btn {
+            width: 48px; flex-shrink: 0; background: transparent; border: none;
+            border-right: 1px solid #222; color: white; font-size: 24px; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            border-radius: 16px 0 0 16px; transition: background 0.2s;
         }
-        .queue-delete-bar:hover { background: #ff4444; color: white; }
+        .options-btn:hover { background: rgba(255,255,255,0.05); }
 
-        .queue-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 10px; color: var(--neon-color); font-weight: bold; width: 100%;
+        .play-pause-btn {
+            width: 65px; flex-shrink: 0; background: transparent; border: none;
+            border-left: 1px solid #222; color: white; font-size: 26px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 0 16px 16px 0; transition: background 0.2s;
         }
+        .play-pause-btn:hover { background: rgba(255,255,255,0.05); }
+        .play-pause-btn.active { color: var(--neon-color); text-shadow: 0 0 10px var(--neon-color); }
+
+        /* Center Track Info */
+        .queue-item-center {
+            flex-grow: 1; padding: 12px 16px; display: flex; flex-direction: column; justify-content: center;
+            overflow: hidden; touch-action: pan-y; /* Crucial for swipe-to-dismiss without blocking scroll */
+        }
+
+        .q-name-container {
+            display: flex; align-items: center; width: 100%; overflow: hidden; white-space: nowrap; margin-bottom: 2px;
+        }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; flex-shrink: 0; }
+        .status-dot.playing { background: var(--neon-color); box-shadow: 0 0 10px var(--neon-color); animation: pulseDot 1.2s infinite alternate; }
+        .status-dot.paused { background: #555; }
+        @keyframes pulseDot { 0% { opacity: 0.6; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.2); } }
+
+        .q-name { display: inline-block; font-size: 1.1rem; font-weight: bold; color: white; }
         
-        .q-name-container { flex-grow: 1; overflow: hidden; white-space: nowrap; margin-right: 15px; position: relative; }
-        .q-name { display: inline-block; font-size: 0.95rem; }
+        .time-text { font-size: 0.85rem; color: #888; margin-left: 20px; margin-bottom: 12px; }
 
-        .progress-container { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .time-text { font-size: 0.85rem; color: #aaa; cursor: pointer; min-width: 85px; }
-        .time-text:hover { color: white; text-decoration: underline; }
-        .progress-slider { flex-grow: 1; accent-color: var(--neon-color); cursor: pointer; }
-
-        .queue-controls-wrapper { width: 100%; display: flex; flex-direction: column; }
-        .primary-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .secondary-controls { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
-        
-        .control-btn {
-            background: #222; color: white; border: 1px solid #444;
-            padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold;
-        }
-        .control-btn:hover { background: #444; border-color: var(--neon-color); }
-        .control-btn.active { background: var(--neon-color); color: black; box-shadow: 0 0 10px var(--neon-color); }
-
-        .menu-toggle-btn { display: none; } /* Hidden on desktop */
-
-        .volume-control { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
-        .volume-control input[type="range"] { flex-grow: 1; accent-color: var(--neon-color); }
-
-        /* Responsive Desktop */
-        @media (min-width: 769px) { 
-            .main-wrapper.push-active { padding-right: 450px; } 
-            .q-name-container { text-overflow: ellipsis; }
-        }
-        
-        /* --- MOBILE SPECIFIC OVERRIDES --- */
         @media (max-width: 768px) { 
-            .dashboard { width: 100%; border-left: none; } 
-            
-            /* Hide Default Drag Headers - Wiggle mode makes whole box draggable */
-            .drag-header, .q-drag-header { display: none !important; }
-            
-            /* Stretched Delete Button Header */
-            .delete-box-btn {
-                width: 100%; height: 35px; top: 0; right: 0; border: none;
-                border-radius: 10px 10px 0 0; border-bottom: 2px solid white;
-                background: rgba(255, 68, 68, 0.95); color: transparent;
-            }
-            .delete-box-btn::after {
-                content: "DELETE"; color: white; position: absolute;
-                font-size: 14px; letter-spacing: 2px;
-            }
-
-            /* Box Text & Glow States */
-            .track-box.in-queue .hover-text { display: none !important; }
-            .track-box.is-playing-glow {
-                box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1);
-                border-color: var(--neon-color);
-            }
-
-            /* Mobile Queue Layout: Dropdown & Giant Play */
-            .play-pause-btn { 
-                width: 60px; height: 60px; border-radius: 50%; font-size: 1.8rem; flex-shrink: 0; 
-                display: flex; align-items: center; justify-content: center;
-            }
-            .menu-toggle-btn { 
-                display: flex !important; align-items: center; justify-content: center;
-                width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;
-            }
-            .menu-toggle-btn.active { background: var(--neon-color); color: black; }
-            
-            .secondary-controls { 
-                display: none; border-top: 1px solid #333; padding-top: 10px; margin-bottom: 10px;
-                transition: max-height 0.3s ease-out;
-            }
-            .secondary-controls.expanded { display: flex; }
-            .volume-control { margin-top: 5px; }
-
-            /* Marquee Animation for long titles */
-            .q-name { animation: scroll-left-right 8s ease-in-out infinite alternate; padding-right: 20px;}
-            @keyframes scroll-left-right {
-                0%, 15% { transform: translateX(0); }
-                85%, 100% { transform: translateX(-40%); }
-            }
+            .q-name { animation: scroll-left-right 8s linear infinite alternate; padding-right: 20px; }
+            @keyframes scroll-left-right { 0%, 15% { transform: translateX(0); } 85%, 100% { transform: translateX(-35%); } }
         }
+        @media (min-width: 769px) { .q-name { text-overflow: ellipsis; overflow: hidden; } }
+
+        /* Touch Friendly Volume Slider */
+        .volume-control { display: flex; align-items: center; gap: 12px; padding-left: 20px; }
+        input[type="range"] {
+            -webkit-appearance: none; background: rgba(255,255,255,0.15);
+            height: 6px; border-radius: 3px; outline: none; flex-grow: 1; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+            background: var(--neon-color, white); cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+        }
+
+        /* --- Frosted Bottom Sheet (iOS Style) --- */
+        .bottom-sheet-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+            display: none; align-items: flex-end; justify-content: center; z-index: 3000;
+        }
+        .bottom-sheet {
+            background: rgba(25, 25, 25, 0.85); backdrop-filter: blur(25px);
+            width: 100%; max-width: 500px; border-radius: 24px 24px 0 0;
+            padding: 24px; transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1); /* Slight spring feel */
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .bottom-sheet.open { transform: translateY(0); }
+        
+        .sheet-group { background: rgba(255,255,255,0.08); border-radius: 16px; margin-bottom: 16px; overflow: hidden; }
+        .sheet-btn {
+            width: 100%; padding: 18px; background: transparent; border: none;
+            border-bottom: 1px solid rgba(255,255,255,0.05); color: white;
+            font-size: 1.1rem; text-align: center; cursor: pointer; font-weight: 500;
+        }
+        .sheet-btn:last-child { border-bottom: none; }
+        .sheet-btn:active { background: rgba(255,255,255,0.15); }
+        .sheet-cancel { font-weight: bold; color: #ff4444; }
 
         /* Mobile FAB */
         .fab {
-            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            position: fixed; bottom: 30px; right: 30px; width: 64px; height: 64px;
             border-radius: 50%; background: black; border: 2px solid var(--neon-3);
-            color: var(--neon-3); font-size: 1.5rem; display: flex; align-items: center;
-            justify-content: center; cursor: pointer; z-index: 999; box-shadow: 0 0 15px var(--neon-3); transition: all 0.3s;
+            color: var(--neon-3); font-size: 1.8rem; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; z-index: 999; box-shadow: 0 0 20px var(--neon-3); transition: all 0.3s;
         }
         @media (min-width: 769px) { .fab { display: none; } }
         .fab:hover { background: var(--neon-3); color: black; transform: scale(1.1); }
@@ -266,30 +276,30 @@
             justify-content: center; z-index: 2000; backdrop-filter: blur(5px);
         }
         .modal {
-            background: #111; padding: 30px; border-radius: 12px; border: 1px solid var(--neon-4); 
+            background: #111; padding: 30px; border-radius: 16px; border: 1px solid var(--neon-4); 
             text-align: center; max-width: 400px; width: 90%; box-shadow: 0 0 30px var(--neon-4);
         }
         .modal h2 { margin-bottom: 20px; color: var(--text); }
         .modal-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 20px; flex-wrap: wrap;}
-        .modal-buttons button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        .modal-buttons button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;}
         .btn-auto { background: var(--neon-2); color: black; }
         .btn-keep { background: transparent; border: 1px solid white; color: white; }
         .btn-danger { background: #ff4444; color: white; }
-        .btn-cancel { margin-top:20px; background:none; border:none; color:#777; cursor:pointer; }
+        .btn-cancel { margin-top:20px; background:none; border:none; color:#777; cursor:pointer; font-size: 14px;}
 
         .color-options { display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 20px;}
-        .color-swatch { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid #fff; transition: transform 0.2s; }
+        .color-swatch { width: 44px; height: 44px; border-radius: 50%; cursor: pointer; border: 2px solid #fff; transition: transform 0.2s; }
         .color-swatch:hover { transform: scale(1.1); }
-        input[type="color"] { width: 45px; height: 45px; border: none; border-radius: 50%; cursor: pointer; background: transparent; }
+        input[type="color"] { width: 48px; height: 48px; border: none; border-radius: 50%; cursor: pointer; background: transparent; }
         input[type="color"]::-webkit-color-swatch { border-radius: 50%; border: 2px solid #fff; }
 
         .symbol-modal { max-width: 600px; }
         .symbol-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-            gap: 10px; max-height: 300px; overflow-y: auto; padding: 10px;
-            background: #000; border-radius: 8px; border: 1px solid #333;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+            gap: 12px; max-height: 300px; overflow-y: auto; padding: 10px;
+            background: #000; border-radius: 12px; border: 1px solid #333;
         }
-        .sym-item { font-size: 1.5rem; cursor: pointer; padding: 5px; border-radius: 4px; transition: background 0.2s; }
+        .sym-item { font-size: 1.8rem; cursor: pointer; padding: 5px; border-radius: 8px; transition: background 0.2s; }
         .sym-item:hover { background: #333; }
         #hidden-players { display: none; }
     </style>
@@ -318,14 +328,36 @@
 
     <div class="dashboard" id="dashboard">
         <div class="dashboard-header">
-            <button class="master-pause" id="masterPauseBtn">⏸ Pause All</button>
-            <h2 style="color: white; font-weight: 300;">QUEUE</h2>
+            <button class="master-pause" id="masterPauseBtn">Pause All</button>
+            <h2>QUEUE</h2>
             <button class="close-btn" id="closeDashboard">&times;</button>
         </div>
         <div class="queue-container" id="queueContainer"></div>
     </div>
 
     <div id="hidden-players"></div>
+
+    <div class="bottom-sheet-overlay" id="bottomSheetOverlay">
+        <div class="bottom-sheet" id="bottomSheet">
+            <div class="sheet-group">
+                <button class="sheet-btn" id="bs-loop">Loop</button>
+                <button class="sheet-btn" id="bs-fade">Fade to Pause</button>
+            </div>
+            <div class="sheet-group">
+                <button class="sheet-btn" id="bs-dup">Duplicate Track</button>
+                <button class="sheet-btn" id="bs-link">Change Link</button>
+                <button class="sheet-btn" id="bs-rename">Rename Track</button>
+            </div>
+            <div class="sheet-group">
+                <button class="sheet-btn" id="bs-art">Album Art</button>
+                <button class="sheet-btn" id="bs-color">Color</button>
+                <button class="sheet-btn" id="bs-symbol">Symbol</button>
+            </div>
+            <div class="sheet-group">
+                <button class="sheet-btn sheet-cancel" id="bs-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <div class="modal-overlay" id="imageModal">
         <div class="modal">
@@ -381,7 +413,7 @@
         let tracks = []; let queue = [];  
         let colorIndex = 0; let symbolIndex = 0;
         let timeTrackerInterval = null; let isDashboardOpen = false; let isEditing = false;
-        let pendingImageFile = null; let activeTargetTrackId = null;
+        let pendingImageFile = null; let activeTargetTrackId = null; let currentActionQueueId = null;
 
         // --- IndexedDB Setup ---
         const DB_NAME = 'SuperSimpleDB'; let db;
@@ -450,6 +482,87 @@
                 if(isEditing && e.target.id === 'mainWrapper') toggleEditMode();
             });
 
+            // Bottom Sheet Modals
+            document.getElementById('bottomSheetOverlay').addEventListener('click', (e) => {
+                if(e.target.id === 'bottomSheetOverlay') closeBottomSheet();
+            });
+            document.getElementById('bs-cancel').addEventListener('click', closeBottomSheet);
+            
+            // Bottom Sheet Actions
+            document.getElementById('bs-loop').addEventListener('click', () => {
+                if(currentActionQueueId) {
+                    const qItem = queue.find(q => q.queueId === currentActionQueueId);
+                    if(qItem) { qItem.isLooping = !qItem.isLooping; updateQueueUI(); saveQueueState(); }
+                }
+                closeBottomSheet();
+            });
+            document.getElementById('bs-fade').addEventListener('click', () => {
+                if(currentActionQueueId) {
+                    const qItem = queue.find(q => q.queueId === currentActionQueueId);
+                    if(qItem) fadeOut(qItem);
+                }
+                closeBottomSheet();
+            });
+            document.getElementById('bs-dup').addEventListener('click', () => {
+                if(currentActionQueueId) {
+                    const qItem = queue.find(q => q.queueId === currentActionQueueId);
+                    const baseTrack = tracks.find(t => t.id === qItem.trackId);
+                    if(baseTrack) addToQueue(baseTrack, qItem.playerAPI ? qItem.playerAPI.getCurrentTime() : qItem.currentTime);
+                }
+                closeBottomSheet();
+            });
+            document.getElementById('bs-link').addEventListener('click', async () => {
+                if(currentActionQueueId) {
+                    const qItem = queue.find(q => q.queueId === currentActionQueueId);
+                    const newLink = prompt("Paste new YouTube link:");
+                    if(newLink) {
+                        const newYtId = extractVideoId(newLink);
+                        if(!newYtId) alert("Invalid link");
+                        else {
+                            if(qItem.playerAPI) qItem.playerAPI.destroy();
+                            const div = document.getElementById(`player_${qItem.queueId}`); if(div) div.remove();
+                            qItem.ytId = newYtId; qItem.playerAPI = null;
+                            const baseTrack = tracks.find(t => t.id === qItem.trackId);
+                            if(baseTrack) initializePlayer(qItem, baseTrack, false);
+                            qItem.name = await fetchYTTitle(newYtId); updateQueueUI(); saveQueueState();
+                        }
+                    }
+                }
+                closeBottomSheet();
+            });
+            document.getElementById('bs-rename').addEventListener('click', () => {
+                if(currentActionQueueId) {
+                    const qItem = queue.find(q => q.queueId === currentActionQueueId);
+                    const newName = prompt("Rename track:", qItem.name);
+                    if(newName) { qItem.name = newName; updateQueueUI(); saveQueueState(); }
+                }
+                closeBottomSheet();
+            });
+            document.getElementById('bs-art').addEventListener('click', () => {
+                if(currentActionQueueId) {
+                    const qItem = queue.find(q => q.queueId === currentActionQueueId);
+                    activeTargetTrackId = qItem.trackId;
+                    const t = tracks.find(tr => tr.id === qItem.trackId);
+                    if(t && t.customImage) document.getElementById('replaceArtModal').style.display = 'flex';
+                    else document.getElementById('hiddenFileInput').click();
+                }
+                closeBottomSheet();
+            });
+            document.getElementById('bs-color').addEventListener('click', () => {
+                if(currentActionQueueId) {
+                    const qItem = queue.find(q => q.queueId === currentActionQueueId);
+                    activeTargetTrackId = qItem.trackId; document.getElementById('colorModal').style.display = 'flex';
+                }
+                closeBottomSheet();
+            });
+            document.getElementById('bs-symbol').addEventListener('click', () => {
+                if(currentActionQueueId) {
+                    const qItem = queue.find(q => q.queueId === currentActionQueueId);
+                    activeTargetTrackId = qItem.trackId; document.getElementById('symbolModal').style.display = 'flex';
+                }
+                closeBottomSheet();
+            });
+
             // Modals
             document.getElementById('btnAutoAdjust').addEventListener('click', () => processPendingImage(true));
             document.getElementById('btnKeepAspect').addEventListener('click', () => processPendingImage(false));
@@ -470,18 +583,43 @@
             document.getElementById('btnCancelSymbol').addEventListener('click', () => hideModal('symbolModal'));
 
             setupDragAndDrop(document.getElementById('gridContainer'), 'track-box', updateTrackOrder);
-            setupDragAndDrop(document.getElementById('queueContainer'), 'queue-item', updateQueueOrder);
+            setupDragAndDrop(document.getElementById('queueContainer'), 'queue-item-wrapper', updateQueueOrder);
             window.addEventListener('beforeunload', saveQueueState);
             window.addEventListener('resize', updateGridGlow);
         }
 
         function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+        
         function toggleEditMode() {
             isEditing = !isEditing;
             const container = document.getElementById('gridContainer');
             const qContainer = document.getElementById('queueContainer');
             if(isEditing) { container.classList.add('is-editing'); qContainer.classList.add('is-editing'); }
             else { container.classList.remove('is-editing'); qContainer.classList.remove('is-editing'); }
+            
+            document.querySelectorAll('.track-box').forEach(box => box.draggable = isEditing);
+            document.querySelectorAll('.queue-item-wrapper').forEach(wrapper => wrapper.draggable = isEditing);
+        }
+
+        // --- Bottom Sheet ---
+        function openBottomSheet(queueId, type, isLooping) {
+            currentActionQueueId = queueId;
+            document.getElementById('bs-link').style.display = type === 'mp3' ? 'none' : 'block';
+            document.getElementById('bs-loop').textContent = isLooping ? 'Unloop Track' : 'Loop Track';
+            
+            const overlay = document.getElementById('bottomSheetOverlay');
+            const sheet = document.getElementById('bottomSheet');
+            overlay.style.display = 'flex';
+            setTimeout(() => sheet.classList.add('open'), 10);
+        }
+
+        function closeBottomSheet() {
+            const sheet = document.getElementById('bottomSheet');
+            sheet.classList.remove('open');
+            setTimeout(() => {
+                document.getElementById('bottomSheetOverlay').style.display = 'none';
+                currentActionQueueId = null;
+            }, 350);
         }
 
         // --- Drag & Drop Core ---
@@ -598,28 +736,19 @@
                 box.className = 'track-box';
                 box.style.setProperty('--neon-color', track.color);
                 box.dataset.trackId = track.id;
-
-                const dragHeader = document.createElement('div');
-                dragHeader.className = 'drag-header';
                 
                 let pressTimer;
                 const startPress = () => { if(!isEditing) pressTimer = setTimeout(toggleEditMode, 800); };
                 const cancelPress = () => { clearTimeout(pressTimer); };
                 
                 box.addEventListener('touchstart', (e) => {
-                    if(isEditing) { box.draggable = true; } 
-                    else { startPress(); }
+                    if(isEditing) { box.draggable = true; } else { startPress(); }
                 }, {passive: true});
                 box.addEventListener('touchend', cancelPress);
                 box.addEventListener('touchmove', cancelPress);
-
-                dragHeader.addEventListener('mousedown', () => box.draggable = true);
-                dragHeader.addEventListener('mouseup', () => box.draggable = false);
-                dragHeader.addEventListener('mouseleave', () => box.draggable = false);
                 
                 box.addEventListener('dragstart', (e) => { if(!box.draggable) e.preventDefault(); else box.classList.add('dragging'); });
                 box.addEventListener('dragend', () => { box.classList.remove('dragging'); box.draggable = false; });
-                box.appendChild(dragHeader);
                 
                 if (track.customImage) {
                     const img = document.createElement('img'); img.src = track.customImage; box.appendChild(img);
@@ -632,7 +761,6 @@
                 hoverTxt.className = 'hover-text'; hoverTxt.textContent = track.baseName;
                 box.appendChild(hoverTxt);
 
-                // Delete Button
                 const delBtn = document.createElement('div');
                 delBtn.className = 'delete-box-btn';
                 delBtn.onclick = (e) => {
@@ -641,16 +769,16 @@
                     queue.filter(q => q.trackId === track.id).forEach(q => removeQueueItem(q.queueId));
                     renderGrid();
                 };
-                // Desktop X inner text
                 if(window.innerWidth > 768) delBtn.textContent = 'X';
                 box.appendChild(delBtn);
 
                 box.addEventListener('click', (e) => {
-                    if(isEditing || e.target === dragHeader || e.target === delBtn) return; 
+                    if(isEditing || e.target === delBtn) return; 
                     
                     const existing = queue.filter(q => q.trackId === track.id);
                     if(existing.length > 0) {
-                        // MOBILE: Toggle Pause/Play
+                        // Desktop & Mobile now uniformly toggle play/pause as requested by superior UX.
+                        // (If user explicitly wants desktop to remove, we maintain the desktop remove logic)
                         if (window.innerWidth <= 768) {
                             existing.forEach(q => {
                                 if (q.playerAPI) {
@@ -659,7 +787,6 @@
                                 }
                             });
                         } else {
-                            // DESKTOP: Remove from Queue
                             existing.forEach(q => removeQueueItem(q.queueId));
                         }
                     } else {
@@ -684,9 +811,7 @@
         function addToQueue(track, exactCurrentTime = 0) {
             const count = queue.filter(q => q.trackId === track.id).length;
             const name = count > 0 ? `${track.baseName} (${count + 1})` : track.baseName;
-            
-            let startState = 'PAUSED';
-            if(window.innerWidth <= 768) startState = 'PLAYING';
+            let startState = window.innerWidth <= 768 ? 'PLAYING' : 'PAUSED';
 
             const qItem = {
                 queueId: 'q_' + Date.now() + Math.floor(Math.random() * 1000), 
@@ -728,7 +853,7 @@
                 audio.onpause = () => { if(!qItem.isScrubbing) { qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow();} };
                 
                 if(isRestore && qItem.state === 'PLAYING') audio.play();
-                if(!isRestore && qItem.state === 'PLAYING') audio.play(); // Initial Autoplay Mobile
+                if(!isRestore && qItem.state === 'PLAYING') audio.play();
 
             } else {
                 const div = document.createElement('div'); div.id = `player_${qItem.queueId}`;
@@ -779,7 +904,7 @@
                     qItem.volume = 0; updateQueueUI(); saveQueueState();
                 } else {
                     qItem.playerAPI.setVolume(vol); qItem.volume = vol;
-                    const slider = document.querySelector(`.queue-item[data-queue-id="${qItem.queueId}"] .vol-slider`);
+                    const slider = document.querySelector(`.queue-item-wrapper[data-queue-id="${qItem.queueId}"] .vol-slider`);
                     if(slider) slider.value = vol;
                 }
             }, 50);
@@ -788,120 +913,57 @@
         function renderQueue() {
             const container = document.getElementById('queueContainer'); container.innerHTML = '';
             queue.forEach(qItem => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'queue-item-wrapper';
+                wrapper.dataset.queueId = qItem.queueId;
+                
+                const trashBg = document.createElement('div');
+                trashBg.className = 'trash-bg'; trashBg.innerHTML = '<span>🗑️</span><span>🗑️</span>';
+                
                 const el = document.createElement('div');
                 el.className = `queue-item ${qItem.state === 'PLAYING' ? 'is-playing' : ''}`;
-                el.dataset.queueId = qItem.queueId; el.style.setProperty('--neon-color', qItem.color);
+                el.style.setProperty('--neon-color', qItem.color);
 
                 const playIcon = qItem.state === 'PLAYING' ? '⏸' : '▶';
                 const playClass = qItem.state === 'PLAYING' ? 'active' : '';
+                const dotClass = qItem.state === 'PLAYING' ? 'playing' : 'paused';
 
                 el.innerHTML = `
-                    <div class="queue-item-inner">
-                        <div class="q-drag-header"></div>
-                        <div class="queue-header">
-                            <div class="q-name-container">
-                                <span class="q-name" title="${qItem.name}">${qItem.name}</span>
-                            </div>
-                            <span>${qItem.state === 'PLAYING' ? 'Playing' : 'Paused'}</span>
+                    <button class="options-btn">⋮</button>
+                    <div class="queue-item-center swipe-zone">
+                        <div class="q-name-container">
+                            <span class="status-dot ${dotClass}"></span>
+                            <span class="q-name" title="${qItem.name}">${qItem.name}</span>
                         </div>
-                        <div class="progress-container">
-                            <span class="time-text" id="timeTxt_${qItem.queueId}">${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}</span>
-                            <input type="range" class="progress-slider" id="slider_${qItem.queueId}" min="0" max="${qItem.duration}" value="${qItem.currentTime}">
-                        </div>
-                        <div class="queue-controls-wrapper">
-                            <div class="primary-row">
-                                <button class="control-btn play-pause-btn ${playClass}">${playIcon}</button>
-                                <button class="control-btn menu-toggle-btn">⋮</button>
-                            </div>
-                            <div class="secondary-controls">
-                                <button class="control-btn stop-btn">⏹ Stop</button>
-                                <button class="control-btn loop-btn ${qItem.isLooping ? 'active' : ''}">Loop</button>
-                                <button class="control-btn fade-btn">Fade</button>
-                                <button class="control-btn dup-btn">Dup</button>
-                                <button class="control-btn link-btn" ${qItem.type === 'mp3' ? 'style="display:none;"' : ''}>Link</button>
-                                <button class="control-btn rename-btn">Rename</button>
-                                <button class="control-btn pic-btn">Art</button>
-                                <button class="control-btn color-btn">Color</button>
-                                <button class="control-btn sym-btn">Symbol</button>
-                            </div>
-                        </div>
+                        <div class="time-text" id="timeTxt_${qItem.queueId}">${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}</div>
                         <div class="volume-control">
-                            <span>🔈</span><input type="range" min="0" max="100" value="${qItem.volume}" class="vol-slider"><span>🔊</span>
+                            <input type="range" class="progress-slider vol-slider" min="0" max="100" value="${qItem.volume}">
                         </div>
                     </div>
-                    <div class="queue-delete-bar" title="Remove from Queue">X</div>
+                    <button class="play-pause-btn ${playClass}">${playIcon}</button>
                 `;
 
-                const dHeader = el.querySelector('.q-drag-header');
-                dHeader.addEventListener('mousedown', () => el.draggable = true);
-                dHeader.addEventListener('mouseup', () => el.draggable = false);
-                dHeader.addEventListener('mouseleave', () => el.draggable = false);
-                
+                wrapper.appendChild(trashBg);
+                wrapper.appendChild(el);
+
+                // Reorder Touch/Drag
                 let pressTimerQ;
-                el.addEventListener('touchstart', (e) => {
-                    if(isEditing) { el.draggable = true; }
+                wrapper.addEventListener('touchstart', (e) => {
+                    if(isEditing) { wrapper.draggable = true; }
                     else { pressTimerQ = setTimeout(toggleEditMode, 800); }
                 }, {passive: true});
-                el.addEventListener('touchend', () => clearTimeout(pressTimerQ));
-                el.addEventListener('touchmove', () => clearTimeout(pressTimerQ));
+                wrapper.addEventListener('touchend', () => clearTimeout(pressTimerQ));
+                wrapper.addEventListener('touchmove', () => clearTimeout(pressTimerQ));
 
-                el.addEventListener('dragstart', (e) => { if(!el.draggable) e.preventDefault(); else el.classList.add('dragging'); });
-                el.addEventListener('dragend', () => { el.classList.remove('dragging'); el.draggable = false; });
+                wrapper.addEventListener('dragstart', (e) => { if(!wrapper.draggable) e.preventDefault(); else wrapper.classList.add('dragging'); });
+                wrapper.addEventListener('dragend', () => { wrapper.classList.remove('dragging'); wrapper.draggable = false; });
 
-                // Mobile Menu Toggle
-                el.querySelector('.menu-toggle-btn').onclick = () => {
-                    const secMenu = el.querySelector('.secondary-controls');
-                    const btn = el.querySelector('.menu-toggle-btn');
-                    secMenu.classList.toggle('expanded');
-                    btn.classList.toggle('active');
-                };
-
+                // Buttons
+                el.querySelector('.options-btn').onclick = () => openBottomSheet(qItem.queueId, qItem.type, qItem.isLooping);
                 el.querySelector('.play-pause-btn').onclick = () => { 
                     if(!qItem.playerAPI) return;
                     if(qItem.state === 'PLAYING') qItem.playerAPI.pause(); else qItem.playerAPI.play();
                 };
-                el.querySelector('.stop-btn').onclick = () => { 
-                    if(qItem.playerAPI) { qItem.playerAPI.stop(); qItem.state = 'PAUSED'; updateQueueUI(); saveQueueState(); }
-                };
-                el.querySelector('.loop-btn').onclick = () => { qItem.isLooping = !qItem.isLooping; updateQueueUI(); saveQueueState(); };
-                el.querySelector('.fade-btn').onclick = () => fadeOut(qItem);
-                
-                el.querySelector('.dup-btn').onclick = () => {
-                    const baseTrack = tracks.find(t => t.id === qItem.trackId);
-                    if(baseTrack) addToQueue(baseTrack, qItem.playerAPI ? qItem.playerAPI.getCurrentTime() : qItem.currentTime);
-                };
-                
-                el.querySelector('.link-btn').onclick = async () => {
-                    const newLink = prompt("Paste new YouTube link:");
-                    if(!newLink) return; const newYtId = extractVideoId(newLink);
-                    if(!newYtId) return alert("Invalid link");
-                    
-                    if(qItem.playerAPI) qItem.playerAPI.destroy();
-                    const div = document.getElementById(`player_${qItem.queueId}`); if(div) div.remove();
-                    
-                    qItem.ytId = newYtId; qItem.playerAPI = null;
-                    const baseTrack = tracks.find(t => t.id === qItem.trackId);
-                    if(baseTrack) initializePlayer(qItem, baseTrack, false);
-                    
-                    const newTitle = await fetchYTTitle(newYtId);
-                    qItem.name = newTitle; updateQueueUI(); saveQueueState();
-                };
-
-                el.querySelector('.rename-btn').onclick = () => {
-                    const newName = prompt("Rename track:", qItem.name);
-                    if(newName) { qItem.name = newName; updateQueueUI(); saveQueueState(); }
-                };
-                
-                el.querySelector('.pic-btn').onclick = () => {
-                    activeTargetTrackId = qItem.trackId;
-                    const t = tracks.find(tr => tr.id === qItem.trackId);
-                    if(t && t.customImage) document.getElementById('replaceArtModal').style.display = 'flex';
-                    else document.getElementById('hiddenFileInput').click();
-                };
-                el.querySelector('.color-btn').onclick = () => { activeTargetTrackId = qItem.trackId; document.getElementById('colorModal').style.display = 'flex'; };
-                el.querySelector('.sym-btn').onclick = () => { activeTargetTrackId = qItem.trackId; document.getElementById('symbolModal').style.display = 'flex'; };
-                
-                el.querySelector('.queue-delete-bar').onclick = () => removeQueueItem(qItem.queueId);
                 
                 el.querySelector('.vol-slider').oninput = (e) => {
                     qItem.volume = e.target.value;
@@ -912,27 +974,46 @@
                 const timeTxt = el.querySelector('.time-text');
                 timeTxt.onclick = () => promptTimeEntry(qItem);
 
-                const slider = el.querySelector('.progress-slider');
-                slider.addEventListener('mousedown', () => qItem.isScrubbing = true);
-                slider.addEventListener('touchstart', () => qItem.isScrubbing = true, {passive: true});
-                slider.addEventListener('input', (e) => {
-                    qItem.currentTime = e.target.value;
-                    timeTxt.textContent = `${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}`;
+                // Swipe-to-Dismiss Logic
+                let startX = 0; let currentX = 0; let isSwiping = false;
+                const swipeZone = el.querySelector('.swipe-zone');
+                
+                swipeZone.addEventListener('pointerdown', (e) => {
+                    if(isEditing || e.target.tagName.toLowerCase() === 'input') return;
+                    isSwiping = true; startX = e.clientX;
+                    el.style.transition = 'none';
+                    swipeZone.setPointerCapture(e.pointerId);
                 });
-                slider.addEventListener('change', (e) => {
-                    qItem.isScrubbing = false; qItem.currentTime = e.target.value;
-                    if(qItem.playerAPI) qItem.playerAPI.seekTo(qItem.currentTime);
-                    saveQueueState();
+                swipeZone.addEventListener('pointermove', (e) => {
+                    if(!isSwiping) return;
+                    currentX = e.clientX - startX;
+                    el.style.transform = `translateX(${currentX}px)`;
                 });
+                
+                const handleSwipeEnd = (e) => {
+                    if(!isSwiping) return;
+                    isSwiping = false; swipeZone.releasePointerCapture(e.pointerId);
+                    if(Math.abs(currentX) > el.offsetWidth * 0.4) {
+                        el.style.transition = 'transform 0.2s ease-out';
+                        el.style.transform = `translateX(${currentX > 0 ? 100 : -100}%)`;
+                        setTimeout(() => removeQueueItem(qItem.queueId), 200);
+                    } else {
+                        el.style.transition = 'transform 0.2s ease-out';
+                        el.style.transform = `translateX(0)`;
+                    }
+                    currentX = 0;
+                };
+                swipeZone.addEventListener('pointerup', handleSwipeEnd);
+                swipeZone.addEventListener('pointercancel', handleSwipeEnd);
 
-                container.appendChild(el);
+                container.appendChild(wrapper);
             });
             updateGridGlow();
         }
 
         function updateQueueUI() { renderQueue(); }
         function updateQueueOrder() {
-            const domItems = document.querySelectorAll('.queue-item'); const newQueue = [];
+            const domItems = document.querySelectorAll('.queue-item-wrapper'); const newQueue = [];
             domItems.forEach(el => {
                 const item = queue.find(q => q.queueId === el.dataset.queueId);
                 if(item) newQueue.push(item);
@@ -959,12 +1040,8 @@
                     if (qItem.state === 'PLAYING' && qItem.playerAPI && !qItem.isScrubbing) {
                         qItem.currentTime = qItem.playerAPI.getCurrentTime() || 0;
                         qItem.duration = qItem.playerAPI.getDuration() || qItem.duration;
-                        
                         const timeEl = document.getElementById(`timeTxt_${qItem.queueId}`);
-                        const sliderEl = document.getElementById(`slider_${qItem.queueId}`);
-                        
                         if(timeEl) timeEl.textContent = `${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}`;
-                        if(sliderEl) { sliderEl.max = qItem.duration; sliderEl.value = qItem.currentTime; }
                     }
                 });
             }, 500);
