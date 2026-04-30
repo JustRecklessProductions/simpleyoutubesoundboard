@@ -114,7 +114,7 @@
         .close-dashboard-btn { color: #888; }
         .close-dashboard-btn:hover { color: white; }
 
-        .queue-container { flex-grow: 1; overflow-y: auto; padding: 20px; overflow-x: hidden; }
+        .queue-container { flex-grow: 1; overflow-y: auto; padding: 20px; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
         .queue-item-wrapper { position: relative; margin-bottom: 16px; background: #ff3b30; border-radius: 16px; display: flex; align-items: center; justify-content: center; }
         .queue-item { position: relative; width: 100%; display: flex; align-items: stretch; background: #0b0b0b; border: 1px solid #333; border-radius: 16px; z-index: 2; transition: transform 0.2s ease-out; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
         .queue-item.is-playing { border-color: var(--neon-color); box-shadow: 0 0 20px var(--neon-color), inset 0 0 5px rgba(255,255,255,0.05); }
@@ -191,7 +191,7 @@
 
         /* --- Bottom Sheet --- */
         .bottom-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; z-index: 3000; }
-        .bottom-sheet { background: rgba(25,25,25,0.85); backdrop-filter: blur(25px); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 24px; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1); border-top: 1px solid rgba(255,255,255,0.1); }
+        .bottom-sheet { background: rgba(25,25,25,0.85); backdrop-filter: blur(25px); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 24px; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1); border-top: 1px solid rgba(255,255,255,0.1); max-height: 85dvh; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
         .bottom-sheet.open { transform: translateY(0); }
         .sheet-group { background: rgba(255,255,255,0.08); border-radius: 16px; margin-bottom: 16px; overflow: hidden; }
         .sheet-btn { width: 100%; padding: 18px; font-family: 'Nunito', sans-serif; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.05); color: white; font-size: 1.1rem; text-align: center; cursor: pointer; font-weight: 600; }
@@ -612,9 +612,25 @@
         }
 
         function fadeIn(qItem) {
-            if(!qItem.playerAPI) return; let tv=qItem.volume; qItem.volume=0; qItem.playerAPI.setVolume(0); qItem.state='PLAYING'; qItem.preventGhostPlay=false; qItem.playerAPI.play();
-            let step=tv/100; const iv=setInterval(()=>{ qItem.volume=Math.min(tv,parseFloat(qItem.volume)+step); qItem.playerAPI.setVolume(qItem.volume); updateQueueUI(); if(qItem.volume>=tv) clearInterval(iv); },80);
+            if(!qItem.playerAPI) return; 
+            let tv = qItem.volume; 
+            qItem.volume = 0; 
+            qItem.playerAPI.setVolume(0); 
+            qItem.state = 'PLAYING'; 
+            qItem.preventGhostPlay = false; 
+            qItem.playerAPI.play();
+            
+            let step = Math.max(1, tv / 25); 
+            setTimeout(() => {
+                const iv = setInterval(() => { 
+                    qItem.volume = Math.min(tv, parseFloat(qItem.volume) + step); 
+                    qItem.playerAPI.setVolume(qItem.volume); 
+                    updateQueueUI(); 
+                    if(qItem.volume >= tv) clearInterval(iv); 
+                }, 80);
+            }, 400);
         }
+
         function fadeOut(qItem) {
             if(!qItem.playerAPI||qItem.state!=='PLAYING') return;
             const iv=setInterval(()=>{ qItem.volume=Math.max(0,qItem.volume-1); qItem.playerAPI.setVolume(qItem.volume); updateQueueUI(); if(qItem.volume<=0){clearInterval(iv); qItem.playerAPI.pause(); qItem.state='PAUSED'; updateQueueUI();} },80);
