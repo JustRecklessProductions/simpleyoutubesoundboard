@@ -15,7 +15,7 @@
         body {
             background-color: var(--bg); color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden; display: flex; height: 100vh; width: 100vw;
+            overflow: hidden; display: flex; height: 100dvh; width: 100vw;
         }
 
         /* --- Fluid Resizing Wrapper --- */
@@ -72,12 +72,14 @@
         .track-box-content {
             background: black; border-radius: 16px; position: absolute; top:0; left:0; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center; overflow: hidden;
-            border: 2px solid var(--neon-color); cursor: pointer; z-index: 1; transition: border-color 0.2s;
+            border: 2px solid var(--neon-color); cursor: pointer; z-index: 1; transition: border-width 0.2s, border-color 0.2s;
         }
         
         .track-box:not(.is-editing):hover { transform: scale(1.02); z-index: 5; }
 
-        /* Active Queue Enlargement (Desktop Only) */
+        /* Active Queue Enlargement & Thicker Border */
+        .track-box.in-queue .track-box-content { border-width: 6px; }
+        
         @media (min-width: 769px) {
             .track-box.in-queue { transform: scale(1.08); z-index: 10; }
             .track-box.in-queue:not(.is-editing):hover { transform: scale(1.10); z-index: 11; }
@@ -154,12 +156,13 @@
             display: flex; flex-direction: column; background: var(--panel-bg); z-index: 1000;
             width: 450px; flex-shrink: 0; margin-right: -450px; border-left: 1px solid #333; box-shadow: -10px 0 30px rgba(0,0,0,0.8);
             transition: margin-right 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            height: 100dvh;
         }
         .dashboard.open { margin-right: 0; }
         
         @media (max-width: 768px) { 
             .dashboard { 
-                position: fixed; top: 0; right: 0; width: 100%; height: 100vh; margin-right: 0; border-left: none;
+                position: fixed; top: 0; right: 0; width: 100%; margin-right: 0; border-left: none;
                 transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             }
             .dashboard.open { transform: translateX(0); }
@@ -185,6 +188,18 @@
 
         .queue-container { flex-grow: 1; overflow-y: auto; padding: 20px; overflow-x: hidden; }
 
+        /* Sticky Mobile Back Button */
+        .dashboard-footer {
+            display: none; padding: 15px 20px; background: #000; border-top: 1px solid #222; flex-shrink: 0; width: 100%;
+        }
+        .dashboard-footer-btn {
+            width: 100%; padding: 16px; background: #222; color: white; border: none;
+            border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .dashboard-footer-btn:active { background: #333; }
+        @media (max-width: 768px) { .dashboard-footer { display: block; } }
+
         /* --- Premium Queue Cards --- */
         .queue-item-wrapper {
             position: relative; margin-bottom: 16px; background: #ff3b30; 
@@ -205,15 +220,29 @@
             border-color: var(--neon-color); box-shadow: 0 0 20px var(--neon-color), inset 0 0 5px rgba(255,255,255,0.05);
         }
 
-        /* Full Height Edge Buttons */
+        /* Left Action Column (Stacked on Desktop) */
+        .queue-left-actions {
+            width: 48px; flex-shrink: 0; display: flex; flex-direction: column;
+            border-right: 1px solid #222; border-radius: 16px 0 0 16px; overflow: hidden;
+        }
+
         .options-btn {
-            width: 48px; flex-shrink: 0; background: transparent; border: none;
-            border-right: 1px solid #222; color: var(--neon-color); font-size: 24px; font-weight: bold;
+            flex-grow: 1; height: 100%; background: transparent; border: none;
+            color: var(--neon-color); font-size: 24px; font-weight: bold;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
-            border-radius: 16px 0 0 16px; transition: background 0.2s;
+            transition: background 0.2s;
         }
         .options-btn:hover { background: rgba(255,255,255,0.05); }
 
+        .queue-delete-btn {
+            height: 25%; background: transparent; border: none; border-top: 1px solid #222;
+            color: #ff4444; font-size: 16px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        }
+        .queue-delete-btn:hover { background: rgba(255,68,68,0.15); text-shadow: 0 0 10px #ff4444; }
+        @media (max-width: 768px) { .queue-delete-btn.desktop-only { display: none; } }
+
+        /* Right Play Button */
         .play-pause-btn {
             width: 65px; flex-shrink: 0; background: transparent; border: none;
             border-left: 1px solid #222; color: white; font-size: 26px; cursor: pointer;
@@ -266,7 +295,7 @@
 
         /* --- Frosted Bottom Sheet (iOS Style) --- */
         .bottom-sheet-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100dvh;
             background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
             display: none; align-items: flex-end; justify-content: center; z-index: 3000;
         }
@@ -619,10 +648,8 @@
             });
             document.getElementById('bs-delete').addEventListener('click', () => {
                 if(currentActionQueueId) {
-                    if(confirm("Are you sure you want to delete this track from the mix?")) {
-                        removeQueueItem(currentActionQueueId);
-                        closeBottomSheet();
-                    }
+                    removeQueueItem(currentActionQueueId);
+                    closeBottomSheet();
                 }
             });
 
@@ -1036,7 +1063,10 @@
                 const playClass = qItem.state === 'PLAYING' ? 'active' : '';
 
                 el.innerHTML = `
-                    <button class="options-btn">⋮</button>
+                    <div class="queue-left-actions">
+                        <button class="options-btn">⋮</button>
+                        <button class="queue-delete-btn desktop-only">X</button>
+                    </div>
                     <div class="queue-item-center swipe-zone">
                         <div class="q-name-container">
                             <span class="q-name" title="${qItem.name}">${qItem.name}</span>
@@ -1070,6 +1100,12 @@
 
                 // Buttons
                 el.querySelector('.options-btn').onclick = () => openBottomSheet(qItem.queueId, qItem.type, qItem.isLooping);
+                
+                const delBtnDesktop = el.querySelector('.queue-delete-btn');
+                if(delBtnDesktop) {
+                    delBtnDesktop.onclick = () => removeQueueItem(qItem.queueId);
+                }
+
                 el.querySelector('.play-pause-btn').onclick = () => { 
                     if(!qItem.playerAPI) return;
                     qItem.preventGhostPlay = false; // User initiated
