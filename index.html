@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Simple Soundboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0b0b0b; --panel-bg: #111; --text: #ffffff;
@@ -14,7 +15,7 @@
 
         body {
             background-color: var(--bg); color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden; display: flex; height: 100dvh; width: 100vw;
         }
 
@@ -29,17 +30,17 @@
             width: 100%; max-width: 600px; margin: 0 auto;
         }
         .input-stack input[type="text"] {
-            width: 100%; padding: 16px; background: #222;
+            width: 100%; padding: 16px; background: #222; font-family: 'Nunito', sans-serif;
             border: 1px solid #444; color: white; border-radius: 8px; outline: none; font-size: 16px; text-align: center;
         }
         .input-stack input[type="text"]:focus { border-color: var(--neon-2); }
         
-        @media (max-width: 768px) { .input-stack input[type="text"]::placeholder { font-size: 11px; } }
+        @media (max-width: 768px) { .input-stack input[type="text"]::placeholder { font-size: 11.5px; } }
 
         .input-buttons { display: flex; gap: 10px; justify-content: center; width: 100%; }
         button.btn-primary, button.btn-secondary {
             flex: 1; padding: 14px 20px; background: transparent; color: white; font-size: 14px;
-            border: 1px solid var(--neon-2); border-radius: 8px; cursor: pointer;
+            border: 1px solid var(--neon-2); border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif;
             text-transform: uppercase; font-weight: bold; transition: all 0.3s;
         }
         button.btn-secondary { border-color: var(--neon-4); color: var(--neon-4); }
@@ -52,7 +53,7 @@
         }
         .action-btn {
             width: 100%; padding: 14px 20px; background: transparent; color: var(--neon-3); font-size: 14px;
-            border: 1px solid var(--neon-3); border-radius: 8px; cursor: pointer;
+            border: 1px solid var(--neon-3); border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif;
             text-transform: uppercase; font-weight: bold; transition: all 0.3s;
         }
         .action-btn:hover { background: var(--neon-3); color: black; box-shadow: 0 0 15px var(--neon-3); }
@@ -88,7 +89,7 @@
         }
 
         .delete-box-btn {
-            position: absolute; top: -12px; right: -12px; width: 36px; height: 36px;
+            position: absolute; top: -12px; right: -12px; width: 36px; height: 36px; font-family: 'Nunito', sans-serif;
             background: #ff4444; border: 3px solid var(--bg); border-radius: 50%;
             color: white; font-weight: bold; font-size: 16px; display: none; align-items: center; justify-content: center;
             z-index: 20; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.2s;
@@ -98,7 +99,7 @@
             body.is-editing .track-box { animation: jiggle 0.3s infinite; }
             @keyframes jiggle { 0% {transform: rotate(-1deg);} 50% {transform: rotate(1deg);} 100% {transform: rotate(-1deg);} }
             .delete-box-btn { top: 0; right: 0; width: 100%; height: 35px; background: rgba(255, 68, 68, 0.95); border: none; border-bottom: 2px solid white; border-radius: 14px 14px 0 0; color: transparent; }
-            .delete-box-btn::after { content: "DELETE"; color: white; position: absolute; font-size: 14px; letter-spacing: 2px; font-weight: bold; }
+            .delete-box-btn::after { content: "DELETE"; color: white; position: absolute; font-size: 14px; letter-spacing: 2px; font-weight: bold; font-family: 'Nunito', sans-serif; }
             body.is-editing .delete-box-btn { display: flex; }
         }
 
@@ -124,7 +125,7 @@
         .dashboard-header, .dashboard-footer { background: #000; display: flex; flex-shrink: 0; width: 100%; padding: 0; }
         .dashboard-header { border-bottom: 1px solid #222; }
         .dashboard-footer { border-top: 1px solid #222; }
-        .dashboard-header button, .dashboard-footer button { width: 100%; padding: 24px; font-size: 1.2rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; background: transparent; border: none; cursor: pointer; margin: 0; transition: background 0.3s, color 0.3s, text-shadow 0.3s; }
+        .dashboard-header button, .dashboard-footer button { width: 100%; padding: 24px; font-family: 'Nunito', sans-serif; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; background: transparent; border: none; cursor: pointer; margin: 0; transition: background 0.3s, color 0.3s, text-shadow 0.3s; }
         .dashboard-header button:hover, .dashboard-footer button:hover { background: rgba(255,255,255,0.05); }
         .master-pause { color: var(--neon-1); }
         .master-play { color: #39ff14; text-shadow: 0 0 10px #39ff14; }
@@ -137,18 +138,18 @@
         .queue-item.is-playing { border-color: var(--neon-color); box-shadow: 0 0 20px var(--neon-color), inset 0 0 5px rgba(255,255,255,0.05); }
         
         .queue-left-actions { width: 48px; flex-shrink: 0; display: flex; flex-direction: column; border-right: 1px solid #222; border-radius: 16px 0 0 16px; overflow: hidden; }
-        .options-btn { flex-grow: 1; height: 100%; background: transparent; border: none; color: var(--neon-color); font-size: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .options-btn { flex-grow: 1; height: 100%; background: transparent; border: none; color: var(--neon-color); font-size: 24px; font-weight: bold; font-family: 'Nunito', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
         .options-btn:hover { background: rgba(255,255,255,0.05); }
-        .queue-delete-btn { height: 25%; background: transparent; border: none; border-top: 1px solid #222; color: #ff4444; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .queue-delete-btn { height: 25%; background: transparent; border: none; border-top: 1px solid #222; color: #ff4444; font-size: 16px; font-weight: bold; font-family: 'Nunito', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .queue-delete-btn:hover { background: rgba(255,68,68,0.15); text-shadow: 0 0 10px #ff4444; }
 
-        .play-pause-btn { width: 65px; flex-shrink: 0; background: transparent; border: none; border-left: 1px solid #222; color: white; font-size: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 0 16px 16px 0; transition: background 0.2s; }
+        .play-pause-btn { width: 65px; flex-shrink: 0; background: transparent; border: none; border-left: 1px solid #222; color: white; font-size: 26px; font-family: 'Nunito', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 0 16px 16px 0; transition: background 0.2s; }
         .play-pause-btn.active { color: var(--neon-color); text-shadow: 0 0 10px var(--neon-color); }
         .queue-item-center { flex-grow: 1; padding: 16px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; touch-action: pan-y; }
         .q-name-container { display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; white-space: nowrap; margin-bottom: 12px; }
-        .q-name { display: inline-block; font-size: 1.1rem; font-weight: bold; color: var(--neon-color); animation: scroll-left-right 8s linear infinite alternate; }
+        .q-name { display: inline-block; font-size: 1.1rem; font-weight: 700; color: var(--neon-color); animation: scroll-left-right 8s linear infinite alternate; }
         @keyframes scroll-left-right { 0%, 10% { transform: translateX(15%); } 90%, 100% { transform: translateX(-15%); } }
-        .time-text { font-size: 1rem; color: #fff; cursor: pointer; display: block; width: fit-content; margin: 0 auto 16px auto; background: rgba(255,255,255,0.15); padding: 10px 24px; border-radius: 24px; font-weight: bold; transition: background 0.2s; text-align: center; letter-spacing: 1px; }
+        .time-text { font-size: 1rem; color: #fff; cursor: pointer; display: block; width: fit-content; margin: 0 auto 16px auto; background: rgba(255,255,255,0.15); padding: 10px 24px; border-radius: 24px; font-weight: 700; transition: background 0.2s; text-align: center; letter-spacing: 1px; }
         .sliders-container { display: flex; flex-direction: column; gap: 16px; width: 100%; }
         input[type="range"] { -webkit-appearance: none; background: rgba(255,255,255,0.15); height: 6px; border-radius: 3px; outline: none; flex-grow: 1; cursor: pointer; width: 100%; }
         input[type="range"].progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--neon-color) !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8); }
@@ -157,26 +158,29 @@
         /* --- Modals --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(5px); }
         .modal { background: #111; padding: 30px; border-radius: 16px; border: 1px solid var(--neon-4); text-align: center; max-width: 400px; width: 90%; box-shadow: 0 0 30px var(--neon-4); }
-        .modal h2 { margin-bottom: 20px; color: var(--text); }
+        .modal h2 { margin-bottom: 20px; color: var(--text); font-weight: 600; }
+        .modal p { font-weight: 400; }
         .modal-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 20px; flex-wrap: wrap;}
-        .modal-buttons button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;}
+        .modal-buttons button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; font-family: 'Nunito', sans-serif;}
         .btn-auto { background: var(--neon-2); color: black; }
         .btn-keep { background: transparent; border: 1px solid white; color: white; }
         .btn-danger { background: #ff4444; color: white; }
-        .btn-cancel { margin-top:20px; background:none; border:none; color:#777; cursor:pointer; font-size: 14px;}
+        .btn-cancel { margin-top:20px; background:none; border:none; color:#777; cursor:pointer; font-size: 14px; font-family: 'Nunito', sans-serif; font-weight: 600;}
         .color-options { display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 20px;}
         .color-swatch { width: 44px; height: 44px; border-radius: 50%; cursor: pointer; border: 2px solid #fff; transition: transform 0.2s; }
         input[type="color"] { width: 48px; height: 48px; border: none; border-radius: 50%; cursor: pointer; background: transparent; }
         input[type="color"]::-webkit-color-swatch { border-radius: 50%; border: 2px solid #fff; }
         #colorPreview { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 15px auto; border: 3px solid white; }
-        #timeInput { width: 100%; padding: 15px; font-size: 28px; text-align: center; background: #222; border: 1px solid var(--neon-2); color: white; border-radius: 12px; outline: none; margin-bottom: 10px; letter-spacing: 2px; }
+        #timeInput { width: 100%; padding: 15px; font-size: 28px; font-family: 'Nunito', sans-serif; font-weight: 700; text-align: center; background: #222; border: 1px solid var(--neon-2); color: white; border-radius: 12px; outline: none; margin-bottom: 10px; letter-spacing: 2px; }
+        
         .bottom-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; z-index: 3000; }
         .bottom-sheet { background: rgba(25, 25, 25, 0.85); backdrop-filter: blur(25px); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 24px; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1); border-top: 1px solid rgba(255,255,255,0.1); }
         .bottom-sheet.open { transform: translateY(0); }
         .sheet-group { background: rgba(255,255,255,0.08); border-radius: 16px; margin-bottom: 16px; overflow: hidden; }
-        .sheet-btn { width: 100%; padding: 18px; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.05); color: white; font-size: 1.1rem; text-align: center; cursor: pointer; font-weight: 500; }
-        .sheet-cancel { font-weight: bold; color: #ff4444 !important; }
-        .sheet-delete { background: #ff4444 !important; color: white !important; font-weight: bold;}
+        .sheet-btn { width: 100%; padding: 18px; font-family: 'Nunito', sans-serif; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.05); color: white; font-size: 1.1rem; text-align: center; cursor: pointer; font-weight: 600; }
+        .sheet-cancel { font-weight: 700; color: #ff4444 !important; }
+        .sheet-delete { background: #ff4444 !important; color: white !important; font-weight: 700;}
+        
         .fab, .fab-stop-edit { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 64px; height: 64px; border-radius: 50%; background: black; border: 2px solid var(--neon-3); color: var(--neon-3); font-size: 1.8rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 999; box-shadow: 0 0 20px var(--neon-3); transition: all 0.3s; }
         .fab-stop-edit { display: none; bottom: 110px; border-color: var(--neon-4); color: var(--neon-4); width: 56px; height: 56px; font-size: 1.5rem;}
         #hidden-players { display: none; }
@@ -254,6 +258,7 @@
     <div class="modal-overlay" id="timeModal">
         <div class="modal">
             <h2>Set Time</h2>
+            <p style="color: #888; font-size: 12px; margin-bottom: 15px;">Type digits to format time (e.g. 123 for 1:23)</p>
             <input type="text" id="timeInput" inputmode="numeric" pattern="[0-9]*" placeholder="0:00">
             <button class="btn-auto" id="btnConfirmTime" style="width:100%">Jump to Time</button>
             <button class="btn-cancel" onclick="hideModal('timeModal')">Cancel</button>
@@ -352,6 +357,7 @@
 
             document.getElementById('timeInput').addEventListener('input', (e) => { let val = e.target.value.replace(/\D/g, ''); if(!val) return; if(val.length > 2) e.target.value = val.slice(0, -2) + ':' + val.slice(-2); else e.target.value = val; });
             document.getElementById('btnConfirmTime').onclick = () => { const qItem = queue.find(q => q.queueId === activeTimeQueueId); const val = document.getElementById('timeInput').value.replace(/\D/g, ''); if(!val) { hideModal('timeModal'); return; } let seconds = val.length > 2 ? parseInt(val.slice(0, -2)) * 60 + parseInt(val.slice(-2)) : parseInt(val); if(seconds > qItem.duration) seconds = qItem.duration; qItem.currentTime = seconds; if(qItem.playerAPI) { qItem.preventGhostPlay = false; qItem.playerAPI.seekTo(seconds); } updateQueueUI(); saveQueueState(); hideModal('timeModal'); };
+            document.getElementById('timeInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('btnConfirmTime').click(); });
 
             document.getElementById('bs-art').onclick = () => { activeTargetTrackId = queue.find(q => q.queueId === currentActionQueueId).trackId; const t = tracks.find(tr => tr.id === activeTargetTrackId); if(t && t.customImage) document.getElementById('replaceArtModal').style.display = 'flex'; else document.getElementById('artSourceModal').style.display = 'flex'; closeBottomSheet(); };
             document.getElementById('btnArtUploadChoice').onclick = () => { hideModal('artSourceModal'); document.getElementById('hiddenFileInput').click(); };
@@ -362,15 +368,60 @@
             window.addEventListener('resize', updateGridGlow);
         }
 
-        async function fetchMediaTitle(url, platform, id) {
-            const fetcher = async (pUrl) => { const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(pUrl)}`); const d = await res.json(); return JSON.parse(d.contents); };
-            const fallback = async (pUrl) => { const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(pUrl)}`); return await res.json(); };
-            let api = '';
-            if (platform === 'youtube') api = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`;
-            else if (platform === 'vimeo') api = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`;
-            else if (platform === 'soundcloud') api = `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(url)}`;
-            try { let data = await fetcher(api); return data.title || "Track X"; } 
-            catch { try { let data = await fallback(url); return data.title || "Track X"; } catch { return "Track X"; } }
+        function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function openTimeModal(queueId) {
+            activeTimeQueueId = queueId;
+            const input = document.getElementById('timeInput');
+            input.value = ''; document.getElementById('timeModal').style.display = 'flex'; input.focus();
+        }
+        
+        function toggleEditMode() {
+            isEditing = !isEditing;
+            if(isEditing) document.body.classList.add('is-editing'); 
+            else document.body.classList.remove('is-editing'); 
+            
+            document.querySelectorAll('.track-box').forEach(box => box.draggable = isEditing);
+            document.querySelectorAll('.queue-item-wrapper').forEach(wrapper => wrapper.draggable = isEditing);
+        }
+
+        function openBottomSheet(queueId, type, isLooping) {
+            currentActionQueueId = queueId;
+            document.getElementById('bs-link').style.display = type === 'mp3' ? 'none' : 'block';
+            document.getElementById('bs-loop').textContent = isLooping ? 'Unloop Track' : 'Loop Track';
+            
+            const overlay = document.getElementById('bottomSheetOverlay');
+            const sheet = document.getElementById('bottomSheet');
+            overlay.style.display = 'flex';
+            setTimeout(() => sheet.classList.add('open'), 10);
+        }
+
+        function closeBottomSheet() {
+            const sheet = document.getElementById('bottomSheet');
+            sheet.classList.remove('open');
+            setTimeout(() => { document.getElementById('bottomSheetOverlay').style.display = 'none'; currentActionQueueId = null; }, 350);
+        }
+
+        function setupDragAndDrop(container, itemClass, callback) {
+            container.addEventListener('dragover', e => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(container, e.clientX, e.clientY, itemClass);
+                const draggable = document.querySelector('.dragging');
+                if(!draggable) return;
+                if (afterElement == null) container.appendChild(draggable);
+                else container.insertBefore(draggable, afterElement);
+            });
+            container.addEventListener('drop', () => { document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging')); callback(); });
+        }
+        function getDragAfterElement(container, x, y, itemClass) {
+            const elements = [...container.querySelectorAll(`.${itemClass}:not(.dragging)`)];
+            return elements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                if(itemClass === 'track-box' && (x < box.left || x > box.right)) return closest; 
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) return { offset, element: child };
+                else return closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
         function parseMediaUrl(url) {
@@ -382,12 +433,15 @@
             return null;
         }
 
-        async function handleAddMediaLink() {
+        function handleAddMediaLink() {
             const url = document.getElementById('mediaLink').value.trim(); const parsed = parseMediaUrl(url); if(!parsed) return alert('Unsupported Link');
-            const track = { id: 'track_'+Date.now(), type: 'embed', platform: parsed.platform, mediaId: parsed.id, baseName: "Grabbing Title...", color: neonColors[colorIndex], symbol: allSymbolsList[symbolIndex], twitchType: parsed.type || null };
+            
+            // Instantly use the assigned symbol as the default name instead of fetching
+            const sym = allSymbolsList[symbolIndex];
+            const track = { id: 'track_'+Date.now(), type: 'embed', platform: parsed.platform, mediaId: parsed.id, baseName: sym, color: neonColors[colorIndex], symbol: sym, twitchType: parsed.type || null };
+            
             colorIndex = (colorIndex+1)%neonColors.length; symbolIndex = (symbolIndex+1)%allSymbolsList.length;
             tracks.push(track); saveTrackToDB(track); renderGrid(); document.getElementById('mediaLink').value = '';
-            const title = await fetchMediaTitle(url, parsed.platform, parsed.id); updateTrackData(track.id, { baseName: title });
         }
 
         function handleAddMP3(e) {
@@ -429,10 +483,16 @@
             queue.forEach(qItem => {
                 const wrapper = document.createElement('div'); wrapper.className = 'queue-item-wrapper'; wrapper.dataset.queueId = qItem.queueId;
                 const el = document.createElement('div'); el.className = `queue-item ${qItem.state === 'PLAYING' ? 'is-playing' : ''}`; el.style.setProperty('--neon-color', qItem.color);
-                el.innerHTML = `<div class="queue-left-actions"><button class="options-btn" onclick="openBottomSheet('${qItem.queueId}','${qItem.type}',${qItem.isLooping})">⋮</button><button class="queue-delete-btn" onclick="removeQueueItem('${qItem.queueId}')">X</button></div><div class="queue-item-center"><div class="q-name-container"><span class="q-name">${qItem.name}</span></div><div class="time-text" onclick="activeTimeQueueId='${qItem.queueId}'; document.getElementById('timeModal').style.display='flex';">${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}</div><div class="sliders-container"><input type="range" class="progress-slider" id="scrub_${qItem.queueId}" min="0" max="${qItem.duration}" value="${qItem.currentTime}"><input type="range" class="vol-slider" min="0" max="100" value="${qItem.volume}"></div></div><button class="play-pause-btn ${qItem.state==='PLAYING'?'active':''}" onclick="const q=queue.find(it=>it.queueId==='${qItem.queueId}'); q.preventGhostPlay=false; if(q.state==='PLAYING') q.playerAPI.pause(); else q.playerAPI.play();">${qItem.state==='PLAYING'?'⏸':'▶'}</button>`;
+                el.innerHTML = `<div class="queue-left-actions"><button class="options-btn" onclick="openBottomSheet('${qItem.queueId}','${qItem.type}',${qItem.isLooping})">⋮</button><button class="queue-delete-btn desktop-only" onclick="removeQueueItem('${qItem.queueId}')">X</button></div><div class="queue-item-center swipe-zone"><div class="q-name-container"><span class="q-name">${qItem.name}</span></div><div class="time-text" onclick="openTimeModal('${qItem.queueId}')">${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}</div><div class="sliders-container"><input type="range" class="progress-slider" id="scrub_${qItem.queueId}" min="0" max="${qItem.duration}" value="${qItem.currentTime}"><div class="volume-control"><span>🔈</span><input type="range" class="vol-slider" min="0" max="100" value="${qItem.volume}"><span>🔊</span></div></div></div><button class="play-pause-btn ${qItem.state==='PLAYING'?'active':''}" onclick="const q=queue.find(it=>it.queueId==='${qItem.queueId}'); q.preventGhostPlay=false; if(q.state==='PLAYING') q.playerAPI.pause(); else q.playerAPI.play();">${qItem.state==='PLAYING'?'⏸':'▶'}</button>`;
                 wrapper.appendChild(el); 
                 el.querySelector('.vol-slider').oninput = (e) => { qItem.volume = e.target.value; if(qItem.playerAPI) qItem.playerAPI.setVolume(qItem.volume); };
-                const scrub = el.querySelector('.progress-slider'); scrub.onmousedown = scrub.ontouchstart = () => qItem.isScrubbing = true; scrub.oninput = (e) => { qItem.currentTime = e.target.value; el.querySelector('.time-text').textContent = formatTime(qItem.currentTime) + ' / ' + formatTime(qItem.duration); }; scrub.onchange = (e) => { qItem.isScrubbing = false; if(qItem.playerAPI) qItem.playerAPI.seekTo(parseFloat(e.target.value)); };
+                const scrub = el.querySelector('.progress-slider'); scrub.onmousedown = scrub.ontouchstart = () => qItem.isScrubbing = true; scrub.oninput = (e) => { qItem.currentTime = e.target.value; el.querySelector('.time-text').textContent = formatTime(qItem.currentTime) + ' / ' + formatTime(qItem.duration); }; scrub.onchange = (e) => { qItem.isScrubbing = false; if(qItem.playerAPI) { qItem.preventGhostPlay = false; qItem.playerAPI.seekTo(parseFloat(e.target.value)); } };
+                
+                let startX = 0; let currentX = 0; let isSwiping = false; const swipeZone = el.querySelector('.swipe-zone');
+                swipeZone.onpointerdown = (e) => { if(window.innerWidth > 768 || isEditing || e.target.tagName.toLowerCase() === 'input') return; isSwiping = true; startX = e.clientX; el.style.transition = 'none'; swipeZone.setPointerCapture(e.pointerId); };
+                swipeZone.onpointermove = (e) => { if(!isSwiping) return; currentX = e.clientX - startX; el.style.transform = `translateX(${currentX}px)`; };
+                const handleSwipeEnd = (e) => { if(!isSwiping) return; isSwiping = false; swipeZone.releasePointerCapture(e.pointerId); if(Math.abs(currentX) > el.offsetWidth * 0.4) { el.style.transition = 'transform 0.2s ease-out'; el.style.transform = `translateX(${currentX > 0 ? 100 : -100}%)`; setTimeout(() => removeQueueItem(qItem.queueId), 200); } else { el.style.transition = 'transform 0.2s ease-out'; el.style.transform = `translateX(0)`; } currentX = 0; };
+                swipeZone.onpointerup = handleSwipeEnd; swipeZone.onpointercancel = handleSwipeEnd;
                 container.appendChild(wrapper);
             }); updateMasterButton(); updateGridGlow();
         }
@@ -440,11 +500,6 @@
         function restoreQueueItem(s) { const base = tracks.find(t=>t.id===s.trackId); if(!base) return; const q = {...s, state: 'PAUSED', color: base.color, playerAPI: null, isScrubbing: false, preventGhostPlay: true}; queue.push(q); renderQueue(); initializePlayer(q, base, true); }
         function addToQueue(t, startAt=0) { const q = { queueId: 'q_'+Date.now()+Math.floor(Math.random()*1000), trackId: t.id, type: t.type, platform: t.platform, mediaId: t.mediaId, twitchType: t.twitchType, name: t.baseName, color: t.color, playerAPI: null, state: 'PAUSED', duration: 0, isLooping: false, volume: 50, currentTime: startAt, isScrubbing: false, preventGhostPlay: false }; queue.push(q); renderQueue(); initializePlayer(q, t); }
         function removeQueueItem(id) { const i = queue.findIndex(q=>q.queueId===id); if(i>-1) { if(queue[i].playerAPI) queue[i].playerAPI.destroy(); const div=document.getElementById(`player_${id}`); if(div) div.remove(); queue.splice(i,1); renderQueue(); renderGrid(); } }
-        function toggleDashboard() { isDashboardOpen = !isDashboardOpen; document.getElementById('dashboard').classList.toggle('open'); document.getElementById('fab').style.display = isDashboardOpen ? 'none' : ''; }
-        function toggleEditMode() { isEditing = !isEditing; document.body.classList.toggle('is-editing', isEditing); }
-        function hideModal(id) { document.getElementById(id).style.display = 'none'; }
-        function openBottomSheet(id, type, looping) { currentActionQueueId = id; document.getElementById('bs-loop').textContent = looping ? 'Unloop Track' : 'Loop Track'; document.getElementById('bottomSheetOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('bottomSheet').classList.add('open'), 10); }
-        function closeBottomSheet() { document.getElementById('bottomSheet').classList.remove('open'); setTimeout(() => { document.getElementById('bottomSheetOverlay').style.display = 'none'; currentActionQueueId = null; }, 350); }
         function formatTime(s) { if(!s) return "0:00"; const m = Math.floor(s/60); const sec = Math.floor(s%60); return `${m}:${sec<10?'0':''}${sec}`; }
         function updateGridGlow() { document.querySelectorAll('.track-box').forEach(box => { const q = queue.filter(q=>q.trackId===box.dataset.trackId); box.classList.toggle('in-queue', q.length>0); box.classList.toggle('is-playing-glow', q.some(it=>it.state==='PLAYING')); }); }
         function updateMasterButton() { const btn = document.getElementById('masterToggleBtn'); const isP = queue.some(q=>q.state==='PLAYING'); btn.textContent = isP ? 'Pause All' : 'Play All'; btn.className = isP ? 'master-pause' : 'master-play'; }
@@ -485,7 +540,12 @@
         }
 
         function updateQueueUI() { renderQueue(); }
-        function updateTrackData(id, upd) { const i = tracks.findIndex(t=>t.id===id); if(i>-1) { tracks[i] = {...tracks[i], ...upd}; saveTrackToDB(tracks[i]); } queue.forEach(q => { if(q.trackId===id) { if(upd.color) q.color = upd.color; if(upd.baseName && (q.name.startsWith("Track") || q.name === "Grabbing Title...")) q.name = upd.baseName; } }); renderGrid(); renderQueue(); saveQueueState(); }
+        function updateTrackData(id, upd) { 
+            const i = tracks.findIndex(t=>t.id===id); 
+            if(i>-1) { tracks[i] = {...tracks[i], ...upd}; saveTrackToDB(tracks[i]); } 
+            queue.forEach(q => { if(q.trackId===id) { if(upd.color) q.color = upd.color; if(upd.baseName) q.name = upd.baseName; } }); 
+            renderGrid(); renderQueue(); saveQueueState(); 
+        }
 
         function startUITracker() {
             setInterval(() => {
