@@ -326,11 +326,24 @@
 
         let isAppInitialized = false;
         async function initApp() { 
-            if(isAppInitialized) return; isAppInitialized = true;
-            await initDB(); tracks = (await loadTracksFromDB()) || []; if(tracks.length > 0) colorIndex = tracks.length % neonColors.length; populateSymbolGrid(); renderGrid(); const savedQueue = loadQueueState(); savedQueue.forEach(q => restoreQueueItem(q)); setupEventListeners(); startUITracker(); setInterval(saveQueueState, 5000); 
+            if(isAppInitialized) return; 
+            isAppInitialized = true;
+            setupEventListeners(); 
+            try {
+                await initDB(); 
+                tracks = (await loadTracksFromDB()) || []; 
+                if(tracks.length > 0) colorIndex = tracks.length % neonColors.length; 
+                populateSymbolGrid(); 
+                renderGrid(); 
+                const savedQueue = loadQueueState(); 
+                savedQueue.forEach(q => { try { restoreQueueItem(q); } catch(e) { console.warn("Flushed corrupt track", e); } }); 
+                startUITracker(); 
+                setInterval(saveQueueState, 5000); 
+            } catch(e) { console.error("Initialization Error", e); }
         }
+        
+        document.addEventListener('DOMContentLoaded', initApp);
         function onYouTubeIframeAPIReady() { initApp(); }
-        setTimeout(initApp, 1000); // Safety fallback if YT API is blocked
 
         function setupEventListeners() {
             document.getElementById('uploadLinkBtn').addEventListener('click', handleAddMediaLink);
@@ -387,6 +400,8 @@
             document.getElementById('btnRemoveArt').onclick = () => { updateTrackData(activeTargetTrackId, { customImage: null, symbol: '♫' }); hideModal('replaceArtModal'); };
 
             window.addEventListener('resize', updateGridGlow);
+            setupDragAndDrop(document.getElementById('gridContainer'), 'track-box', () => {});
+            setupDragAndDrop(document.getElementById('queueContainer'), 'queue-item-wrapper', () => {});
         }
 
         function hideModal(id) { document.getElementById(id).style.display = 'none'; }
@@ -399,9 +414,15 @@
         
         function toggleEditMode() {
             isEditing = !isEditing;
-            if(isEditing) document.body.classList.add('is-editing'); 
-            else document.body.classList.remove('is-editing'); 
-            
+            if(isEditing) {
+                document.body.classList.add('is-editing'); 
+            } else {
+                document.body.classList.remove('is-editing'); 
+                updateTrackOrder();
+                updateQueueOrder();
+                renderGrid();
+                renderQueue();
+            }
             document.querySelectorAll('.track-box').forEach(box => box.draggable = isEditing);
             document.querySelectorAll('.queue-item-wrapper').forEach(wrapper => wrapper.draggable = isEditing);
         }
@@ -497,6 +518,13 @@
                 const hoverTxt = document.createElement('div'); hoverTxt.className = 'hover-text'; hoverTxt.textContent = track.baseName; boxContent.appendChild(hoverTxt);
                 const delBtn = document.createElement('div'); delBtn.className = 'delete-box-btn'; delBtn.onclick = (e) => { e.stopPropagation(); deleteTrackFromDB(track.id); tracks = tracks.filter(t=>t.id!==track.id); queue.filter(q=>q.trackId===track.id).forEach(q=>removeQueueItem(q.queueId)); renderGrid(); };
                 if(window.innerWidth > 768) delBtn.textContent = 'X'; box.append(boxContent, delBtn);
+                
+                let pressTimer;
+                box.onmousedown = box.ontouchstart = (e) => { if(isEditing) { box.draggable = true; } else { pressTimer = setTimeout(toggleEditMode, 800); } };
+                box.onmouseup = box.ontouchend = box.onmouseleave = box.ontouchmove = () => clearTimeout(pressTimer);
+                box.ondragstart = (e) => { if(!box.draggable) e.preventDefault(); else box.classList.add('dragging'); };
+                box.ondragend = () => { box.classList.remove('dragging'); box.draggable = false; };
+
                 box.onclick = () => { if(isEditing) return; if(queue.some(q=>q.trackId===track.id)){ if(window.innerWidth <= 768) { const q = queue.find(q=>q.trackId===track.id); if(q.state==='PLAYING') q.playerAPI.pause(); else { q.preventGhostPlay=false; q.playerAPI.play(); } } else { removeQueueItem(queue.find(q=>q.trackId===track.id).queueId); } } else { addToQueue(track); if(!isDashboardOpen && window.innerWidth > 768) toggleDashboard(); } };
                 container.appendChild(box);
             }); updateGridGlow();
@@ -512,6 +540,12 @@
                 el.querySelector('.vol-slider').oninput = (e) => { qItem.volume = e.target.value; if(qItem.playerAPI) qItem.playerAPI.setVolume(qItem.volume); };
                 const scrub = el.querySelector('.progress-slider'); scrub.onmousedown = scrub.ontouchstart = () => qItem.isScrubbing = true; scrub.oninput = (e) => { qItem.currentTime = e.target.value; el.querySelector('.time-text').textContent = formatTime(qItem.currentTime) + ' / ' + formatTime(qItem.duration); }; scrub.onchange = (e) => { qItem.isScrubbing = false; if(qItem.playerAPI) { qItem.preventGhostPlay = false; qItem.playerAPI.seekTo(parseFloat(e.target.value)); } };
                 
+                let pressTimer;
+                wrapper.onmousedown = wrapper.ontouchstart = (e) => { if(isEditing) { wrapper.draggable = true; } else { pressTimer = setTimeout(toggleEditMode, 800); } };
+                wrapper.onmouseup = wrapper.ontouchend = wrapper.onmouseleave = wrapper.ontouchmove = () => clearTimeout(pressTimer);
+                wrapper.ondragstart = (e) => { if(!wrapper.draggable) e.preventDefault(); else wrapper.classList.add('dragging'); };
+                wrapper.ondragend = () => { wrapper.classList.remove('dragging'); wrapper.draggable = false; };
+
                 let startX = 0; let currentX = 0; let isSwiping = false; const swipeZone = el.querySelector('.swipe-zone');
                 swipeZone.onpointerdown = (e) => { if(window.innerWidth > 768 || isEditing || e.target.tagName.toLowerCase() === 'input') return; isSwiping = true; startX = e.clientX; el.style.transition = 'none'; swipeZone.setPointerCapture(e.pointerId); };
                 swipeZone.onpointermove = (e) => { if(!isSwiping) return; currentX = e.clientX - startX; el.style.transform = `translateX(${currentX}px)`; };
@@ -527,7 +561,15 @@
                 const item = queue.find(q => q.queueId === el.dataset.queueId);
                 if(item) newQueue.push(item);
             });
-            queue = newQueue; saveQueueState();
+            if(newQueue.length > 0) { queue = newQueue; saveQueueState(); }
+        }
+        function updateTrackOrder() {
+            const domItems = document.querySelectorAll('.track-box'); const newTracks = [];
+            domItems.forEach(el => {
+                const t = tracks.find(tr => tr.id === el.dataset.trackId);
+                if(t) newTracks.push(t);
+            });
+            if(newTracks.length > 0) { tracks = newTracks; saveAllTracksToDB(); }
         }
 
         function restoreQueueItem(s) { const base = tracks.find(t=>t.id===s.trackId); if(!base) return; const q = {...s, state: 'PAUSED', color: base.color, playerAPI: null, isScrubbing: false, preventGhostPlay: true}; queue.push(q); renderQueue(); initializePlayer(q, base, true); }
@@ -549,12 +591,14 @@
                 if(!isRestore && q.state === 'PLAYING') a.play();
 
             } else if (q.platform === 'youtube') {
+                if (typeof YT === 'undefined' || !YT.Player) { setTimeout(() => initializePlayer(q, base, isRestore), 500); return; }
                 const div = document.createElement('div'); div.id = `player_${q.queueId}`; h.appendChild(div);
                 const yt = new YT.Player(div.id, { height: '0', width: '0', videoId: q.mediaId, playerVars: { 'autoplay': 0, 'controls': 0 }, events: {
                     'onReady': (e) => { q.playerAPI = { play: ()=>yt.playVideo(), pause: ()=>yt.pauseVideo(), stop: ()=>{yt.stopVideo(); yt.seekTo(0);}, seekTo: (s)=>yt.seekTo(s, true), setVolume: (v)=>yt.setVolume(v), getDuration: ()=>yt.getDuration(), getCurrentTime: ()=>yt.getCurrentTime(), destroy: ()=>yt.destroy() }; q.duration = yt.getDuration() || q.duration; yt.setVolume(q.volume); if(q.currentTime>0) yt.seekTo(q.currentTime, true); if(q.state==='PAUSED') setTimeout(()=>yt.pauseVideo(), 50); else if(!isRestore) setTimeout(()=>yt.playVideo(), 200); updateQueueUI(); },
                     'onStateChange': (e) => { if(e.data === YT.PlayerState.PLAYING) { if(q.preventGhostPlay && q.state==='PAUSED') { yt.pauseVideo(); q.preventGhostPlay=false; return; } q.preventGhostPlay=false; q.state='PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow(); } else if(e.data === YT.PlayerState.PAUSED && !q.isScrubbing) { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } else if(e.data === YT.PlayerState.ENDED) { if(q.isLooping) yt.playVideo(); else { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } } }
                 }});
             } else if (q.platform === 'vimeo') {
+                if (typeof Vimeo === 'undefined' || !Vimeo.Player) { setTimeout(() => initializePlayer(q, base, isRestore), 500); return; }
                 const div = document.createElement('div'); div.id = `player_${q.queueId}`; h.appendChild(div);
                 const vim = new Vimeo.Player(div, { id: q.mediaId, width: 0, height: 0 });
                 q.playerAPI = { play: ()=>vim.play(), pause: ()=>vim.pause(), stop: ()=>{vim.pause(); vim.setCurrentTime(0);}, seekTo: (s)=>vim.setCurrentTime(s), setVolume: (v)=>vim.setVolume(v/100), getDuration: ()=>q.duration, getCurrentTime: ()=>q.currentTime, destroy: ()=>vim.destroy() };
@@ -566,6 +610,7 @@
                 if(!isRestore && q.state === 'PLAYING') vim.play();
 
             } else if (q.platform === 'soundcloud') {
+                if (typeof SC === 'undefined' || !SC.Widget) { setTimeout(() => initializePlayer(q, base, isRestore), 500); return; }
                 const frame = document.createElement('iframe'); frame.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(q.mediaId)}&auto_play=false`; frame.width="0"; frame.height="0"; h.appendChild(frame);
                 const sc = SC.Widget(frame); q.playerAPI = { play: ()=>sc.play(), pause: ()=>sc.pause(), stop: ()=>{sc.pause(); sc.seekTo(0);}, seekTo: (s)=>sc.seekTo(s*1000), setVolume: (v)=>sc.setVolume(v), getDuration: ()=>q.duration, getCurrentTime: ()=>q.currentTime, destroy: ()=>frame.remove() };
                 sc.bind(SC.Widget.Events.READY, () => { sc.getDuration(d => { q.duration = d/1000; updateQueueUI(); }); sc.setVolume(q.volume); if(q.currentTime>0) sc.seekTo(q.currentTime*1000); if(!isRestore && q.state==='PLAYING') sc.play(); });
@@ -575,6 +620,7 @@
                 sc.bind(SC.Widget.Events.FINISH, () => { if(q.isLooping) sc.play(); else { q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow(); } });
 
             } else if (q.platform === 'twitch') {
+                if (typeof Twitch === 'undefined' || !Twitch.Player) { setTimeout(() => initializePlayer(q, base, isRestore), 500); return; }
                 const div = document.createElement('div'); div.id = `player_${q.queueId}`; h.appendChild(div);
                 const opt = { width:0, height:0, autoplay:false }; if(q.twitchType==='clip') opt.clip=q.mediaId; else opt.video=q.mediaId;
                 const tw = new Twitch.Player(div.id, opt); q.playerAPI = { play: ()=>tw.play(), pause: ()=>tw.pause(), stop: ()=>{tw.pause(); tw.seek(0);}, seekTo: (s)=>tw.seek(s), setVolume: (v)=>tw.setVolume(v/100), getDuration: ()=>tw.getDuration(), getCurrentTime: ()=>tw.getCurrentTime(), destroy: ()=>div.remove() };
@@ -585,21 +631,12 @@
             }
         }
 
-        function updateQueueUI() { renderQueue(); }
-        
         function updateTrackData(trackId, updatesObj) {
             const i = tracks.findIndex(t=>t.id===trackId);
             if(i>-1) {
                 let oldSymbol = tracks[i].symbol;
-                tracks[i] = {...tracks[i], ...updatesObj};
-                saveTrackToDB(tracks[i]);
-                queue.forEach(q => {
-                    if(q.trackId===trackId) {
-                        if(updatesObj.color) q.color = updatesObj.color;
-                        if(updatesObj.baseName) q.name = updatesObj.baseName;
-                        if(updatesObj.symbol && q.name === oldSymbol) q.name = updatesObj.symbol;
-                    }
-                });
+                tracks[i] = {...tracks[i], ...updatesObj}; saveTrackToDB(tracks[i]);
+                queue.forEach(q => { if(q.trackId===trackId) { if(updatesObj.color) q.color = updatesObj.color; if(updatesObj.baseName) q.name = updatesObj.baseName; if(updatesObj.symbol && q.name === oldSymbol) q.name = updatesObj.symbol; } });
             }
             renderGrid(); renderQueue(); saveQueueState();
         }
