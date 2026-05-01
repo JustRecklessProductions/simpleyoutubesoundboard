@@ -22,9 +22,10 @@
 
         .desktop-only { display: none !important; }
 
-        .main-wrapper { flex-grow: 1; min-width: 0; overflow-y: auto; position: relative; }
+        /* Modified to a flex column so footer sits at bottom naturally */
+        .main-wrapper { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; position: relative; overflow: hidden; }
 
-        .header-container { padding: 30px 20px; text-align: center; border-bottom: 1px solid #222; position: relative; }
+        .header-container { padding: 30px 20px; text-align: center; border-bottom: 1px solid #222; position: relative; flex-shrink: 0; }
         h1 { margin-bottom: 25px; font-weight: 300; letter-spacing: 2px; padding: 0 70px; }
 
         .input-stack { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; max-width: 600px; margin: 0 auto; }
@@ -37,28 +38,19 @@
         button.btn-primary:hover { background: var(--neon-2); color: black; box-shadow: 0 0 15px var(--neon-2); }
         button.btn-secondary:hover { background: var(--neon-4); color: black; box-shadow: 0 0 15px var(--neon-4); }
 
-        /* --- Unified FAB and Edit Grid Styling --- */
-        .fab, .btn-edit-mode {
-            width: 64px !important; height: 64px !important; flex-shrink: 0;
-            border-radius: 50%; background: black; border: 2px solid var(--neon-3);
-            color: var(--neon-3); display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; box-shadow: 0 0 20px var(--neon-3); transition: all 0.3s;
-            margin: 0; padding: 0 !important; user-select: none; z-index: 100;
+        /* Edit Button Styling */
+        .btn-edit-mode {
+            width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; 
+            background: transparent; border: none; color: #666; 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; transition: all 0.3s; margin: 0; padding: 0; z-index: 100;
         }
-        .fab { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 999; }
+        .btn-edit-mode:hover { color: white; background: rgba(255,255,255,0.1); text-shadow: 0 0 10px white; }
         
-        .fab:hover, .btn-edit-mode:hover { background: var(--neon-3); color: black; box-shadow: 0 0 25px var(--neon-3); }
-        
-        /* Active (Editing) State */
-        .btn-edit-mode.is-active { border-color: white !important; color: white !important; box-shadow: 0 0 20px white !important; }
-        .btn-edit-mode.is-active:hover { background: white !important; color: black !important; box-shadow: 0 0 25px white !important; }
+        /* Active Edit State */
+        .btn-edit-mode.is-active { color: white !important; filter: drop-shadow(0 0 8px white); }
 
-        /* Floating stop edit button at bottom */
-        .fab-stop-edit { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); z-index: 999; display: none; }
-        body.is-editing .fab-stop-edit { display: flex; }
-        body.is-editing .fab { display: none; }
-
-        /* --- Fullscreen Toggle Button --- */
+        /* Fullscreen Toggle Button */
         .desktop-fs-btn {
             background: transparent; border: none; color: #666; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
@@ -73,8 +65,13 @@
             .desktop-fs-btn { display: none !important; }
         }
 
+        /* Full Width Main Footer (Replaces FAB) */
+        .main-footer { background: #000; display: flex; flex-shrink: 0; width: 100%; border-top: 1px solid #222; }
+        .main-footer button { width: 100%; padding: 24px; background: transparent; border: none; color: #888; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: color 0.3s, text-shadow 0.3s; }
+        .main-footer button:hover { color: white; background: rgba(255,255,255,0.05); }
+
         /* --- Grid & Boxes --- */
-        .grid-container { padding: 20px; display: grid; gap: 20px; max-width: 1400px; margin: 0 auto; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+        .grid-container { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 20px; display: grid; gap: 20px; max-width: 1400px; margin: 0 auto; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); align-content: start; width: 100%; }
         .track-box { background: transparent; border-radius: 16px; position: relative; aspect-ratio: 1 / 1; width: 100%; touch-action: manipulation; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s; }
         .track-box-content { background: black; border-radius: 16px; position: absolute; top:0; left:0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--neon-color); cursor: pointer; z-index: 1; transition: border-width 0.2s, border-color 0.2s; }
         @media (hover: hover) and (pointer: fine) {
@@ -83,6 +80,7 @@
         }
         .track-box.is-playing-glow .track-box-content { border-width: 6px; box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); }
 
+        /* Universal Grid arrow buttons (Main & Queue) */
         .grid-arrow-btn { position: absolute; width: 28px; height: 28px; background: rgba(0,0,0,0.82); border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; color: white; font-size: 10px; cursor: pointer; z-index: 25; display: none; align-items: center; justify-content: center; transition: background 0.15s, border-color 0.15s; font-family: 'Nunito', sans-serif; padding: 0; }
         .grid-arrow-btn:hover { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.7); }
         body.is-editing .grid-arrow-btn { display: flex; }
@@ -91,6 +89,7 @@
         .arrow-left  { left: 6px;   top: 50%;  transform: translateY(-50%); }
         .arrow-right { right: 6px;  top: 50%;  transform: translateY(-50%); }
 
+        /* Universal Delete box btn (Main & Queue) */
         .delete-box-btn { position: absolute; top: -12px; right: -12px; width: 36px; height: 36px; font-family: 'Nunito', sans-serif; background: #ff4444; border: 3px solid var(--bg); border-radius: 50%; color: white; font-weight: bold; font-size: 16px; display: none; align-items: center; justify-content: center; z-index: 30; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
         body.is-editing .delete-box-btn { display: flex; }
 
@@ -100,11 +99,7 @@
         .track-box .hover-text { position: absolute; top: 50%; left: 0; transform: translateY(-50%); z-index: 2; font-weight: bold; font-size: 1rem; text-transform: uppercase; opacity: 0; transition: opacity 0.3s; text-shadow: 1px 1px 3px black; background: rgba(0,0,0,0.7); pointer-events: none; width: 100%; text-align: center; padding: 10px; }
 
         /* --- Dashboard --- */
-        .dashboard {
-            display: flex; flex-direction: column; background: var(--panel-bg); z-index: 1000;
-            width: 100%; flex-shrink: 0; position: fixed; top: 0; right: 0;
-            transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); height: 100dvh;
-        }
+        .dashboard { display: flex; flex-direction: column; background: var(--panel-bg); z-index: 1000; width: 100%; flex-shrink: 0; position: fixed; top: 0; right: 0; transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); height: 100dvh; }
         .dashboard.open { transform: translateX(0); }
 
         .dashboard-header, .dashboard-footer { background: #000; display: flex; flex-shrink: 0; width: 100%; padding: 0; position: relative; }
@@ -112,7 +107,8 @@
         .dashboard-footer { border-top: 1px solid #222; }
         .dashboard-header button.master-play, .dashboard-footer button { width: 100%; padding: 24px; font-family: 'Nunito', sans-serif; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; background: transparent; border: none; cursor: pointer; margin: 0; transition: background 0.3s, color 0.3s, text-shadow 0.3s; text-align: center; }
         .dashboard-header button.master-play:hover, .dashboard-footer button:hover { background: rgba(255,255,255,0.05); }
-        .master-pause { color: var(--neon-1); }
+        
+        .master-pause { color: var(--neon-1); text-shadow: 0 0 10px var(--neon-1); }
         .master-play { color: #39ff14; text-shadow: 0 0 10px #39ff14; }
         
         .close-dashboard-btn { color: #888; display: flex; align-items: center; justify-content: center; }
@@ -126,11 +122,6 @@
         .queue-left-actions { width: 48px; flex-shrink: 0; display: flex; flex-direction: column; border-right: 1px solid #222; border-radius: 16px 0 0 16px; overflow: hidden; }
         .options-btn { flex-grow: 1; background: transparent; border: none; color: var(--neon-color); font-size: 24px; font-weight: bold; font-family: 'Nunito', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; min-height: 44px; }
         .options-btn:hover { background: rgba(255,255,255,0.05); }
-
-        .queue-move-btn { display: none; width: 100%; background: transparent; border: none; border-bottom: 1px solid #222; color: rgba(255,255,255,0.5); font-size: 11px; cursor: pointer; padding: 8px 0; font-family: 'Nunito', sans-serif; align-items: center; justify-content: center; transition: background 0.2s, color 0.2s; }
-        .queue-move-btn:hover { background: rgba(255,255,255,0.07); color: white; }
-        body.is-editing .queue-move-btn { display: flex; }
-        .queue-move-btn:last-of-type { border-bottom: none; border-top: 1px solid #222; }
 
         .play-pause-btn { width: 65px; flex-shrink: 0; background: transparent; border: none; border-left: 1px solid #222; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 0 16px 16px 0; transition: background 0.2s, color 0.2s, filter 0.2s; }
         .play-pause-btn.active { color: var(--neon-color); filter: drop-shadow(0 0 5px var(--neon-color)); }
@@ -207,11 +198,11 @@
             <div class="top-right-controls" style="position: absolute; right: 15px; top: 15px; display: flex; align-items: center; gap: 10px; z-index: 100;">
                 <button class="btn-edit-mode" id="editGridBtn">
                     <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M10 11.5v-5m0 0l-2 2m2-2l2 2" />
-                        <path d="M10 16.5v5m0 0l-2-2m2 2l2-2" />
-                        <path d="M7.5 14h-5m0 0l2-2m-2 2l2 2" />
-                        <path d="M12.5 14h5m0 0l-2-2m2 2l-2 2" />
-                        <path d="M17 2l5 5m0-5l-5 5" />
+                        <path d="M11 6v12M11 6l-3 3M11 6l3 3"/>
+                        <path d="M11 18l-3-3M11 18l3-3"/>
+                        <path d="M5 12h12M5 12l3-3M5 12l3 3"/>
+                        <path d="M17 12l-3-3M17 12l-3 3"/>
+                        <path d="M19 3l4 4M23 3l-4 4"/>
                     </svg>
                 </button>
                 <button class="desktop-fs-btn fs-toggle" title="Toggle Fullscreen">
@@ -232,32 +223,22 @@
                 </div>
             </div>
         </div>
+        
         <div class="grid-container" id="gridContainer"></div>
+        
+        <div class="main-footer">
+            <button id="openDashboardBtn" title="Open Queue">
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h5m4 0h9" />
+                    <circle cx="10" cy="6" r="2" />
+                    <path d="M3 12h11m4 0h3" />
+                    <circle cx="16" cy="12" r="2" />
+                    <path d="M3 18h3m4 0h11" />
+                    <circle cx="8" cy="18" r="2" />
+                </svg>
+            </button>
+        </div>
     </div>
-
-    <div class="fab" id="fab">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-            <rect x="3" y="3" width="4.5" height="4.5" rx="1"/>
-            <rect x="9.75" y="3" width="4.5" height="4.5" rx="1"/>
-            <rect x="16.5" y="3" width="4.5" height="4.5" rx="1"/>
-            <rect x="3" y="9.75" width="4.5" height="4.5" rx="1"/>
-            <rect x="9.75" y="9.75" width="4.5" height="4.5" rx="1"/>
-            <rect x="16.5" y="9.75" width="4.5" height="4.5" rx="1"/>
-            <rect x="3" y="16.5" width="4.5" height="4.5" rx="1"/>
-            <rect x="9.75" y="16.5" width="4.5" height="4.5" rx="1"/>
-            <rect x="16.5" y="16.5" width="4.5" height="4.5" rx="1"/>
-        </svg>
-    </div>
-
-    <button class="btn-edit-mode fab-stop-edit" id="fabStopEdit">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10 11.5v-5m0 0l-2 2m2-2l2 2" />
-            <path d="M10 16.5v5m0 0l-2-2m2 2l2-2" />
-            <path d="M7.5 14h-5m0 0l2-2m-2 2l2 2" />
-            <path d="M12.5 14h5m0 0l-2-2m2 2l-2 2" />
-            <path d="M17 2l5 5m0-5l-5 5" />
-        </svg>
-    </button>
 
     <div class="dashboard" id="dashboard">
         <div class="dashboard-header">
@@ -265,11 +246,11 @@
             <div class="top-right-controls" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 10px; z-index: 100;">
                 <button class="btn-edit-mode" id="queueEditBtn">
                     <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M10 11.5v-5m0 0l-2 2m2-2l2 2" />
-                        <path d="M10 16.5v5m0 0l-2-2m2 2l2-2" />
-                        <path d="M7.5 14h-5m0 0l2-2m-2 2l2 2" />
-                        <path d="M12.5 14h5m0 0l-2-2m2 2l-2 2" />
-                        <path d="M17 2l5 5m0-5l-5 5" />
+                        <path d="M11 6v12M11 6l-3 3M11 6l3 3"/>
+                        <path d="M11 18l-3-3M11 18l3-3"/>
+                        <path d="M5 12h12M5 12l3-3M5 12l3 3"/>
+                        <path d="M17 12l-3-3M17 12l-3 3"/>
+                        <path d="M19 3l4 4M23 3l-4 4"/>
                     </svg>
                 </button>
                 <button class="desktop-fs-btn fs-toggle" title="Toggle Fullscreen">
@@ -284,13 +265,16 @@
         
         <div class="dashboard-footer">
             <button class="close-dashboard-btn" id="closeDashboardBtn" title="Close Queue">
-                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 6h5m4 0h9" />
-                    <circle cx="10" cy="6" r="2" />
-                    <path d="M3 12h11m4 0h3" />
-                    <circle cx="16" cy="12" r="2" />
-                    <path d="M3 18h3m4 0h11" />
-                    <circle cx="8" cy="18" r="2" />
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor">
+                    <rect x="3" y="3" width="4.5" height="4.5" rx="1"/>
+                    <rect x="9.75" y="3" width="4.5" height="4.5" rx="1"/>
+                    <rect x="16.5" y="3" width="4.5" height="4.5" rx="1"/>
+                    <rect x="3" y="9.75" width="4.5" height="4.5" rx="1"/>
+                    <rect x="9.75" y="9.75" width="4.5" height="4.5" rx="1"/>
+                    <rect x="16.5" y="9.75" width="4.5" height="4.5" rx="1"/>
+                    <rect x="3" y="16.5" width="4.5" height="4.5" rx="1"/>
+                    <rect x="9.75" y="16.5" width="4.5" height="4.5" rx="1"/>
+                    <rect x="16.5" y="16.5" width="4.5" height="4.5" rx="1"/>
                 </svg>
             </button>
         </div>
@@ -322,7 +306,7 @@
 
     <script>
         const playSvg = `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg>`;
-        const pauseSvg = `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><rect x="5" y="4" width="4.5" height="16" rx="1"/><rect x="14.5" y="4" width="4.5" height="16" rx="1"/></svg>`;
+        const pauseSvg = `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="2"/><rect x="14" y="4" width="4" height="16" rx="2"/></svg>`;
 
         const neonColors = ['#fc0e12','#00fff7','#ff00fc','#fff500'];
         const randomSymbols = ['🔥','🌊','🍃','🌲','🌋','🌌','🌙','☀️','🌈','🪐','☄️','🫧','★','☆','⚔️','🛡️','🏹','🔪','🪓','💥','💣','🧨','⚡','🚀','🛸','🏆','🆙','🆒','💯','💢','🐺','🐦','🦉','🦄','💡','🧪','👻','👽','✨','🌟','⛺','💎','👑','🌸','🍀','🎸','🎬','☕','🍕','🍎','🎁','🎈','😀','😂','😍'];
@@ -359,22 +343,47 @@
 
         function safeBind(id, evt, handler) { const el = document.getElementById(id); if (el) el.addEventListener(evt, handler); }
 
-        function getGridColumnCount() { const container = document.getElementById('gridContainer'); return Math.max(1, window.getComputedStyle(container).gridTemplateColumns.split(' ').length); }
+        function getGridColumnCount(containerId) { const container = document.getElementById(containerId); return Math.max(1, window.getComputedStyle(container).gridTemplateColumns.split(' ').length); }
+        
         function updateArrowVisibility() {
             if (!isEditing) return;
-            const boxes = [...document.querySelectorAll('#gridContainer .track-box')]; const cols = getGridColumnCount(); const total = boxes.length;
+            
+            // Main Grid Arrow math
+            const boxes = [...document.querySelectorAll('#gridContainer .track-box')]; 
+            const cols = getGridColumnCount('gridContainer'); 
+            const total = boxes.length;
             boxes.forEach((box, idx) => {
-                const col = idx % cols; const up = box.querySelector('.arrow-up'); const down = box.querySelector('.arrow-down'); const left = box.querySelector('.arrow-left'); const right = box.querySelector('.arrow-right');
+                const col = idx % cols; 
+                const up = box.querySelector('.arrow-up'); 
+                const down = box.querySelector('.arrow-down'); 
+                const left = box.querySelector('.arrow-left'); 
+                const right = box.querySelector('.arrow-right');
                 if (up) up.style.visibility = idx < cols ? 'hidden' : 'visible';
                 if (down) down.style.visibility = idx + cols >= total ? 'hidden' : 'visible';
                 if (left) left.style.visibility = col === 0 ? 'hidden' : 'visible';
                 if (right) right.style.visibility = (col === cols - 1 || idx + 1 >= total) ? 'hidden' : 'visible';
             });
+
+            // Queue Grid Arrow math
+            const qBoxes = [...document.querySelectorAll('#queueContainer .queue-item')]; 
+            const qCols = getGridColumnCount('queueContainer'); 
+            const qTotal = qBoxes.length;
+            qBoxes.forEach((box, idx) => {
+                const col = idx % qCols; 
+                const up = box.querySelector('.arrow-up'); 
+                const down = box.querySelector('.arrow-down'); 
+                const left = box.querySelector('.arrow-left'); 
+                const right = box.querySelector('.arrow-right');
+                if (up) up.style.visibility = idx < qCols ? 'hidden' : 'visible';
+                if (down) down.style.visibility = idx + qCols >= qTotal ? 'hidden' : 'visible';
+                if (left) left.style.visibility = col === 0 ? 'hidden' : 'visible';
+                if (right) right.style.visibility = (col === qCols - 1 || idx + 1 >= qTotal) ? 'hidden' : 'visible';
+            });
         }
 
         function moveTrack(trackId, direction) {
             const idx = tracks.findIndex(t => t.id === trackId); if (idx === -1) return;
-            const cols = getGridColumnCount(); let targetIdx;
+            const cols = getGridColumnCount('gridContainer'); let targetIdx;
             if (direction === 'up') targetIdx = idx - cols; else if (direction === 'down') targetIdx = idx + cols; else if (direction === 'left') targetIdx = idx - 1; else if (direction === 'right') targetIdx = idx + 1;
             if (targetIdx == null || targetIdx < 0 || targetIdx >= tracks.length) return;
             [tracks[idx], tracks[targetIdx]] = [tracks[targetIdx], tracks[idx]]; saveTrackOrder(); renderGrid();
@@ -382,7 +391,9 @@
 
         function moveQueueItem(queueId, direction) {
             const idx = queue.findIndex(q => q.queueId === queueId); if (idx === -1) return;
-            const targetIdx = direction === 'up' ? idx - 1 : idx + 1; if (targetIdx < 0 || targetIdx >= queue.length) return;
+            const cols = getGridColumnCount('queueContainer'); let targetIdx;
+            if (direction === 'up') targetIdx = idx - cols; else if (direction === 'down') targetIdx = idx + cols; else if (direction === 'left') targetIdx = idx - 1; else if (direction === 'right') targetIdx = idx + 1;
+            if (targetIdx == null || targetIdx < 0 || targetIdx >= queue.length) return;
             [queue[idx], queue[targetIdx]] = [queue[targetIdx], queue[idx]]; saveQueueState(); renderQueue();
         }
 
@@ -422,7 +433,6 @@
                 setupEventListeners();
                 setupTianFullscreen(document.getElementById('editGridBtn'));
                 setupTianFullscreen(document.getElementById('queueEditBtn'));
-                setupTianFullscreen(document.getElementById('fabStopEdit'));
                 
                 await initDB(); tracks = await loadTracksFromDB();
                 if (tracks.length > 0) colorIndex = tracks.length % neonColors.length;
@@ -443,13 +453,14 @@
             safeBind('uploadLinkBtn', 'click', handleAddMediaLink);
             safeBind('triggerMp3Btn', 'click', () => document.getElementById('mp3Input').click());
             safeBind('mp3Input', 'change', handleAddMP3);
-            safeBind('fab', 'click', toggleDashboard);
+            
+            // New Dashboard Bindings
+            safeBind('openDashboardBtn', 'click', toggleDashboard);
             safeBind('closeDashboardBtn', 'click', toggleDashboard);
             
-            // Edit bindings mapping to the updated unified class structure
+            // Unified Edit bindings
             safeBind('editGridBtn', 'click', toggleEditMode);
             safeBind('queueEditBtn', 'click', toggleEditMode);
-            safeBind('fabStopEdit', 'click', toggleEditMode);
             
             document.querySelectorAll('.fs-toggle').forEach(btn => btn.addEventListener('click', toggleFullscreen));
 
@@ -488,7 +499,6 @@
             isEditing = !isEditing;
             document.body.classList.toggle('is-editing', isEditing);
             
-            // Sync all edit grid buttons to show active state
             document.querySelectorAll('.btn-edit-mode').forEach(btn => {
                 btn.classList.toggle('is-active', isEditing);
             });
@@ -533,15 +543,12 @@
             const container=document.getElementById('queueContainer'); container.innerHTML='';
             
             queue.forEach((qItem, qIdx) => {
-                const isFirst = qIdx === 0; const isLast  = qIdx === queue.length - 1;
                 const wrapper=document.createElement('div'); wrapper.className='queue-item-wrapper'; wrapper.dataset.queueId=qItem.queueId;
                 const el=document.createElement('div'); el.className=`queue-item ${qItem.state==='PLAYING'?'is-playing':''} ${qItem.isLooping?'is-looping':''}`; el.style.setProperty('--neon-color',qItem.color);
                 
                 el.innerHTML=`
                     <div class="queue-left-actions">
-                        <button class="queue-move-btn" style="visibility:${isFirst?'hidden':'visible'}" onclick="moveQueueItem('${qItem.queueId}','up')">▲</button>
                         <button class="options-btn" onclick="openBottomSheet('${qItem.queueId}','${qItem.type}',${qItem.isLooping})">⋮</button>
-                        <button class="queue-move-btn" style="visibility:${isLast?'hidden':'visible'}" onclick="moveQueueItem('${qItem.queueId}','down')">▼</button>
                     </div>
                     <div class="queue-item-center swipe-zone">
                         <div class="q-name-container"><span class="q-name">${qItem.name}</span></div>
@@ -555,12 +562,22 @@
                         ${qItem.state === 'PLAYING' ? pauseSvg : playSvg}
                     </button>`;
                 
+                // Add Queue edit controls correctly overlayed on top of items
+                [['up','▲'],['down','▼'],['left','◀'],['right','▶']].forEach(([dir, glyph]) => { 
+                    const btn=document.createElement('button'); btn.className=`grid-arrow-btn arrow-${dir}`; btn.textContent=glyph; 
+                    btn.onclick=(e)=>{ e.stopPropagation(); moveQueueItem(qItem.queueId, dir); }; 
+                    el.appendChild(btn); 
+                });
+                const del=document.createElement('div'); del.className='delete-box-btn'; del.textContent='X'; 
+                del.onclick=(e)=>{ e.stopPropagation(); removeQueueItem(qItem.queueId); }; 
+                el.appendChild(del);
+
                 wrapper.appendChild(el);
                 el.querySelector('.vol-slider').oninput=(e)=>{ qItem.volume=e.target.value; if(qItem.playerAPI) qItem.playerAPI.setVolume(qItem.volume); };
                 const scrub=el.querySelector('.progress-slider'); scrub.onmousedown=scrub.ontouchstart=()=>qItem.isScrubbing=true; scrub.oninput=(e)=>{ qItem.currentTime=e.target.value; el.querySelector('.time-text').textContent=formatTime(qItem.currentTime)+' / '+formatTime(qItem.duration); }; scrub.onchange=(e)=>{ qItem.isScrubbing=false; if(qItem.playerAPI){qItem.preventGhostPlay=false; qItem.playerAPI.seekTo(parseFloat(e.target.value));} };
                 container.appendChild(wrapper);
             });
-            updateMasterButton(); updateGridGlow();
+            updateMasterButton(); updateGridGlow(); if(isEditing) requestAnimationFrame(updateArrowVisibility);
         }
 
         function updateQueueUI() {
