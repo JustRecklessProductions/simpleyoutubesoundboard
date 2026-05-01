@@ -31,20 +31,26 @@
             overflow: hidden;
         }
         
-        /* 68px exactly matches the physical height of the dashboard header and play/pause button */
         .header-container.collapsed { height: 68px; padding: 0 20px; }
         
         .header-content-inner { transition: opacity 0.2s, transform 0.3s; opacity: 1; transform: translateY(0); }
         .header-container.collapsed .header-content-inner { opacity: 0; transform: translateY(-10px); pointer-events: none; }
 
-        .header-container .top-right-controls { 
+        /* --- Top Left / Top Right Controls --- */
+        .top-right-controls { 
             position: absolute; right: 15px; top: 15px; 
             display: flex; align-items: center; gap: 10px; z-index: 100;
             transition: top 0.3s, transform 0.3s;
         }
+
+        .top-left-controls { 
+            position: absolute; left: 15px; top: 15px; 
+            display: flex; align-items: center; gap: 5px; z-index: 100;
+            transition: top 0.3s, transform 0.3s;
+        }
         
-        /* Perfectly center the top-right icons vertically when the header collapses */
-        .header-container.collapsed .top-right-controls { top: 50%; transform: translateY(-50%); }
+        .header-container.collapsed .top-right-controls,
+        .header-container.collapsed .top-left-controls { top: 50%; transform: translateY(-50%); }
 
         h1 { margin-bottom: 25px; font-weight: 300; letter-spacing: 2px; padding: 0 70px; }
 
@@ -58,7 +64,7 @@
         button.btn-primary:hover { background: var(--neon-2); color: black; box-shadow: 0 0 15px var(--neon-2); }
         button.btn-secondary:hover { background: var(--neon-4); color: black; box-shadow: 0 0 15px var(--neon-4); }
 
-        /* Unified Top-Right Edit/Collapse Buttons */
+        /* Unified Buttons */
         .btn-edit-mode {
             width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; 
             background: transparent; border: none; color: #777; 
@@ -67,6 +73,17 @@
         }
         .btn-edit-mode:hover { color: white; background: rgba(255,255,255,0.1); text-shadow: 0 0 10px white; }
         .btn-edit-mode.is-active { color: white !important; filter: drop-shadow(0 0 8px white); }
+
+        /* Folders UI */
+        .folder-wrapper { position: relative; display: inline-block; }
+        .delete-folder-btn { 
+            position: absolute; top: -2px; right: -2px; width: 18px; height: 18px; 
+            font-family: 'Nunito', sans-serif; background: #ff4444; border: 2px solid var(--bg); 
+            border-radius: 50%; color: white; font-weight: bold; font-size: 10px; 
+            display: none; align-items: center; justify-content: center; z-index: 110; 
+            cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.5); 
+        }
+        body.is-editing .delete-folder-btn { display: flex; }
 
         /* Fullscreen Toggle Button */
         .desktop-fs-btn {
@@ -124,7 +141,6 @@
         .dashboard-header { border-bottom: 1px solid #222; align-items: center; justify-content: center; height: 68px; }
         .dashboard-footer { border-top: 1px solid #222; }
         
-        /* Master Toggle Button Fix - Targets ID so style persists perfectly across class swaps */
         .dashboard-header #masterToggleBtn, .dashboard-footer button { width: 100%; padding: 24px; font-family: 'Nunito', sans-serif; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; background: transparent; border: none; cursor: pointer; margin: 0; transition: background 0.3s, color 0.3s, text-shadow 0.3s; text-align: center; }
         .dashboard-header #masterToggleBtn:hover, .dashboard-footer button:hover { background: rgba(255,255,255,0.05); }
         
@@ -215,6 +231,18 @@
 <body>
     <div class="main-wrapper" id="mainWrapper">
         <div class="header-container" id="mainHeader">
+            
+            <div class="top-left-controls" id="topLeftControls">
+                <button class="btn-edit-mode" id="saveFolderBtn" title="Save Current Grid to Folder">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                </button>
+                <div id="foldersContainer" style="display: flex; gap: 5px;"></div>
+            </div>
+
             <div class="top-right-controls">
                 <button class="btn-edit-mode" id="collapseHeaderBtn" title="Toggle Header">
                     <span class="icon-chevron-up">
@@ -350,6 +378,7 @@
 
         let tracks = []; let queue = []; let colorIndex = 0; let isDashboardOpen = false; let isEditing = false;
         let activeTargetTrackId = null; let currentActionQueueId = null; let activeTimeQueueId = null; let tempSelectedColor = '#ffffff';
+        let savedFolders = [];
 
         const DB_NAME = 'SuperSimpleDB'; let db;
         function initDB() { return new Promise((resolve) => { const req = indexedDB.open(DB_NAME, 5); req.onupgradeneeded = (e) => { db = e.target.result; if (!db.objectStoreNames.contains('tracks')) db.createObjectStore('tracks', { keyPath: 'id' }); }; req.onsuccess = (e) => { db = e.target.result; resolve(db); }; }); }
@@ -370,6 +399,78 @@
                     resolve(loaded);
                 };
             });
+        }
+
+        // --- Folders Logic ---
+        function loadFolders() {
+            const f = localStorage.getItem('SuperSimpleFolders');
+            savedFolders = f ? JSON.parse(f) : [];
+            renderFolders();
+        }
+
+        function saveFoldersState() {
+            localStorage.setItem('SuperSimpleFolders', JSON.stringify(savedFolders));
+        }
+
+        function createFolder() {
+            if (tracks.length === 0) return alert("Add some tracks to the grid first to save a folder!");
+            const folder = {
+                id: 'folder_' + Date.now(),
+                tracksSnapshot: JSON.parse(JSON.stringify(tracks)) // deep copy
+            };
+            savedFolders.push(folder);
+            saveFoldersState();
+            renderFolders();
+        }
+
+        function deleteFolder(id, e) {
+            e.stopPropagation();
+            savedFolders = savedFolders.filter(f => f.id !== id);
+            saveFoldersState();
+            renderFolders();
+        }
+
+        function loadFolder(id) {
+            if (isEditing) return; // Prevent loading when strictly trying to reorganize folders
+            const folder = savedFolders.find(f => f.id === id);
+            if (folder && confirm("Load this folder? Your current grid will be replaced.")) {
+                // Clear existing tracks from DB
+                tracks.forEach(t => deleteTrackFromDB(t.id));
+                // Restore the snapshot
+                tracks = JSON.parse(JSON.stringify(folder.tracksSnapshot));
+                // Save new tracks back to DB
+                saveAllTracksToDB();
+                saveTrackOrder();
+                renderGrid();
+            }
+        }
+
+        function renderFolders() {
+            const container = document.getElementById('foldersContainer');
+            container.innerHTML = '';
+            savedFolders.forEach((f, idx) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'folder-wrapper';
+                
+                const btn = document.createElement('button');
+                btn.className = 'btn-edit-mode';
+                btn.title = `Load Folder ${idx + 1}`;
+                btn.innerHTML = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+                btn.onclick = () => loadFolder(f.id);
+
+                const delBtn = document.createElement('div');
+                delBtn.className = 'delete-folder-btn';
+                delBtn.textContent = 'X';
+                delBtn.onclick = (e) => deleteFolder(f.id, e);
+
+                wrapper.appendChild(btn);
+                wrapper.appendChild(delBtn);
+                container.appendChild(wrapper);
+            });
+            // Re-apply is-active glow to newly drawn buttons if in edit mode
+            if (isEditing) {
+                container.querySelectorAll('.btn-edit-mode').forEach(b => b.classList.add('is-active'));
+            }
         }
 
         function saveQueueState() { localStorage.setItem('SuperSimpleQueue', JSON.stringify(queue.map(q => ({ queueId:q.queueId, trackId:q.trackId, type:q.type, mediaId:q.mediaId, platform:q.platform, name:q.name, color:q.color, state:q.state, duration:q.duration, isLooping:q.isLooping, volume:q.volume, currentTime:q.currentTime })))); }
@@ -467,7 +568,11 @@
                 
                 await initDB(); tracks = await loadTracksFromDB();
                 if (tracks.length > 0) colorIndex = tracks.length % neonColors.length;
-                populateSymbolGrid(); renderGrid();
+                
+                loadFolders();
+                populateSymbolGrid(); 
+                renderGrid();
+                
                 const savedQueue = loadQueueState(); savedQueue.forEach(s => { try { restoreQueueItem(s); } catch(e) {} });
                 if (savedQueue.length > 0) renderQueue();
                 startUITracker(); setInterval(saveQueueState, 5000);
@@ -491,6 +596,9 @@
             // Edit Mode
             safeBind('editGridBtn', 'click', toggleEditMode);
             safeBind('queueEditBtn', 'click', toggleEditMode);
+
+            // Folder Save
+            safeBind('saveFolderBtn', 'click', createFolder);
 
             // Collapse Header
             safeBind('collapseHeaderBtn', 'click', () => {
@@ -537,6 +645,7 @@
             isEditing = !isEditing;
             document.body.classList.toggle('is-editing', isEditing);
             
+            // Also light up the Save and Folder buttons when in edit mode
             document.querySelectorAll('.btn-edit-mode:not(#collapseHeaderBtn)').forEach(btn => {
                 btn.classList.toggle('is-active', isEditing);
             });
