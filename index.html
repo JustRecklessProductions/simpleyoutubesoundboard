@@ -22,10 +22,30 @@
 
         .desktop-only { display: none !important; }
 
-        /* Modified to a flex column so footer sits at bottom naturally */
         .main-wrapper { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; position: relative; overflow: hidden; }
 
-        .header-container { padding: 30px 20px; text-align: center; border-bottom: 1px solid #222; position: relative; flex-shrink: 0; }
+        /* --- Header Collapse Logic --- */
+        .header-container { 
+            padding: 30px 20px; text-align: center; border-bottom: 1px solid #222; 
+            position: relative; flex-shrink: 0; transition: height 0.3s, padding 0.3s;
+            overflow: hidden;
+        }
+        
+        /* 68px exactly matches the physical height of the dashboard header and play/pause button */
+        .header-container.collapsed { height: 68px; padding: 0 20px; }
+        
+        .header-content-inner { transition: opacity 0.2s, transform 0.3s; opacity: 1; transform: translateY(0); }
+        .header-container.collapsed .header-content-inner { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+
+        .header-container .top-right-controls { 
+            position: absolute; right: 15px; top: 15px; 
+            display: flex; align-items: center; gap: 10px; z-index: 100;
+            transition: top 0.3s, transform 0.3s;
+        }
+        
+        /* Perfectly center the top-right icons vertically when the header collapses */
+        .header-container.collapsed .top-right-controls { top: 50%; transform: translateY(-50%); }
+
         h1 { margin-bottom: 25px; font-weight: 300; letter-spacing: 2px; padding: 0 70px; }
 
         .input-stack { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; max-width: 600px; margin: 0 auto; }
@@ -38,7 +58,7 @@
         button.btn-primary:hover { background: var(--neon-2); color: black; box-shadow: 0 0 15px var(--neon-2); }
         button.btn-secondary:hover { background: var(--neon-4); color: black; box-shadow: 0 0 15px var(--neon-4); }
 
-        /* Edit Button Styling */
+        /* Unified Top-Right Edit/Collapse Buttons */
         .btn-edit-mode {
             width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; 
             background: transparent; border: none; color: #666; 
@@ -46,8 +66,6 @@
             cursor: pointer; transition: all 0.3s; margin: 0; padding: 0; z-index: 100;
         }
         .btn-edit-mode:hover { color: white; background: rgba(255,255,255,0.1); text-shadow: 0 0 10px white; }
-        
-        /* Active Edit State */
         .btn-edit-mode.is-active { color: white !important; filter: drop-shadow(0 0 8px white); }
 
         /* Fullscreen Toggle Button */
@@ -65,7 +83,7 @@
             .desktop-fs-btn { display: none !important; }
         }
 
-        /* Full Width Main Footer (Replaces FAB) */
+        /* Full Width Main Footer (Queue Trigger) */
         .main-footer { background: #000; display: flex; flex-shrink: 0; width: 100%; border-top: 1px solid #222; }
         .main-footer button { width: 100%; padding: 24px; background: transparent; border: none; color: #888; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: color 0.3s, text-shadow 0.3s; }
         .main-footer button:hover { color: white; background: rgba(255,255,255,0.05); }
@@ -80,7 +98,7 @@
         }
         .track-box.is-playing-glow .track-box-content { border-width: 6px; box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); }
 
-        /* Universal Grid arrow buttons (Main & Queue) */
+        /* Universal Grid arrow buttons */
         .grid-arrow-btn { position: absolute; width: 28px; height: 28px; background: rgba(0,0,0,0.82); border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; color: white; font-size: 10px; cursor: pointer; z-index: 25; display: none; align-items: center; justify-content: center; transition: background 0.15s, border-color 0.15s; font-family: 'Nunito', sans-serif; padding: 0; }
         .grid-arrow-btn:hover { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.7); }
         body.is-editing .grid-arrow-btn { display: flex; }
@@ -89,7 +107,7 @@
         .arrow-left  { left: 6px;   top: 50%;  transform: translateY(-50%); }
         .arrow-right { right: 6px;  top: 50%;  transform: translateY(-50%); }
 
-        /* Universal Delete box btn (Main & Queue) */
+        /* Universal Delete box btn */
         .delete-box-btn { position: absolute; top: -12px; right: -12px; width: 36px; height: 36px; font-family: 'Nunito', sans-serif; background: #ff4444; border: 3px solid var(--bg); border-radius: 50%; color: white; font-weight: bold; font-size: 16px; display: none; align-items: center; justify-content: center; z-index: 30; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
         body.is-editing .delete-box-btn { display: flex; }
 
@@ -103,10 +121,12 @@
         .dashboard.open { transform: translateX(0); }
 
         .dashboard-header, .dashboard-footer { background: #000; display: flex; flex-shrink: 0; width: 100%; padding: 0; position: relative; }
-        .dashboard-header { border-bottom: 1px solid #222; align-items: center; justify-content: center; }
+        .dashboard-header { border-bottom: 1px solid #222; align-items: center; justify-content: center; height: 68px; }
         .dashboard-footer { border-top: 1px solid #222; }
-        .dashboard-header button.master-play, .dashboard-footer button { width: 100%; padding: 24px; font-family: 'Nunito', sans-serif; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; background: transparent; border: none; cursor: pointer; margin: 0; transition: background 0.3s, color 0.3s, text-shadow 0.3s; text-align: center; }
-        .dashboard-header button.master-play:hover, .dashboard-footer button:hover { background: rgba(255,255,255,0.05); }
+        
+        /* Master Toggle Button Fix - Targets ID so style persists perfectly across class swaps */
+        .dashboard-header #masterToggleBtn, .dashboard-footer button { width: 100%; padding: 24px; font-family: 'Nunito', sans-serif; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; background: transparent; border: none; cursor: pointer; margin: 0; transition: background 0.3s, color 0.3s, text-shadow 0.3s; text-align: center; }
+        .dashboard-header #masterToggleBtn:hover, .dashboard-footer button:hover { background: rgba(255,255,255,0.05); }
         
         .master-pause { color: var(--neon-1); text-shadow: 0 0 10px var(--neon-1); }
         .master-play { color: #39ff14; text-shadow: 0 0 10px #39ff14; }
@@ -194,9 +214,21 @@
 </head>
 <body>
     <div class="main-wrapper" id="mainWrapper">
-        <div class="header-container">
-            <div class="top-right-controls" style="position: absolute; right: 15px; top: 15px; display: flex; align-items: center; gap: 10px; z-index: 100;">
-                <button class="btn-edit-mode" id="editGridBtn">
+        <div class="header-container" id="mainHeader">
+            <div class="top-right-controls">
+                <button class="btn-edit-mode" id="collapseHeaderBtn" title="Toggle Header">
+                    <span class="icon-chevron-up">
+                        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 15l-6-6-6 6"/>
+                        </svg>
+                    </span>
+                    <span class="icon-chevron-down" style="display:none;">
+                        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </span>
+                </button>
+                <button class="btn-edit-mode" id="editGridBtn" title="Edit Grid">
                     <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 6v12M11 6l-3 3M11 6l3 3"/>
                         <path d="M11 18l-3-3M11 18l3-3"/>
@@ -213,13 +245,15 @@
                 </button>
             </div>
             
-            <h1>Super Simple Soundboard</h1>
-            <div class="input-stack">
-                <input type="text" id="mediaLink" placeholder="Paste YouTube, SoundCloud, Twitch, or Vimeo link Here...">
-                <div class="input-buttons">
-                    <button class="btn-primary" id="uploadLinkBtn">Add Link</button>
-                    <button class="btn-secondary" id="triggerMp3Btn">Upload MP3</button>
-                    <input type="file" id="mp3Input" accept="audio/mp3, audio/mpeg" style="display: none;">
+            <div class="header-content-inner">
+                <h1>Super Simple Soundboard</h1>
+                <div class="input-stack">
+                    <input type="text" id="mediaLink" placeholder="Paste YouTube, SoundCloud, Twitch, or Vimeo link Here...">
+                    <div class="input-buttons">
+                        <button class="btn-primary" id="uploadLinkBtn">Add Link</button>
+                        <button class="btn-secondary" id="triggerMp3Btn">Upload MP3</button>
+                        <input type="file" id="mp3Input" accept="audio/mp3, audio/mpeg" style="display: none;">
+                    </div>
                 </div>
             </div>
         </div>
@@ -348,7 +382,6 @@
         function updateArrowVisibility() {
             if (!isEditing) return;
             
-            // Main Grid Arrow math
             const boxes = [...document.querySelectorAll('#gridContainer .track-box')]; 
             const cols = getGridColumnCount('gridContainer'); 
             const total = boxes.length;
@@ -364,7 +397,6 @@
                 if (right) right.style.visibility = (col === cols - 1 || idx + 1 >= total) ? 'hidden' : 'visible';
             });
 
-            // Queue Grid Arrow math
             const qBoxes = [...document.querySelectorAll('#queueContainer .queue-item')]; 
             const qCols = getGridColumnCount('queueContainer'); 
             const qTotal = qBoxes.length;
@@ -397,7 +429,6 @@
             [queue[idx], queue[targetIdx]] = [queue[targetIdx], queue[idx]]; saveQueueState(); renderQueue();
         }
 
-        // --- FULLSCREEN LOGIC ---
         function toggleFullscreen() {
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
@@ -454,13 +485,20 @@
             safeBind('triggerMp3Btn', 'click', () => document.getElementById('mp3Input').click());
             safeBind('mp3Input', 'change', handleAddMP3);
             
-            // New Dashboard Bindings
             safeBind('openDashboardBtn', 'click', toggleDashboard);
             safeBind('closeDashboardBtn', 'click', toggleDashboard);
             
-            // Unified Edit bindings
+            // Edit Mode
             safeBind('editGridBtn', 'click', toggleEditMode);
             safeBind('queueEditBtn', 'click', toggleEditMode);
+
+            // Collapse Header
+            safeBind('collapseHeaderBtn', 'click', () => {
+                const header = document.getElementById('mainHeader');
+                const isCollapsed = header.classList.toggle('collapsed');
+                document.querySelector('.icon-chevron-up').style.display = isCollapsed ? 'none' : 'block';
+                document.querySelector('.icon-chevron-down').style.display = isCollapsed ? 'block' : 'none';
+            });
             
             document.querySelectorAll('.fs-toggle').forEach(btn => btn.addEventListener('click', toggleFullscreen));
 
@@ -499,7 +537,7 @@
             isEditing = !isEditing;
             document.body.classList.toggle('is-editing', isEditing);
             
-            document.querySelectorAll('.btn-edit-mode').forEach(btn => {
+            document.querySelectorAll('.btn-edit-mode:not(#collapseHeaderBtn)').forEach(btn => {
                 btn.classList.toggle('is-active', isEditing);
             });
 
@@ -562,7 +600,6 @@
                         ${qItem.state === 'PLAYING' ? pauseSvg : playSvg}
                     </button>`;
                 
-                // Add Queue edit controls correctly overlayed on top of items
                 [['up','▲'],['down','▼'],['left','◀'],['right','▶']].forEach(([dir, glyph]) => { 
                     const btn=document.createElement('button'); btn.className=`grid-arrow-btn arrow-${dir}`; btn.textContent=glyph; 
                     btn.onclick=(e)=>{ e.stopPropagation(); moveQueueItem(qItem.queueId, dir); }; 
@@ -605,7 +642,13 @@
         function removeQueueItem(id) { const i=queue.findIndex(q=>q.queueId===id); if(i>-1){if(queue[i].playerAPI) queue[i].playerAPI.destroy(); const div=document.getElementById(`player_${id}`); if(div) div.remove(); queue.splice(i,1); renderQueue(); renderGrid();} }
         function formatTime(s) { if(!s) return '0:00'; const m=Math.floor(s/60),sec=Math.floor(s%60); return `${m}:${sec<10?'0':''}${sec}`; }
         function updateGridGlow() { document.querySelectorAll('.track-box').forEach(box=>{ const qs=queue.filter(q=>q.trackId===box.dataset.trackId); box.classList.toggle('in-queue', qs.length>0); box.classList.toggle('is-playing-glow', qs.some(it=>it.state==='PLAYING')); }); }
-        function updateMasterButton() { const btn=document.getElementById('masterToggleBtn'); const isP=queue.some(q=>q.state==='PLAYING'); btn.textContent=isP?'Pause All':'Play All'; btn.className=isP?'master-pause':'master-play'; }
+        
+        function updateMasterButton() { 
+            const btn = document.getElementById('masterToggleBtn'); 
+            const isP = queue.some(q => q.state === 'PLAYING'); 
+            btn.textContent = isP ? 'Pause All' : 'Play All'; 
+            btn.className = isP ? 'master-pause' : 'master-play'; 
+        }
 
         function initializePlayer(q, base, isRestore=false) {
             const h=document.getElementById('hidden-players');
