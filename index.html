@@ -200,6 +200,11 @@
         .fab-stop-edit { display: none; bottom: 110px; border-color: var(--neon-4); color: var(--neon-4); box-shadow: 0 0 20px var(--neon-4); width: 56px; height: 56px; font-size: 1.5rem; }
         body.is-editing .fab-stop-edit { display: flex; }
         body.is-editing .fab { display: none; }
+        
+        /* Mobile-only adjustment for the thumb button */
+        @media (max-width: 768px) {
+            .fab-stop-edit { bottom: 30px; width: 64px; height: 64px; font-size: 1.8rem; }
+        }
 
         #hidden-players { display: none; }
     </style>
@@ -684,10 +689,10 @@
                 const mEdit = document.createElement('button');
                 mEdit.className = 'action-btn';
                 mEdit.style.cssText = 'margin-bottom: 20px; border-color: white; color: white; display: block;';
-                mEdit.textContent = 'Edit Grid';
+                mEdit.textContent = isEditing ? 'Stop Editing' : 'Edit Grid';
                 mEdit.onclick = () => {
-                    toggleDashboard(); // Closes the queue dashboard
-                    if (!isEditing) toggleEditMode(); // Triggers edit mode on the grid behind it
+                    toggleEditMode();
+                    mEdit.textContent = isEditing ? 'Stop Editing' : 'Edit Grid';
                 };
                 container.appendChild(mEdit);
             }
