@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Simple Soundboard</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -22,84 +21,96 @@
 
         .main-wrapper { flex-grow: 1; min-width: 0; overflow-y: auto; position: relative; }
 
-        .header-container { padding: 30px 20px; text-align: center; border-bottom: 1px solid #222; position: relative; }
+        /* --- Universal Input Section --- */
+        .header-container { padding: 30px 20px; text-align: center; border-bottom: 1px solid #222; }
         h1 { margin-bottom: 25px; font-weight: 300; letter-spacing: 2px; }
 
-        .input-stack { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; max-width: 600px; margin: 0 auto; }
-        .input-stack input[type="text"] { width: 100%; padding: 16px; background: #222; font-family: 'Nunito', sans-serif; border: 1px solid #444; color: white; border-radius: 8px; outline: none; font-size: 16px; text-align: center; }
+        .input-stack {
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+            width: 100%; max-width: 600px; margin: 0 auto;
+        }
+        .input-stack input[type="text"] {
+            width: 100%; padding: 16px; background: #222; font-family: 'Nunito', sans-serif;
+            border: 1px solid #444; color: white; border-radius: 8px; outline: none; font-size: 16px; text-align: center;
+        }
         .input-stack input[type="text"]:focus { border-color: var(--neon-2); }
-        
+        .input-stack input[type="text"]::placeholder { font-size: 11.5px; } 
+
         .input-buttons { display: flex; gap: 10px; justify-content: center; width: 100%; }
-        button.btn-primary, button.btn-secondary { flex: 1; padding: 14px 20px; background: transparent; color: white; font-size: 14px; border: 1px solid var(--neon-2); border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; text-transform: uppercase; font-weight: bold; transition: all 0.3s; }
+        button.btn-primary, button.btn-secondary {
+            flex: 1; padding: 14px 20px; background: transparent; color: white; font-size: 14px;
+            border: 1px solid var(--neon-2); border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif;
+            text-transform: uppercase; font-weight: bold; transition: all 0.3s;
+        }
         button.btn-secondary { border-color: var(--neon-4); color: var(--neon-4); }
         button.btn-primary:hover { background: var(--neon-2); color: black; box-shadow: 0 0 15px var(--neon-2); }
         button.btn-secondary:hover { background: var(--neon-4); color: black; box-shadow: 0 0 15px var(--neon-4); }
 
-        .header-controls { display: flex; flex-direction: column; gap: 12px; margin: 25px auto 0 auto; align-items: center; width: 100%; max-width: 600px; }
-        .action-btn { width: 100%; padding: 14px 20px; background: transparent; color: var(--neon-3); font-size: 14px; border: 1px solid var(--neon-3); border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; text-transform: uppercase; font-weight: bold; transition: all 0.3s; }
+        .header-controls { 
+            display: flex; flex-direction: column; gap: 12px; margin: 25px auto 0 auto; 
+            align-items: center; width: 100%; max-width: 600px;
+        }
+        .action-btn {
+            width: 100%; padding: 14px 20px; background: transparent; color: var(--neon-3); font-size: 14px;
+            border: 1px solid var(--neon-3); border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif;
+            text-transform: uppercase; font-weight: bold; transition: all 0.3s;
+        }
         .action-btn:hover { background: var(--neon-3); color: black; box-shadow: 0 0 15px var(--neon-3); }
         #editGridBtn { border-color: white; color: white; }
         #editGridBtn:hover { background: white; color: black; box-shadow: 0 0 15px white; }
 
-        /* --- Fullscreen Button --- */
-        .fullscreen-btn {
-            position: absolute; top: 25px; right: 25px;
-            background: transparent; border: none; color: white;
-            font-size: 26px; cursor: pointer; z-index: 990;
-            transition: text-shadow 0.3s, transform 0.2s;
+        /* --- Grid & Boxes (Now using Universal Mobile Structure) --- */
+        .grid-container {
+            padding: 15px; display: grid; gap: 15px; max-width: 1400px; margin: 0 auto;
+            grid-template-columns: repeat(auto-fill, minmax(40%, 1fr));
         }
-        .fullscreen-btn:hover { text-shadow: 0 0 15px white, 0 0 25px white; transform: scale(1.1); }
 
-        /* --- Grid & Boxes --- */
-        .grid-container { padding: 20px; display: grid; gap: 20px; max-width: 1400px; margin: 0 auto; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-        
-        .track-box { background: transparent; border-radius: 16px; position: relative; aspect-ratio: 1 / 1; width: 100%; touch-action: manipulation; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s; }
-        .track-box-content { background: black; border-radius: 16px; position: absolute; top:0; left:0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--neon-color); cursor: pointer; z-index: 1; transition: border-width 0.2s, border-color 0.2s; }
-        
-        @media (hover: hover) and (pointer: fine) {
-            .track-box:not(.is-editing):hover { transform: scale(1.02); z-index: 5; }
-            .track-box:not(.is-editing):hover .hover-text { opacity: 1; }
+        .track-box {
+            background: transparent; border-radius: 16px; position: relative; aspect-ratio: 1 / 1;
+            width: 100%; height: 100%; touch-action: manipulation; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
+        }
+        .track-box-content {
+            background: black; border-radius: 16px; position: absolute; top:0; left:0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+            border: 2px solid var(--neon-color); cursor: pointer; z-index: 1; transition: border-width 0.2s, border-color 0.2s;
         }
         
-        @media (min-width: 1025px) {
-            .track-box.in-queue { transform: scale(1.08); z-index: 10; }
-            @media (hover: hover) and (pointer: fine) {
-                .track-box.in-queue:not(.is-editing):hover { transform: scale(1.10); z-index: 11; }
-            }
+        .track-box:not(.is-editing):hover { transform: scale(1.02); z-index: 5; }
+        .track-box.in-queue { transform: scale(1.08); z-index: 10; }
+        .track-box.in-queue:not(.is-editing):hover { transform: scale(1.10); z-index: 11; }
+        
+        /* Thicker Border ONLY when Playing */
+        .track-box.is-playing-glow .track-box-content {
+            border-width: 6px; box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); border-color: var(--neon-color);
         }
-        .track-box.is-playing-glow .track-box-content { border-width: 6px; box-shadow: 0 0 25px var(--neon-color), inset 0 0 10px rgba(255,255,255,0.1); }
 
-        /* --- Grid arrow buttons --- */
-        .grid-arrow-btn {
-            position: absolute; width: 28px; height: 28px;
-            background: rgba(0,0,0,0.82); border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 50%; color: white; font-size: 10px;
-            cursor: pointer; z-index: 25; display: none;
-            align-items: center; justify-content: center;
-            transition: background 0.15s, border-color 0.15s;
-            font-family: 'Nunito', sans-serif; padding: 0;
+        /* --- Edit Mode & Delete Buttons (Kept Desktop Style) --- */
+        .delete-box-btn {
+            position: absolute; top: -12px; right: -12px; width: 36px; height: 36px; font-family: 'Nunito', sans-serif;
+            background: #ff4444; border: 3px solid var(--bg); border-radius: 50%;
+            color: white; font-weight: bold; font-size: 16px; display: none; align-items: center; justify-content: center;
+            z-index: 20; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.2s;
         }
-        .grid-arrow-btn:hover { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.7); }
-        body.is-editing .grid-arrow-btn { display: flex; }
-        .arrow-up    { top: 6px;    left: 50%; transform: translateX(-50%); }
-        .arrow-down  { bottom: 6px; left: 50%; transform: translateX(-50%); }
-        .arrow-left  { left: 6px;   top: 50%;  transform: translateY(-50%); }
-        .arrow-right { right: 6px;  top: 50%;  transform: translateY(-50%); }
-
-        /* --- Delete box btn --- */
-        .delete-box-btn { position: absolute; top: -12px; right: -12px; width: 36px; height: 36px; font-family: 'Nunito', sans-serif; background: #ff4444; border: 3px solid var(--bg); border-radius: 50%; color: white; font-weight: bold; font-size: 16px; display: none; align-items: center; justify-content: center; z-index: 30; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
         body.is-editing .delete-box-btn { display: flex; }
+        body.is-editing .fab-stop-edit { display: flex; }
+
+        .dragging { transform: scale(1.05) !important; box-shadow: 0 20px 40px rgba(0,0,0,0.6) !important; opacity: 1 !important; z-index: 50 !important; transition: transform 0.15s ease, box-shadow 0.15s ease !important; }
+        .dragging * { pointer-events: none !important; }
 
         .track-symbol { font-size: 4rem; text-shadow: 0 0 15px var(--neon-color); filter: drop-shadow(0 0 12px var(--neon-color)); z-index: 1; pointer-events: none; transform: translateZ(0); }
         .track-box img { width: 100%; height: 100%; display: block; object-fit: cover; z-index: 0; opacity: 0.8; transition: opacity 0.3s; pointer-events: none; }
-        @media (hover: hover) and (pointer: fine) { .track-box:hover img { opacity: 0.4; } }
-        
-        .track-box .hover-text { position: absolute; top: 50%; left: 0; transform: translateY(-50%); z-index: 2; font-weight: bold; font-size: 1rem; text-transform: uppercase; opacity: 0; transition: opacity 0.3s; text-shadow: 1px 1px 3px black; background: rgba(0,0,0,0.7); pointer-events: none; width: 100%; text-align: center; padding: 10px; }
+        .track-box:hover img { opacity: 0.4; }
+        .track-box .hover-text { position: absolute; top: 25px; z-index: 2; font-weight: bold; font-size: 0.95rem; text-transform: uppercase; opacity: 0; transition: opacity 0.3s; text-shadow: 2px 2px 4px black; pointer-events: none; width: 100%; text-align: center; padding: 0 10px; }
+        .track-box:not(.is-editing):hover .hover-text { opacity: 1; }
         .track-box.in-queue .hover-text { display: none !important; }
 
-        /* --- Dashboard --- */
-        .dashboard { display: flex; flex-direction: column; background: var(--panel-bg); z-index: 1000; width: 450px; flex-shrink: 0; margin-right: -450px; border-left: 1px solid #333; box-shadow: -10px 0 30px rgba(0,0,0,0.8); transition: margin-right 0.4s cubic-bezier(0.25, 1, 0.5, 1); height: 100dvh; }
-        .dashboard.open { margin-right: 0; }
+        /* --- Dashboard (Now Universal Overlay Style) --- */
+        .dashboard {
+            display: flex; flex-direction: column; background: var(--panel-bg); z-index: 1000;
+            position: fixed; top: 0; right: 0; width: 100%; height: 100dvh;
+            transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .dashboard.open { transform: translateX(0); }
 
         .dashboard-header, .dashboard-footer { background: #000; display: flex; flex-shrink: 0; width: 100%; padding: 0; }
         .dashboard-header { border-bottom: 1px solid #222; }
@@ -111,22 +122,16 @@
         .close-dashboard-btn { color: #888; }
         .close-dashboard-btn:hover { color: white; }
 
-        .queue-container { flex-grow: 1; overflow-y: auto; padding: 20px; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+        .queue-container { flex-grow: 1; overflow-y: auto; padding: 20px; overflow-x: hidden; }
         .queue-item-wrapper { position: relative; margin-bottom: 16px; background: #ff3b30; border-radius: 16px; display: flex; align-items: center; justify-content: center; }
         .queue-item { position: relative; width: 100%; display: flex; align-items: stretch; background: #0b0b0b; border: 1px solid #333; border-radius: 16px; z-index: 2; transition: transform 0.2s ease-out; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
         .queue-item.is-playing { border-color: var(--neon-color); box-shadow: 0 0 20px var(--neon-color), inset 0 0 5px rgba(255,255,255,0.05); }
-
+        
         .queue-left-actions { width: 48px; flex-shrink: 0; display: flex; flex-direction: column; border-right: 1px solid #222; border-radius: 16px 0 0 16px; overflow: hidden; }
-        .options-btn { flex-grow: 1; background: transparent; border: none; color: var(--neon-color); font-size: 24px; font-weight: bold; font-family: 'Nunito', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; min-height: 44px; }
+        .options-btn { flex-grow: 1; height: 100%; background: transparent; border: none; color: var(--neon-color); font-size: 24px; font-weight: bold; font-family: 'Nunito', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
         .options-btn:hover { background: rgba(255,255,255,0.05); }
-        .queue-delete-btn { background: transparent; border: none; border-top: 1px solid #222; color: #ff4444; font-size: 16px; font-weight: bold; font-family: 'Nunito', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; padding: 10px 0; }
+        .queue-delete-btn { height: 25%; background: transparent; border: none; border-top: 1px solid #222; color: #ff4444; font-size: 16px; font-weight: bold; font-family: 'Nunito', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .queue-delete-btn:hover { background: rgba(255,68,68,0.15); text-shadow: 0 0 10px #ff4444; }
-
-        /* --- Queue move buttons --- */
-        .queue-move-btn { display: none; width: 100%; background: transparent; border: none; border-bottom: 1px solid #222; color: rgba(255,255,255,0.5); font-size: 11px; cursor: pointer; padding: 8px 0; font-family: 'Nunito', sans-serif; align-items: center; justify-content: center; transition: background 0.2s, color 0.2s; }
-        .queue-move-btn:hover { background: rgba(255,255,255,0.07); color: white; }
-        body.is-editing .queue-move-btn { display: flex; }
-        .queue-move-btn:last-of-type { border-bottom: none; border-top: 1px solid #222; }
 
         .play-pause-btn { width: 65px; flex-shrink: 0; background: transparent; border: none; border-left: 1px solid #222; color: white; font-size: 26px; font-family: 'Nunito', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 0 16px 16px 0; transition: background 0.2s; }
         .play-pause-btn.active { color: var(--neon-color); text-shadow: 0 0 10px var(--neon-color); }
@@ -136,122 +141,50 @@
         @keyframes scroll-left-right { 0%, 10% { transform: translateX(15%); } 90%, 100% { transform: translateX(-15%); } }
         .time-text { font-size: 1rem; color: #fff; cursor: pointer; display: block; width: fit-content; margin: 0 auto 16px auto; background: rgba(255,255,255,0.15); padding: 10px 24px; border-radius: 24px; font-weight: 700; transition: background 0.2s; text-align: center; letter-spacing: 1px; }
         .sliders-container { display: flex; flex-direction: column; gap: 16px; width: 100%; }
-        input[type="range"] { -webkit-appearance: none; background: rgba(255,255,255,0.15); height: 6px; border-radius: 3px; outline: none; flex-grow: 1; cursor: pointer; width: 100%; transition: background 0.3s, box-shadow 0.3s; }
-        input[type="range"].progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--neon-color) !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8); transition: box-shadow 0.3s, background 0.3s; }
+        .volume-control { display: flex; align-items: center; gap: 12px; }
+        input[type="range"] { -webkit-appearance: none; background: rgba(255,255,255,0.15); height: 6px; border-radius: 3px; outline: none; flex-grow: 1; cursor: pointer; width: 100%; }
+        input[type="range"].progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--neon-color) !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8); }
         input[type="range"].vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: white !important; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.8); }
-        .volume-control { display: flex; align-items: center; gap: 10px; width: 100%; }
-        .volume-control span { font-size: 14px; flex-shrink: 0; }
-        .volume-control input[type="range"] { width: auto; }
-
-        /* LOOPING TRACK LINE GLOW */
-        .queue-item.is-looping input[type="range"].progress-slider {
-            background: var(--neon-color);
-            box-shadow: 0 0 10px var(--neon-color);
-        }
-        .queue-item.is-looping input[type="range"].progress-slider::-webkit-slider-thumb {
-            background: var(--neon-color) !important;
-            box-shadow: 0 0 15px var(--neon-color), 0 0 5px white;
-        }
 
         /* --- Modals --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(5px); }
         .modal { background: #111; padding: 30px; border-radius: 16px; border: 1px solid var(--neon-4); text-align: center; max-width: 400px; width: 90%; box-shadow: 0 0 30px var(--neon-4); }
         .modal h2 { margin-bottom: 20px; color: var(--text); font-weight: 600; }
         .modal p { font-weight: 400; }
-        .modal-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 20px; flex-wrap: wrap; flex-direction: column; }
-        .modal-buttons button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; font-family: 'Nunito', sans-serif; }
-
-        button.btn-auto {
-            background: var(--neon-2); color: black;
-            font-weight: 700; font-size: 15px; padding: 16px 20px;
-            border-radius: 8px; border: none; cursor: pointer;
-            font-family: 'Nunito', sans-serif; text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 0 18px rgba(0, 255, 247, 0.45);
-            transition: box-shadow 0.25s, transform 0.1s;
-        }
-        button.btn-auto:hover { box-shadow: 0 0 32px var(--neon-2); transform: scale(1.02); }
-        button.btn-auto:active { transform: scale(0.98); }
-
-        .btn-keep { background: transparent; border: 1px solid white !important; color: white; padding: 14px 20px !important; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; }
-        .btn-keep:hover { background: rgba(255,255,255,0.1); }
+        .modal-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 20px; flex-wrap: wrap;}
+        .modal-buttons button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; font-family: 'Nunito', sans-serif;}
+        .btn-auto { background: var(--neon-2); color: black; }
+        .btn-keep { background: transparent; border: 1px solid white; color: white; }
         .btn-danger { background: #ff4444; color: white; }
-        .btn-cancel { margin-top:20px; background:none; border:none; color:#777; cursor:pointer; font-size: 14px; font-family: 'Nunito', sans-serif; font-weight: 600; }
-        .color-options { display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+        .btn-cancel { margin-top:20px; background:none; border:none; color:#777; cursor:pointer; font-size: 14px; font-family: 'Nunito', sans-serif; font-weight: 600;}
+        
+        .color-options { display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 20px;}
         .color-swatch { width: 44px; height: 44px; border-radius: 50%; cursor: pointer; border: 2px solid #fff; transition: transform 0.2s; }
         input[type="color"] { width: 48px; height: 48px; border: none; border-radius: 50%; cursor: pointer; background: transparent; }
         input[type="color"]::-webkit-color-swatch { border-radius: 50%; border: 2px solid #fff; }
         #colorPreview { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 15px auto; border: 3px solid white; }
-        #timeInput { width: 100%; padding: 15px; font-size: 28px; font-family: 'Nunito', sans-serif; font-weight: 700; text-align: center; background: #222; border: 1px solid var(--neon-2); color: white; border-radius: 12px; outline: none; margin-bottom: 20px; letter-spacing: 2px; }
+        #timeInput { width: 100%; padding: 15px; font-size: 28px; font-family: 'Nunito', sans-serif; font-weight: 700; text-align: center; background: #222; border: 1px solid var(--neon-2); color: white; border-radius: 12px; outline: none; margin-bottom: 10px; letter-spacing: 2px; }
+        
+        .symbol-modal { max-width: 600px; }
+        .symbol-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 12px; max-height: 300px; overflow-y: auto; padding: 10px; background: #000; border-radius: 12px; border: 1px solid #333; }
+        .sym-item { font-size: 1.8rem; cursor: pointer; padding: 5px; border-radius: 8px; transition: background 0.2s; }
+        .sym-item:hover { background: #333; }
 
-        /* --- Symbol modal --- */
-        .symbol-modal { max-width: 520px !important; }
-        .symbol-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; max-height: 300px; overflow-y: auto; margin-bottom: 20px; padding: 4px; }
-        .sym-item { font-size: 1.4rem; text-align: center; cursor: pointer; padding: 8px 4px; border-radius: 8px; transition: background 0.15s; }
-        .sym-item:hover { background: rgba(255,255,255,0.12); }
-
-        /* --- Bottom Sheet --- */
         .bottom-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; z-index: 3000; }
-        .bottom-sheet { background: rgba(25,25,25,0.85); backdrop-filter: blur(25px); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 24px; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1); border-top: 1px solid rgba(255,255,255,0.1); max-height: 85dvh; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+        .bottom-sheet { background: rgba(25, 25, 25, 0.85); backdrop-filter: blur(25px); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 24px; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1); border-top: 1px solid rgba(255,255,255,0.1); }
         .bottom-sheet.open { transform: translateY(0); }
         .sheet-group { background: rgba(255,255,255,0.08); border-radius: 16px; margin-bottom: 16px; overflow: hidden; }
         .sheet-btn { width: 100%; padding: 18px; font-family: 'Nunito', sans-serif; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.05); color: white; font-size: 1.1rem; text-align: center; cursor: pointer; font-weight: 600; }
         .sheet-cancel { font-weight: 700; color: #ff4444 !important; }
-        .sheet-delete { background: #ff4444 !important; color: white !important; font-weight: 700; }
-
-        /* --- FABs --- */
+        .sheet-delete { background: #ff4444 !important; color: white !important; font-weight: 700;}
+        
         .fab, .fab-stop-edit { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 64px; height: 64px; border-radius: 50%; background: black; border: 2px solid var(--neon-3); color: var(--neon-3); font-size: 1.8rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 999; box-shadow: 0 0 20px var(--neon-3); transition: all 0.3s; }
-        .fab-stop-edit { display: none; bottom: 110px; border-color: var(--neon-4); color: var(--neon-4); box-shadow: 0 0 20px var(--neon-4); width: 56px; height: 56px; font-size: 1.5rem; }
-        body.is-editing .fab-stop-edit { display: flex; }
-        body.is-editing .fab { display: none; }
-        
-        /* ---------------------------------------------------- */
-        /* RESPONSIVE BREAKPOINTS (Mobile & Tablet specific)    */
-        /* ---------------------------------------------------- */
-        
-        /* Apply full-screen dashboard and general hiding for BOTH mobile and tablet */
-        @media (max-width: 1024px) { 
-            .desktop-only { display: none !important; } 
-            .fullscreen-btn { display: none; top: 15px; right: 15px; font-size: 24px; }
-            body.is-editing .fullscreen-btn { display: block; }
-            
-            .dashboard { 
-                position: fixed; top: 0; right: 0; width: 100%; margin-right: 0; 
-                border-left: none; transform: translateX(100%); 
-                transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
-            } 
-            .dashboard.open { transform: translateX(0); } 
-            
-            .fab-stop-edit { bottom: 30px; width: 64px; height: 64px; font-size: 1.8rem; }
-        }
-
-        /* Mobile specific adjustments (< 768px) */
-        @media (max-width: 768px) {
-            .grid-container { grid-template-columns: repeat(auto-fill, minmax(40%, 1fr)); gap: 15px; padding: 15px; }
-            .input-stack input[type="text"]::placeholder { font-size: 11px; }
-        }
-
-        /* Tablet specific adjustments (769px - 1024px) */
-        @media (min-width: 769px) and (max-width: 1024px) {
-            /* Shrink main boxes to comfortably fit 7 columns */
-            .grid-container { grid-template-columns: repeat(7, 1fr); gap: 15px; padding: 15px; }
-            
-            /* Wrap queue items in a grid layout (min 300px wide per item) */
-            .queue-container { 
-                display: grid; 
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
-                gap: 16px; 
-                align-content: start; 
-            }
-            .queue-item-wrapper { margin-bottom: 0; }
-        }
-
+        .fab-stop-edit { display: none; bottom: 110px; border-color: var(--neon-4); color: var(--neon-4); width: 56px; height: 56px; font-size: 1.5rem;}
         #hidden-players { display: none; }
     </style>
 </head>
 <body>
     <div class="main-wrapper" id="mainWrapper">
-        <button id="fullscreenBtn" class="fullscreen-btn" title="Toggle Fullscreen">⛶</button>
         <div class="header-container">
             <h1>Super Simple Soundboard</h1>
             <div class="input-stack">
@@ -263,7 +196,6 @@
                 </div>
             </div>
             <div class="header-controls">
-                <button class="action-btn desktop-only" id="toggleDesktopBtn">Toggle Queue</button>
                 <button class="action-btn" id="editGridBtn">Edit Grid</button>
             </div>
         </div>
@@ -304,675 +236,4 @@
     </div>
 
     <div class="modal-overlay" id="colorModal">
-        <div class="modal">
-            <h2>Select Color</h2>
-            <div id="colorPreview"></div>
-            <div class="color-options">
-                <div class="color-swatch" style="background:#fc0e12;" data-color="#fc0e12"></div>
-                <div class="color-swatch" style="background:#00fff7;" data-color="#00fff7"></div>
-                <div class="color-swatch" style="background:#ff00fc;" data-color="#ff00fc"></div>
-                <div class="color-swatch" style="background:#fff500;" data-color="#fff500"></div>
-                <input type="color" id="nativeColorPicker" value="#ffffff">
-            </div>
-            <button class="btn-auto" id="btnConfirmColor" style="width:100%">Apply Color</button>
-            <button class="btn-cancel" onclick="hideModal('colorModal')">Cancel</button>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="timeModal">
-        <div class="modal">
-            <h2>Set Time</h2>
-            <p style="color:#888;font-size:12px;margin-bottom:15px;">Type digits to format time (e.g. 123 for 1:23)</p>
-            <input type="tel" id="timeInput" inputmode="numeric" pattern="[0-9]*" placeholder="0:00">
-            <button class="btn-auto" id="btnConfirmTime" style="width:100%">Jump to Time</button>
-            <button class="btn-cancel" onclick="hideModal('timeModal')">Cancel</button>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="artSourceModal">
-        <div class="modal">
-            <h2>Add Album Art</h2>
-            <div class="modal-buttons">
-                <button class="btn-auto" id="btnArtUploadChoice">Upload Image/GIF</button>
-                <button class="btn-keep" id="btnArtLinkChoice">Paste Link</button>
-            </div>
-            <button class="btn-cancel" onclick="hideModal('artSourceModal')">Cancel</button>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="replaceArtModal">
-        <div class="modal">
-            <h2>Manage Art</h2>
-            <div class="modal-buttons" style="flex-direction:row;">
-                <button class="btn-auto" id="btnReplaceArt">Replace Art</button>
-                <button class="btn-danger" id="btnRemoveArt">Remove Art</button>
-            </div>
-            <button class="btn-cancel" onclick="hideModal('replaceArtModal')">Cancel</button>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="symbolModal">
-        <div class="modal symbol-modal">
-            <h2>Select Symbol</h2>
-            <div class="symbol-grid" id="symbolGrid"></div>
-            <button class="btn-cancel" onclick="hideModal('symbolModal')">Cancel</button>
-        </div>
-    </div>
-
-    <div id="hidden-players"></div>
-    <input type="file" id="hiddenFileInput" accept="image/*, image/gif" style="display:none;">
-
-    <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="https://player.vimeo.com/api/player.js"></script>
-    <script src="https://w.soundcloud.com/player/api.js"></script>
-    <script src="https://player.twitch.tv/js/embed/v1.js"></script>
-
-    <script>
-        const neonColors = ['#fc0e12','#00fff7','#ff00fc','#fff500'];
-
-        // Random symbols for new tracks
-        const randomSymbols = ['🔥','🌊','🍃','🌲','🌋','🌌','🌙','☀️','🌈','🪐','☄️','🫧','★','☆','⚔️','🛡️','🏹','🔪','🪓','💥','💣','🧨','⚡','🚀','🛸','🏆','🆙','🆒','💯','💢','🐺','🐦','🦉','🦄','💡','🧪','👻','👽','✨','🌟','⛺','💎','👑','🌸','🍀','🎸','🎬','☕','🍕','🍎','🎁','🎈','😀','😂','😍'];
-        function getRandomSymbol() { return randomSymbols[Math.floor(Math.random() * randomSymbols.length)]; }
-
-        const defaultMusicSymbols = ['♫','𝄞','♪','𝄢','𝄽','♬','♮','𝄡'];
-        const allSymbolsList = ['🔥','🌊','🌧','⛈','🌬','🍃','🌲','🌋','🏔','🌌','🌙','🌑','☀️','☁️','🌫','❄️','💨','🌦','🌈','🪐','☄️','🏜','🏝','🫧','♨','☀','☁','★','☆','☂','🗡️','⚔️','🛡️','🏹','🔪','🪓','💥','💣','🧨','⚡','🚀','🛸','🚂','🚗','✈️','🏆','⚽','🎯','🆙','🆒','💯','💢','⚓','🐺','🐦','🦉','🐍','🦂','🦄','🐼','🚨','🆘','⚠️','‼️','❕','🛑','🚫','⛔','📛','🚩','☢️','☣️','🩹','🩺','🚑','🚒','🔔','📢','📣','☠','☢','☣','🚷','💡','🔋','⚙️','🧪','💻','📱','📷','📶','⏻','🔍','📍','📅','✉️','🛒','⚙','⚗','⚛','⚖','⏼','⏽','⏾','☏','☎','💀','☠️','👻','👹','👺','🧛','🧟','🧌','🦇','🕷️','🕸️','🩸','⚰️','🪦','🏚️','🥀','⛓️','👽','🤡','😈','👿','😱','😨','😰','👁️','🧠','🌚','✨','🌟','🕯','⛺','🏙','🏠','📖','📚','🔑','🔒','💎','👑','🌸','☘','🍀','🎸','🎨','🎬','☕','🍕','🍎','🎁','🎈','🧘','🛌','🛁','😀','😂','😍','🤔','🤫','✔️','❌','✖️',...defaultMusicSymbols];
-
-        let tracks = []; let queue = []; let colorIndex = 0; let isDashboardOpen = false; let isEditing = false;
-        let activeTargetTrackId = null; let currentActionQueueId = null; let activeTimeQueueId = null; let tempSelectedColor = '#ffffff';
-
-        // Check for iOS Devices to completely remove the fullscreen button
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        if (isIOS) {
-            const fsBtn = document.getElementById('fullscreenBtn');
-            if (fsBtn) fsBtn.remove();
-        }
-
-        // --- IndexedDB ---
-        const DB_NAME = 'SuperSimpleDB'; let db;
-        function initDB() {
-            return new Promise((resolve) => {
-                const req = indexedDB.open(DB_NAME, 5);
-                req.onupgradeneeded = (e) => { db = e.target.result; if (!db.objectStoreNames.contains('tracks')) db.createObjectStore('tracks', { keyPath: 'id' }); };
-                req.onsuccess = (e) => { db = e.target.result; resolve(db); };
-            });
-        }
-        function saveTrackToDB(track) { db.transaction('tracks','readwrite').objectStore('tracks').put(track); }
-        function deleteTrackFromDB(id) { db.transaction('tracks','readwrite').objectStore('tracks').delete(id); }
-        function saveAllTracksToDB() { tracks.forEach(t => saveTrackToDB(t)); }
-
-        // Track order persisted in localStorage so IndexedDB insertion order doesnt matter
-        function saveTrackOrder() { localStorage.setItem('SuperSimpleTrackOrder', JSON.stringify(tracks.map(t => t.id))); }
-
-        function loadTracksFromDB() {
-            return new Promise((resolve) => {
-                const req = db.transaction('tracks','readonly').objectStore('tracks').getAll();
-                req.onsuccess = () => {
-                    const loaded = req.result || [];
-                    const orderStr = localStorage.getItem('SuperSimpleTrackOrder');
-                    if (orderStr) {
-                        try {
-                            const order = JSON.parse(orderStr);
-                            loaded.sort((a, b) => {
-                                const ai = order.indexOf(a.id), bi = order.indexOf(b.id);
-                                if (ai === -1) return 1; if (bi === -1) return -1; return ai - bi;
-                            });
-                        } catch(e) {}
-                    }
-                    resolve(loaded);
-                };
-            });
-        }
-
-        function saveQueueState() {
-            const state = queue.map(q => ({ queueId:q.queueId, trackId:q.trackId, type:q.type, mediaId:q.mediaId, platform:q.platform, name:q.name, color:q.color, state:q.state, duration:q.duration, isLooping:q.isLooping, volume:q.volume, currentTime:q.currentTime }));
-            localStorage.setItem('SuperSimpleQueue', JSON.stringify(state));
-        }
-        function loadQueueState() { const d = localStorage.getItem('SuperSimpleQueue'); return d ? JSON.parse(d) : []; }
-
-        function safeBind(id, evt, handler) { const el = document.getElementById(id); if (el) el.addEventListener(evt, handler); }
-
-        // --- Grid column & arrow helpers ---
-        function getGridColumnCount() {
-            const container = document.getElementById('gridContainer');
-            const cols = window.getComputedStyle(container).gridTemplateColumns.split(' ').length;
-            return Math.max(1, cols);
-        }
-
-        function updateArrowVisibility() {
-            if (!isEditing) return;
-            const boxes = [...document.querySelectorAll('#gridContainer .track-box')];
-            const cols = getGridColumnCount();
-            const total = boxes.length;
-            boxes.forEach((box, idx) => {
-                const col = idx % cols;
-                const up    = box.querySelector('.arrow-up');
-                const down  = box.querySelector('.arrow-down');
-                const left  = box.querySelector('.arrow-left');
-                const right = box.querySelector('.arrow-right');
-                if (up)    up.style.visibility    = idx < cols              ? 'hidden' : 'visible';
-                if (down)  down.style.visibility  = idx + cols >= total     ? 'hidden' : 'visible';
-                if (left)  left.style.visibility  = col === 0               ? 'hidden' : 'visible';
-                if (right) right.style.visibility = (col === cols - 1 || idx + 1 >= total) ? 'hidden' : 'visible';
-            });
-        }
-
-        // --- Move functions ---
-        function moveTrack(trackId, direction) {
-            const idx = tracks.findIndex(t => t.id === trackId);
-            if (idx === -1) return;
-            const cols = getGridColumnCount();
-            let targetIdx;
-            if (direction === 'up')    targetIdx = idx - cols;
-            else if (direction === 'down')  targetIdx = idx + cols;
-            else if (direction === 'left')  targetIdx = idx - 1;
-            else if (direction === 'right') targetIdx = idx + 1;
-            if (targetIdx == null || targetIdx < 0 || targetIdx >= tracks.length) return;
-            [tracks[idx], tracks[targetIdx]] = [tracks[targetIdx], tracks[idx]];
-            saveTrackOrder();
-            renderGrid();
-        }
-
-        function moveQueueItem(queueId, direction) {
-            const idx = queue.findIndex(q => q.queueId === queueId);
-            if (idx === -1) return;
-            const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-            if (targetIdx < 0 || targetIdx >= queue.length) return;
-            [queue[idx], queue[targetIdx]] = [queue[targetIdx], queue[idx]];
-            saveQueueState();
-            renderQueue();
-        }
-
-        // --- Init ---
-        let isAppInitialized = false;
-        async function initApp() {
-            if (isAppInitialized) return;
-            isAppInitialized = true;
-            try {
-                setupEventListeners();
-                await initDB();
-                tracks = await loadTracksFromDB();
-                if (tracks.length > 0) colorIndex = tracks.length % neonColors.length;
-                populateSymbolGrid();
-                renderGrid();
-                const savedQueue = loadQueueState();
-                savedQueue.forEach(s => { try { restoreQueueItem(s); } catch(e) { console.warn('Flushed corrupt track', e); } });
-                if (savedQueue.length > 0) renderQueue();
-                startUITracker();
-                setInterval(saveQueueState, 5000);
-            } catch(e) { console.error('Init error', e); }
-        }
-
-        document.addEventListener('DOMContentLoaded', initApp);
-        function onYouTubeIframeAPIReady() { initApp(); }
-        setTimeout(initApp, 1000);
-
-        function toggleDashboard() {
-            isDashboardOpen = !isDashboardOpen;
-            document.getElementById('dashboard').classList.toggle('open', isDashboardOpen);
-        }
-
-        function setupEventListeners() {
-            safeBind('uploadLinkBtn', 'click', handleAddMediaLink);
-            safeBind('triggerMp3Btn', 'click', () => document.getElementById('mp3Input').click());
-            safeBind('mp3Input', 'change', handleAddMP3);
-            safeBind('fab', 'click', toggleDashboard);
-            safeBind('closeDashboardBtn', 'click', toggleDashboard);
-            safeBind('fabStopEdit', 'click', toggleEditMode);
-            safeBind('toggleDesktopBtn', 'click', toggleDashboard);
-            safeBind('editGridBtn', 'click', toggleEditMode);
-            
-            // Fullscreen Binding
-            safeBind('fullscreenBtn', 'click', () => {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(err => {
-                        console.log(`Error attempting to enable fullscreen: ${err.message}`);
-                    });
-                } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    }
-                }
-            });
-            document.addEventListener('fullscreenchange', () => {
-                const fsBtn = document.getElementById('fullscreenBtn');
-                if (fsBtn) fsBtn.textContent = document.fullscreenElement ? '🗗' : '⛶';
-            });
-
-            safeBind('masterToggleBtn', 'click', () => {
-                const isAnyPlaying = queue.some(q => q.state === 'PLAYING');
-                if (isAnyPlaying) queue.forEach(q => { if (q.state==='PLAYING' && q.playerAPI) q.playerAPI.pause(); });
-                else queue.forEach(q => { if (q.state==='PAUSED' && q.playerAPI) { q.preventGhostPlay=false; q.playerAPI.play(); } });
-            });
-            safeBind('bottomSheetOverlay', 'click', (e) => { if (e.target.id==='bottomSheetOverlay') closeBottomSheet(); });
-            safeBind('bs-cancel', 'click', closeBottomSheet);
-            safeBind('bs-fadein', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); if(q) fadeIn(q); closeBottomSheet(); });
-            safeBind('bs-fadeout', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); if(q) fadeOut(q); closeBottomSheet(); });
-            safeBind('bs-loop', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); if(q) { q.isLooping=!q.isLooping; updateQueueUI(); saveQueueState(); } closeBottomSheet(); });
-            safeBind('bs-dup', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); const t = tracks.find(t=>t.id===q.trackId); if(t) addToQueue(t, q.currentTime); closeBottomSheet(); });
-            
-            safeBind('bs-rename', 'click', () => { 
-                const q = queue.find(q=>q.queueId===currentActionQueueId); 
-                const n = prompt('Rename track:', q.name); 
-                if(n) { 
-                    updateTrackData(q.trackId, { baseName: n });
-                } 
-                closeBottomSheet(); 
-            });
-
-            safeBind('bs-delete', 'click', () => { removeQueueItem(currentActionQueueId); closeBottomSheet(); });
-            safeBind('bs-symbol', 'click', () => {
-                const q = queue.find(q=>q.queueId===currentActionQueueId);
-                if (q) activeTargetTrackId = q.trackId;
-                document.getElementById('symbolModal').style.display = 'flex';
-                closeBottomSheet();
-            });
-            safeBind('bs-link', 'click', () => {
-                const qItem = queue.find(q=>q.queueId===currentActionQueueId);
-                const cur = qItem.platform==='soundcloud' ? qItem.mediaId : (qItem.platform==='youtube' ? `https://youtu.be/${qItem.mediaId}` : (qItem.platform==='vimeo' ? `https://vimeo.com/${qItem.mediaId}` : qItem.mediaId));
-                const newLink = prompt('Paste new link:', cur);
-                if (newLink && newLink!==cur) {
-                    const parsed = parseMediaUrl(newLink);
-                    if (!parsed) alert('Invalid or unsupported link');
-                    else {
-                        if (qItem.playerAPI) qItem.playerAPI.destroy();
-                        const div = document.getElementById(`player_${qItem.queueId}`); if(div) div.remove();
-                        qItem.platform=parsed.platform; qItem.mediaId=parsed.id; qItem.twitchType=parsed.type||null; qItem.playerAPI=null;
-                        const base = tracks.find(t=>t.id===qItem.trackId);
-                        if (base) initializePlayer(qItem, base, false);
-                        updateQueueUI(); saveQueueState();
-                    }
-                }
-                closeBottomSheet();
-            });
-            safeBind('bs-color', 'click', () => {
-                activeTargetTrackId = queue.find(q=>q.queueId===currentActionQueueId).trackId;
-                tempSelectedColor = tracks.find(t=>t.id===activeTargetTrackId).color;
-                document.getElementById('colorPreview').style.background = tempSelectedColor;
-                document.getElementById('colorModal').style.display = 'flex';
-                closeBottomSheet();
-            });
-            document.querySelectorAll('.color-swatch').forEach(el => el.onclick = (e) => { tempSelectedColor=e.target.dataset.color; document.getElementById('colorPreview').style.background=tempSelectedColor; });
-            safeBind('nativeColorPicker', 'input', (e) => { tempSelectedColor=e.target.value; document.getElementById('colorPreview').style.background=tempSelectedColor; });
-            safeBind('btnConfirmColor', 'click', () => { updateTrackData(activeTargetTrackId, { color: tempSelectedColor }); hideModal('colorModal'); });
-            safeBind('timeInput', 'input', (e) => { let v=e.target.value.replace(/\D/g,''); if(!v) return; e.target.value = v.length>2 ? v.slice(0,-2)+':'+v.slice(-2) : v; });
-            safeBind('btnConfirmTime', 'click', () => {
-                const qItem = queue.find(q=>q.queueId===activeTimeQueueId);
-                const v = document.getElementById('timeInput').value.replace(/\D/g,'');
-                if (!v) { hideModal('timeModal'); return; }
-                let s = v.length>2 ? parseInt(v.slice(0,-2))*60+parseInt(v.slice(-2)) : parseInt(v);
-                if (s>qItem.duration) s=qItem.duration;
-                qItem.currentTime=s; if(qItem.playerAPI){qItem.preventGhostPlay=false; qItem.playerAPI.seekTo(s);}
-                updateQueueUI(); saveQueueState(); hideModal('timeModal');
-            });
-            safeBind('timeInput', 'keypress', (e) => { if(e.key==='Enter') document.getElementById('btnConfirmTime').click(); });
-            safeBind('bs-art', 'click', () => {
-                activeTargetTrackId = queue.find(q=>q.queueId===currentActionQueueId).trackId;
-                const t = tracks.find(t=>t.id===activeTargetTrackId);
-                if (t && t.customImage) document.getElementById('replaceArtModal').style.display='flex';
-                else document.getElementById('artSourceModal').style.display='flex';
-                closeBottomSheet();
-            });
-            safeBind('btnArtUploadChoice', 'click', () => { hideModal('artSourceModal'); document.getElementById('hiddenFileInput').click(); });
-            safeBind('btnArtLinkChoice', 'click', () => { hideModal('artSourceModal'); const u=prompt('Paste Image/GIF URL:'); if(u) updateTrackData(activeTargetTrackId,{customImage:u}); });
-            safeBind('hiddenFileInput', 'change', (e) => { const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=(ev)=>updateTrackData(activeTargetTrackId,{customImage:ev.target.result}); r.readAsDataURL(f); e.target.value=''; });
-            safeBind('btnReplaceArt', 'click', () => { hideModal('replaceArtModal'); document.getElementById('artSourceModal').style.display='flex'; });
-            safeBind('btnRemoveArt', 'click', () => { updateTrackData(activeTargetTrackId,{customImage:null,symbol:'♫'}); hideModal('replaceArtModal'); });
-
-            window.addEventListener('resize', () => { updateGridGlow(); updateArrowVisibility(); });
-        }
-
-        function hideModal(id) { document.getElementById(id).style.display='none'; }
-        function openTimeModal(queueId) { activeTimeQueueId=queueId; const i=document.getElementById('timeInput'); i.value=''; document.getElementById('timeModal').style.display='flex'; i.focus(); }
-
-        function toggleEditMode() {
-            isEditing = !isEditing;
-            document.body.classList.toggle('is-editing', isEditing);
-            if (!isEditing) {
-                renderGrid();
-                renderQueue();
-            } else {
-                requestAnimationFrame(updateArrowVisibility);
-            }
-        }
-
-        function openBottomSheet(queueId, type, isLooping) {
-            currentActionQueueId = queueId;
-            document.getElementById('bs-link').style.display = type==='mp3' ? 'none' : 'block';
-            document.getElementById('bs-loop').textContent = isLooping ? 'Unloop Track' : 'Loop Track';
-            const overlay = document.getElementById('bottomSheetOverlay');
-            overlay.style.display = 'flex';
-            setTimeout(() => document.getElementById('bottomSheet').classList.add('open'), 10);
-        }
-        function closeBottomSheet() {
-            document.getElementById('bottomSheet').classList.remove('open');
-            setTimeout(() => { document.getElementById('bottomSheetOverlay').style.display='none'; currentActionQueueId=null; }, 350);
-        }
-
-        function parseMediaUrl(url) {
-            let yt=url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/); if(yt) return {platform:'youtube',id:yt[1]};
-            let vim=url.match(/vimeo\.com\/(?:video\/)?(\d+)/); if(vim) return {platform:'vimeo',id:vim[1]};
-            if(url.includes('soundcloud.com/')) return {platform:'soundcloud',id:url};
-            let twV=url.match(/twitch\.tv\/videos\/(\d+)/); if(twV) return {platform:'twitch',type:'video',id:twV[1]};
-            let twC=url.match(/clips\.twitch\.tv\/([a-zA-Z0-9_-]+)/)||url.match(/twitch\.tv\/.*\/clip\/([a-zA-Z0-9_-]+)/); if(twC) return {platform:'twitch',type:'clip',id:twC[1]};
-            return null;
-        }
-
-        function handleAddMediaLink() {
-            const url=document.getElementById('mediaLink').value.trim(); if(!url) return;
-            const parsed=parseMediaUrl(url); if(!parsed) return alert('Unsupported Link');
-            const sym = getRandomSymbol();
-            const track={id:'track_'+Date.now(),type:'embed',platform:parsed.platform,mediaId:parsed.id,baseName:sym,color:neonColors[colorIndex],symbol:sym,twitchType:parsed.type||null};
-            colorIndex=(colorIndex+1)%neonColors.length;
-            tracks.push(track); saveTrackToDB(track); saveTrackOrder(); renderGrid();
-            document.getElementById('mediaLink').value='';
-        }
-
-        function handleAddMP3(e) {
-            const file=e.target.files[0]; if(!file) return;
-            const reader=new FileReader();
-            reader.onload=(ev) => {
-                const sym = getRandomSymbol();
-                const track={id:'track_'+Date.now(),type:'mp3',platform:'local',baseName:file.name.replace(/\.[^/.]+$/,''),color:neonColors[colorIndex],symbol:sym,localAudio:ev.target.result};
-                colorIndex=(colorIndex+1)%neonColors.length;
-                tracks.push(track); saveTrackToDB(track); saveTrackOrder(); renderGrid();
-            };
-            reader.readAsDataURL(file); e.target.value='';
-        }
-
-        function fadeIn(qItem) {
-            if(!qItem.playerAPI) return; 
-            let tv = qItem.volume; 
-            qItem.volume = 0; 
-            qItem.playerAPI.setVolume(0); 
-            qItem.state = 'PLAYING'; 
-            qItem.preventGhostPlay = false; 
-            qItem.playerAPI.play();
-            
-            let step = Math.max(1, tv / 25); 
-            setTimeout(() => {
-                const iv = setInterval(() => { 
-                    qItem.volume = Math.min(tv, parseFloat(qItem.volume) + step); 
-                    qItem.playerAPI.setVolume(qItem.volume); 
-                    updateQueueUI(); 
-                    if(qItem.volume >= tv) clearInterval(iv); 
-                }, 80);
-            }, 400);
-        }
-
-        function fadeOut(qItem) {
-            if(!qItem.playerAPI||qItem.state!=='PLAYING') return;
-            const iv=setInterval(()=>{ qItem.volume=Math.max(0,qItem.volume-1); qItem.playerAPI.setVolume(qItem.volume); updateQueueUI(); if(qItem.volume<=0){clearInterval(iv); qItem.playerAPI.pause(); qItem.state='PAUSED'; updateQueueUI();} },80);
-        }
-
-        function renderGrid() {
-            const container=document.getElementById('gridContainer'); container.innerHTML='';
-            tracks.forEach(track => {
-                const box=document.createElement('div'); box.className=`track-box ${queue.some(q=>q.trackId===track.id)?'in-queue':''}`; box.dataset.trackId=track.id;
-                
-                // Add native tooltip popup
-                box.setAttribute('title', track.baseName);
-                
-                const content=document.createElement('div'); content.className='track-box-content'; content.style.setProperty('--neon-color',track.color);
-                if(track.customImage){const img=document.createElement('img'); img.src=track.customImage; content.appendChild(img);}
-                else{const sym=document.createElement('div'); sym.className='track-symbol'; sym.textContent=track.symbol; content.appendChild(sym);}
-                const hover=document.createElement('div'); hover.className='hover-text'; hover.textContent=track.baseName; content.appendChild(hover);
-                box.appendChild(content);
-
-                // Arrow buttons (4 directions)
-                [['up','▲'],['down','▼'],['left','◀'],['right','▶']].forEach(([dir, glyph]) => {
-                    const btn=document.createElement('button'); btn.className=`grid-arrow-btn arrow-${dir}`; btn.textContent=glyph;
-                    btn.onclick=(e)=>{ e.stopPropagation(); moveTrack(track.id, dir); };
-                    box.appendChild(btn);
-                });
-
-                // Delete button
-                const del=document.createElement('div'); del.className='delete-box-btn';
-                del.textContent='X';
-                del.onclick=(e)=>{ e.stopPropagation(); deleteTrackFromDB(track.id); tracks=tracks.filter(t=>t.id!==track.id); saveTrackOrder(); queue.filter(q=>q.trackId===track.id).forEach(q=>removeQueueItem(q.queueId)); renderGrid(); };
-                box.appendChild(del);
-
-                // MULTITOUCH POINTER LOGIC (Replaces standard click)
-                let startX = 0;
-                let startY = 0;
-                let isDragging = false;
-
-                box.onpointerdown = (e) => {
-                    if (isEditing) return;
-                    startX = e.clientX;
-                    startY = e.clientY;
-                    isDragging = false;
-                };
-
-                box.onpointermove = (e) => {
-                    if (isEditing) return;
-                    if (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10) {
-                        isDragging = true;
-                    }
-                };
-
-                box.onpointerup = (e) => {
-                    if (isEditing || isDragging) return;
-                    
-                    if (queue.some(q => q.trackId === track.id)) {
-                        if (window.innerWidth <= 1024) { 
-                            const q = queue.find(q => q.trackId === track.id); 
-                            if (q.state === 'PLAYING') q.playerAPI.pause(); 
-                            else { q.preventGhostPlay = false; q.playerAPI.play(); } 
-                        } else { 
-                            removeQueueItem(queue.find(q => q.trackId === track.id).queueId); 
-                        }
-                    } else {
-                        addToQueue(track, 0, window.innerWidth <= 1024);
-                        if (!isDashboardOpen && window.innerWidth > 1024) toggleDashboard();
-                    }
-                };
-
-                container.appendChild(box);
-            });
-            updateGridGlow();
-            if(isEditing) requestAnimationFrame(updateArrowVisibility);
-        }
-
-        function renderQueue() {
-            const container=document.getElementById('queueContainer'); container.innerHTML='';
-            
-            // Render mobile/tablet Edit Grid button right inside the scrollable container
-            if (window.innerWidth <= 1024) {
-                const mEdit = document.createElement('button');
-                mEdit.className = 'action-btn';
-                mEdit.style.cssText = 'margin-bottom: 20px; border-color: white; color: white; display: block;';
-                mEdit.textContent = isEditing ? 'Stop Editing' : 'Edit Grid';
-                mEdit.onclick = () => {
-                    toggleEditMode();
-                    mEdit.textContent = isEditing ? 'Stop Editing' : 'Edit Grid';
-                };
-                container.appendChild(mEdit);
-            }
-
-            queue.forEach((qItem, qIdx) => {
-                const isFirst = qIdx === 0;
-                const isLast  = qIdx === queue.length - 1;
-                const wrapper=document.createElement('div'); wrapper.className='queue-item-wrapper'; wrapper.dataset.queueId=qItem.queueId;
-                
-                const el=document.createElement('div'); el.className=`queue-item ${qItem.state==='PLAYING'?'is-playing':''} ${qItem.isLooping?'is-looping':''}`; el.style.setProperty('--neon-color',qItem.color);
-                
-                el.innerHTML=`
-                    <div class="queue-left-actions">
-                        <button class="queue-move-btn" style="visibility:${isFirst?'hidden':'visible'}" onclick="moveQueueItem('${qItem.queueId}','up')">▲</button>
-                        <button class="options-btn" onclick="openBottomSheet('${qItem.queueId}','${qItem.type}',${qItem.isLooping})">⋮</button>
-                        <button class="queue-move-btn" style="visibility:${isLast?'hidden':'visible'}" onclick="moveQueueItem('${qItem.queueId}','down')">▼</button>
-                        <button class="queue-delete-btn desktop-only" onclick="removeQueueItem('${qItem.queueId}')">X</button>
-                    </div>
-                    <div class="queue-item-center swipe-zone">
-                        <div class="q-name-container"><span class="q-name">${qItem.name}</span></div>
-                        <div class="time-text" onclick="openTimeModal('${qItem.queueId}')">${formatTime(qItem.currentTime)} / ${formatTime(qItem.duration)}</div>
-                        <div class="sliders-container">
-                            <input type="range" class="progress-slider" id="scrub_${qItem.queueId}" min="0" max="${qItem.duration}" value="${qItem.currentTime}">
-                            <div class="volume-control"><span>🔈</span><input type="range" class="vol-slider" min="0" max="100" value="${qItem.volume}"><span>🔊</span></div>
-                        </div>
-                    </div>
-                    <button class="play-pause-btn ${qItem.state==='PLAYING'?'active':''}" onclick="const q=queue.find(it=>it.queueId==='${qItem.queueId}'); q.preventGhostPlay=false; if(q.state==='PLAYING') q.playerAPI.pause(); else q.playerAPI.play();">${qItem.state==='PLAYING'?'⏸':'▶'}</button>`;
-
-                wrapper.appendChild(el);
-
-                el.querySelector('.vol-slider').oninput=(e)=>{ qItem.volume=e.target.value; if(qItem.playerAPI) qItem.playerAPI.setVolume(qItem.volume); };
-                const scrub=el.querySelector('.progress-slider');
-                scrub.onmousedown=scrub.ontouchstart=()=>qItem.isScrubbing=true;
-                scrub.oninput=(e)=>{ qItem.currentTime=e.target.value; el.querySelector('.time-text').textContent=formatTime(qItem.currentTime)+' / '+formatTime(qItem.duration); };
-                scrub.onchange=(e)=>{ qItem.isScrubbing=false; if(qItem.playerAPI){qItem.preventGhostPlay=false; qItem.playerAPI.seekTo(parseFloat(e.target.value));} };
-
-                container.appendChild(wrapper);
-            });
-            updateMasterButton();
-            updateGridGlow();
-        }
-
-        // Lightweight DOM patcher — no full re-render
-        function updateQueueUI() {
-            queue.forEach(q => {
-                const wrapper=document.querySelector(`.queue-item-wrapper[data-queue-id="${q.queueId}"]`); if(!wrapper) return;
-                const el=wrapper.querySelector('.queue-item'); if(!el) return;
-                el.style.setProperty('--neon-color', q.color);
-                el.classList.toggle('is-playing', q.state==='PLAYING');
-                
-                // Toggle loop CSS class dynamically
-                el.classList.toggle('is-looping', q.isLooping);
-
-                const ppBtn=el.querySelector('.play-pause-btn');
-                if(ppBtn){ ppBtn.textContent=q.state==='PLAYING'?'⏸':'▶'; ppBtn.classList.toggle('active',q.state==='PLAYING'); }
-                
-                const nameEl = el.querySelector('.q-name');
-                if (nameEl) nameEl.textContent = q.name;
-
-                const timeEl=el.querySelector('.time-text'); if(timeEl) timeEl.textContent=formatTime(q.currentTime)+' / '+formatTime(q.duration);
-                const scrub=el.querySelector('.progress-slider'); if(scrub){scrub.max=q.duration; if(!q.isScrubbing) scrub.value=q.currentTime;}
-                const vol=el.querySelector('.vol-slider'); if(vol&&!q.isScrubbing) vol.value=q.volume;
-            });
-            updateMasterButton();
-            updateGridGlow();
-        }
-
-        function restoreQueueItem(s) {
-            const base=tracks.find(t=>t.id===s.trackId); if(!base) return;
-            const q={...s, state:'PAUSED', color:base.color, playerAPI:null, isScrubbing:false, preventGhostPlay:true};
-            queue.push(q);
-            initializePlayer(q, base, true);
-        }
-
-        function addToQueue(t, startAt=0, autoPlay=false) {
-            const q={queueId:'q_'+Date.now()+Math.floor(Math.random()*1000),trackId:t.id,type:t.type,platform:t.platform,mediaId:t.mediaId,twitchType:t.twitchType,name:t.baseName,color:t.color,playerAPI:null,state:autoPlay?'PLAYING':'PAUSED',duration:0,isLooping:false,volume:50,currentTime:startAt,isScrubbing:false,preventGhostPlay:!autoPlay};
-            queue.push(q); renderQueue(); initializePlayer(q,t);
-        }
-        function removeQueueItem(id) {
-            const i=queue.findIndex(q=>q.queueId===id); if(i>-1){if(queue[i].playerAPI) queue[i].playerAPI.destroy(); const div=document.getElementById(`player_${id}`); if(div) div.remove(); queue.splice(i,1); renderQueue(); renderGrid();}
-        }
-        function formatTime(s) { if(!s) return '0:00'; const m=Math.floor(s/60),sec=Math.floor(s%60); return `${m}:${sec<10?'0':''}${sec}`; }
-        function updateGridGlow() {
-            document.querySelectorAll('.track-box').forEach(box=>{
-                const qs=queue.filter(q=>q.trackId===box.dataset.trackId);
-                box.classList.toggle('in-queue', qs.length>0);
-                box.classList.toggle('is-playing-glow', qs.some(it=>it.state==='PLAYING'));
-            });
-        }
-        function updateMasterButton() {
-            const btn=document.getElementById('masterToggleBtn'); const isP=queue.some(q=>q.state==='PLAYING');
-            btn.textContent=isP?'Pause All':'Play All'; btn.className=isP?'master-pause':'master-play';
-        }
-
-        function initializePlayer(q, base, isRestore=false) {
-            const h=document.getElementById('hidden-players');
-            try {
-                if(q.type==='mp3') {
-                    const a=new Audio(base.localAudio);
-                    q.playerAPI={play:()=>a.play(),pause:()=>a.pause(),stop:()=>{a.pause();a.currentTime=0;},seekTo:(s)=>a.currentTime=s,setVolume:(v)=>a.volume=v/100,getDuration:()=>a.duration,getCurrentTime:()=>a.currentTime,destroy:()=>{a.pause();a.src='';}};
-                    a.onloadedmetadata=()=>{q.duration=a.duration; a.volume=q.volume/100; if(q.currentTime>0) a.currentTime=q.currentTime; updateQueueUI();};
-                    a.ontimeupdate=()=>{if(!q.isScrubbing) q.currentTime=a.currentTime;};
-                    a.onended=()=>{if(q.isLooping) a.play(); else{q.state='PAUSED'; updateQueueUI(); saveQueueState();}};
-                    a.onplay=()=>{q.state='PLAYING'; updateQueueUI(); saveQueueState(); updateGridGlow();};
-                    a.onpause=()=>{if(!q.isScrubbing){q.state='PAUSED'; updateQueueUI(); saveQueueState(); updateGridGlow();}};
-                    if(!isRestore&&q.state==='PLAYING') a.play();
-
-                } else if(q.platform==='youtube') {
-                    if(typeof YT==='undefined'||!YT.Player){setTimeout(()=>initializePlayer(q,base,isRestore),500);return;}
-                    const div=document.createElement('div'); div.id=`player_${q.queueId}`; h.appendChild(div);
-                    const yt=new YT.Player(div.id,{height:'0',width:'0',videoId:q.mediaId,playerVars:{autoplay:0,controls:0},events:{
-                        onReady:()=>{q.playerAPI={play:()=>yt.playVideo(),pause:()=>yt.pauseVideo(),stop:()=>{yt.stopVideo();yt.seekTo(0);},seekTo:(s)=>yt.seekTo(s,true),setVolume:(v)=>yt.setVolume(v),getDuration:()=>yt.getDuration(),getCurrentTime:()=>yt.getCurrentTime(),destroy:()=>yt.destroy()}; q.duration=yt.getDuration()||q.duration; yt.setVolume(q.volume); if(q.currentTime>0) yt.seekTo(q.currentTime,true); if(q.state==='PAUSED') setTimeout(()=>yt.pauseVideo(),50); else if(!isRestore) setTimeout(()=>yt.playVideo(),200); updateQueueUI();},
-                        onStateChange:(e)=>{if(e.data===YT.PlayerState.PLAYING){if(q.preventGhostPlay&&q.state==='PAUSED'){yt.pauseVideo();q.preventGhostPlay=false;return;} q.preventGhostPlay=false;q.state='PLAYING';updateQueueUI();saveQueueState();updateGridGlow();} else if(e.data===YT.PlayerState.PAUSED&&!q.isScrubbing){q.state='PAUSED';updateQueueUI();saveQueueState();updateGridGlow();} else if(e.data===YT.PlayerState.ENDED){if(q.isLooping) yt.playVideo(); else{q.state='PAUSED';updateQueueUI();saveQueueState();updateGridGlow();}}}
-                    }});
-
-                } else if(q.platform==='vimeo') {
-                    if(typeof Vimeo==='undefined'||!Vimeo.Player){setTimeout(()=>initializePlayer(q,base,isRestore),500);return;}
-                    const div=document.createElement('div'); div.id=`player_${q.queueId}`; h.appendChild(div);
-                    const vim=new Vimeo.Player(div,{id:q.mediaId,width:0,height:0});
-                    q.playerAPI={play:()=>vim.play(),pause:()=>vim.pause(),stop:()=>{vim.pause();vim.setCurrentTime(0);},seekTo:(s)=>vim.setCurrentTime(s),setVolume:(v)=>vim.setVolume(v/100),getDuration:()=>q.duration,getCurrentTime:()=>q.currentTime,destroy:()=>vim.destroy()};
-                    vim.getDuration().then(d=>{q.duration=d;updateQueueUI();}); vim.setVolume(q.volume/100); if(q.currentTime>0) vim.setCurrentTime(q.currentTime);
-                    vim.on('play',()=>{q.state='PLAYING';updateQueueUI();saveQueueState();updateGridGlow();});
-                    vim.on('pause',()=>{if(!q.isScrubbing){q.state='PAUSED';updateQueueUI();saveQueueState();updateGridGlow();}});
-                    vim.on('timeupdate',(d)=>{if(!q.isScrubbing) q.currentTime=d.seconds;});
-                    vim.on('ended',()=>{if(q.isLooping) vim.play(); else{q.state='PAUSED';updateQueueUI();saveQueueState();updateGridGlow();}});
-                    if(!isRestore&&q.state==='PLAYING') vim.play();
-
-                } else if(q.platform==='soundcloud') {
-                    if(typeof SC==='undefined'||!SC.Widget){setTimeout(()=>initializePlayer(q,base,isRestore),500);return;}
-                    const frame=document.createElement('iframe'); frame.src=`https://w.soundcloud.com/player/?url=${encodeURIComponent(q.mediaId)}&auto_play=false`; frame.width='0'; frame.height='0'; h.appendChild(frame);
-                    const sc=SC.Widget(frame);
-                    q.playerAPI={play:()=>sc.play(),pause:()=>sc.pause(),stop:()=>{sc.pause();sc.seekTo(0);},seekTo:(s)=>sc.seekTo(s*1000),setVolume:(v)=>sc.setVolume(v),getDuration:()=>q.duration,getCurrentTime:()=>q.currentTime,destroy:()=>frame.remove()};
-                    sc.bind(SC.Widget.Events.READY,()=>{sc.getDuration(d=>{q.duration=d/1000;updateQueueUI();}); sc.setVolume(q.volume); if(q.currentTime>0) sc.seekTo(q.currentTime*1000); if(!isRestore&&q.state==='PLAYING') sc.play();});
-                    sc.bind(SC.Widget.Events.PLAY,()=>{q.state='PLAYING';updateQueueUI();saveQueueState();updateGridGlow();});
-                    sc.bind(SC.Widget.Events.PAUSE,()=>{if(!q.isScrubbing){q.state='PAUSED';updateQueueUI();saveQueueState();updateGridGlow();}});
-                    sc.bind(SC.Widget.Events.PLAY_PROGRESS,(d)=>{if(!q.isScrubbing) q.currentTime=d.currentPosition/1000;});
-                    sc.bind(SC.Widget.Events.FINISH,()=>{if(q.isLooping) sc.play(); else{q.state='PAUSED';updateQueueUI();saveQueueState();updateGridGlow();}});
-
-                } else if(q.platform==='twitch') {
-                    if(typeof Twitch==='undefined'||!Twitch.Player){setTimeout(()=>initializePlayer(q,base,isRestore),500);return;}
-                    const div=document.createElement('div'); div.id=`player_${q.queueId}`; h.appendChild(div);
-                    const parent=window.location.hostname||'localhost';
-                    const opt={width:0,height:0,autoplay:false,parent:[parent]};
-                    if(q.twitchType==='clip') opt.clip=q.mediaId; else opt.video=q.mediaId;
-                    const tw=new Twitch.Player(div.id,opt);
-                    q.playerAPI={play:()=>tw.play(),pause:()=>tw.pause(),stop:()=>{tw.pause();tw.seek(0);},seekTo:(s)=>tw.seek(s),setVolume:(v)=>tw.setVolume(v/100),getDuration:()=>tw.getDuration(),getCurrentTime:()=>tw.getCurrentTime(),destroy:()=>div.remove()};
-                    tw.addEventListener(Twitch.Player.READY,()=>{q.duration=tw.getDuration()||q.duration; tw.setVolume(q.volume/100); if(q.currentTime>0) tw.seek(q.currentTime); if(!isRestore&&q.state==='PLAYING') tw.play(); updateQueueUI();});
-                    tw.addEventListener(Twitch.Player.PLAYING,()=>{q.state='PLAYING';updateQueueUI();saveQueueState();updateGridGlow();});
-                    tw.addEventListener(Twitch.Player.PAUSE,()=>{if(!q.isScrubbing){q.state='PAUSED';updateQueueUI();saveQueueState();updateGridGlow();}});
-                    tw.addEventListener(Twitch.Player.ENDED,()=>{if(q.isLooping) tw.play(); else{q.state='PAUSED';updateQueueUI();saveQueueState();updateGridGlow();}});
-                }
-            } catch(e) { console.error('Player init error',e); }
-        }
-
-        function updateTrackData(trackId, updatesObj) {
-            try {
-                const i=tracks.findIndex(t=>t.id===trackId); if(i===-1) return;
-                const oldSym=tracks[i].symbol;
-                tracks[i]={...tracks[i],...updatesObj}; saveTrackToDB(tracks[i]);
-                queue.forEach(q=>{if(q.trackId===trackId){if(updatesObj.color) q.color=updatesObj.color; if(updatesObj.baseName) q.name=updatesObj.baseName; if(updatesObj.symbol&&q.name===oldSym) q.name=updatesObj.symbol;}});
-                renderGrid(); renderQueue(); saveQueueState();
-            } catch(e) { console.error('updateTrackData error',e); }
-        }
-
-        function populateSymbolGrid() {
-            const grid=document.getElementById('symbolGrid');
-            allSymbolsList.forEach(sym=>{
-                const div=document.createElement('div'); div.className='sym-item'; div.textContent=sym;
-                div.onclick=()=>{ if(activeTargetTrackId){updateTrackData(activeTargetTrackId,{symbol:sym,customImage:null}); hideModal('symbolModal');} };
-                grid.appendChild(div);
-            });
-        }
-
-        function startUITracker() {
-            setInterval(()=>{
-                queue.forEach(q=>{
-                    try {
-                        if(q.state==='PLAYING'&&q.playerAPI&&!q.isScrubbing){
-                            if(q.platform==='youtube'||q.platform==='twitch'){const ct=q.playerAPI.getCurrentTime(); if(ct!=null) q.currentTime=ct;}
-                            const tEl=document.querySelector(`.queue-item-wrapper[data-queue-id="${q.queueId}"] .time-text`);
-                            const sEl=document.getElementById(`scrub_${q.queueId}`);
-                            if(tEl) tEl.textContent=formatTime(q.currentTime)+' / '+formatTime(q.duration);
-                            if(sEl) sEl.value=q.currentTime;
-                        }
-                    } catch(e){}
-                });
-            },500);
-        }
-    </script>
-</body>
-</html>
+        ```
