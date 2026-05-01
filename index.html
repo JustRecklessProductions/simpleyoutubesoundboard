@@ -22,7 +22,7 @@
 
         .main-wrapper { flex-grow: 1; min-width: 0; overflow-y: auto; position: relative; }
 
-        .header-container { padding: 30px 20px; text-align: center; border-bottom: 1px solid #222; }
+        .header-container { padding: 30px 20px; text-align: center; border-bottom: 1px solid #222; position: relative; }
         h1 { margin-bottom: 25px; font-weight: 300; letter-spacing: 2px; }
 
         .input-stack { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; max-width: 600px; margin: 0 auto; }
@@ -42,6 +42,19 @@
         #editGridBtn { border-color: white; color: white; }
         #editGridBtn:hover { background: white; color: black; box-shadow: 0 0 15px white; }
         @media (max-width: 768px) { .desktop-only { display: none !important; } }
+
+        /* --- Fullscreen Button --- */
+        .fullscreen-btn {
+            position: absolute; top: 25px; right: 25px;
+            background: transparent; border: none; color: white;
+            font-size: 26px; cursor: pointer; z-index: 990;
+            transition: text-shadow 0.3s, transform 0.2s;
+        }
+        .fullscreen-btn:hover { text-shadow: 0 0 15px white, 0 0 25px white; transform: scale(1.1); }
+        @media (max-width: 768px) {
+            .fullscreen-btn { display: none; top: 15px; right: 15px; font-size: 24px; }
+            body.is-editing .fullscreen-btn { display: block; }
+        }
 
         /* --- Grid & Boxes --- */
         .grid-container { padding: 20px; display: grid; gap: 20px; max-width: 1400px; margin: 0 auto; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
@@ -211,6 +224,7 @@
 </head>
 <body>
     <div class="main-wrapper" id="mainWrapper">
+        <button id="fullscreenBtn" class="fullscreen-btn" title="Toggle Fullscreen">⛶</button>
         <div class="header-container">
             <h1>Super Simple Soundboard</h1>
             <div class="input-stack">
@@ -223,7 +237,7 @@
             </div>
             <div class="header-controls">
                 <button class="action-btn desktop-only" id="toggleDesktopBtn">Toggle Queue</button>
-                <button class="action-btn" id="editGridBtn">Edit Grid</button>
+                <button class="action-btn desktop-only" id="editGridBtn">Edit Grid</button>
             </div>
         </div>
         <div class="grid-container" id="gridContainer"></div>
@@ -338,6 +352,13 @@
 
         let tracks = []; let queue = []; let colorIndex = 0; let isDashboardOpen = false; let isEditing = false;
         let activeTargetTrackId = null; let currentActionQueueId = null; let activeTimeQueueId = null; let tempSelectedColor = '#ffffff';
+
+        // Check for iOS Devices to completely remove the fullscreen button
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (isIOS) {
+            const fsBtn = document.getElementById('fullscreenBtn');
+            if (fsBtn) fsBtn.remove();
+        }
 
         // --- IndexedDB ---
         const DB_NAME = 'SuperSimpleDB'; let db;
@@ -472,6 +493,24 @@
             safeBind('fabStopEdit', 'click', toggleEditMode);
             safeBind('toggleDesktopBtn', 'click', toggleDashboard);
             safeBind('editGridBtn', 'click', toggleEditMode);
+            
+            // Fullscreen Binding
+            safeBind('fullscreenBtn', 'click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            });
+            document.addEventListener('fullscreenchange', () => {
+                const fsBtn = document.getElementById('fullscreenBtn');
+                if (fsBtn) fsBtn.textContent = document.fullscreenElement ? '🗗' : '⛶';
+            });
+
             safeBind('masterToggleBtn', 'click', () => {
                 const isAnyPlaying = queue.some(q => q.state === 'PLAYING');
                 if (isAnyPlaying) queue.forEach(q => { if (q.state==='PLAYING' && q.playerAPI) q.playerAPI.pause(); });
