@@ -52,9 +52,9 @@
         .header-container.collapsed .top-right-controls,
         .header-container.collapsed .top-left-controls { top: 50%; transform: translateY(-50%); }
 
-        h1 { margin-bottom: 25px; font-weight: 300; letter-spacing: 2px; padding: 0 70px; }
+        h1 { margin-bottom: 25px; font-weight: 300; letter-spacing: 2px; padding: 0 70px; position: relative; z-index: 60; }
 
-        .input-stack { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; max-width: 600px; margin: 0 auto; }
+        .input-stack { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; max-width: 600px; margin: 0 auto; position: relative; z-index: 60; }
         .input-stack input[type="text"] { width: 100%; padding: 16px; background: #222; font-family: 'Nunito', sans-serif; border: 1px solid #444; color: white; border-radius: 8px; outline: none; font-size: 16px; text-align: center; }
         .input-stack input[type="text"]:focus { border-color: var(--neon-2); }
         
@@ -73,6 +73,16 @@
         }
         .btn-edit-mode:hover { background: rgba(255,255,255,0.1); text-shadow: 0 0 10px white; }
         .btn-edit-mode.is-active { filter: drop-shadow(0 0 8px white); }
+
+        /* Mega Flash Animation */
+        @keyframes megaFlash {
+            0% { background: transparent; box-shadow: 0 0 0 transparent; transform: scale(1); filter: brightness(1); }
+            15% { background: #fff; color: #000; box-shadow: 0 0 50px #fff, 0 0 100px #fff, inset 0 0 40px #fff; transform: scale(1.3); filter: brightness(2); }
+            100% { background: transparent; color: #fff; box-shadow: 0 0 0 transparent; transform: scale(1); filter: brightness(1); }
+        }
+        .mega-flash {
+            animation: megaFlash 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
 
         /* Fullscreen Toggle Button */
         .fs-btn {
@@ -171,7 +181,7 @@
         .album-wrapper { display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; width: 100%; }
         .album-box-container { position: relative; width: 100%; aspect-ratio: 1/1; }
         .album-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--neon-color); filter: blur(20px); opacity: 0.5; transition: all 0.3s; z-index: 0; }
-        .album-box { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1; cursor: pointer; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); overflow: hidden; }
+        .album-box { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; z-index: 1; cursor: pointer; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); overflow: hidden; }
         .album-box img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.85; transition: opacity 0.3s; }
         .album-name { font-size: 1.1rem; font-weight: 700; text-align: center; color: white; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px; }
         
@@ -227,9 +237,35 @@
             .queue-item-wrapper { margin-bottom: 0; }
         }
 
+        /* --- Mobile Tweaks (3 columns & Top Bar) --- */
         @media (max-width: 768px) {
-            .grid-container { grid-template-columns: repeat(auto-fill, minmax(40%, 1fr)); gap: 15px; padding: 15px; }
+            /* 3 Columns strictly on mobile */
+            .grid-container { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
             .input-stack input[type="text"]::placeholder { font-size: 11px; }
+
+            /* Black top bar to prevent button overlap over title */
+            .header-container:not(.collapsed)::before {
+                content: '';
+                position: absolute;
+                top: 0; left: 0; right: 0;
+                height: 68px; /* Matching dashboard headers */
+                background: #000;
+                border-bottom: 1px solid #222;
+                z-index: 50;
+            }
+            .header-container:not(.collapsed) {
+                padding-top: 90px; /* Push content cleanly beneath the new top bar */
+            }
+            .header-container:not(.collapsed) .top-left-controls,
+            .header-container:not(.collapsed) .top-right-controls {
+                top: 12px; /* Center inside the 68px bar */
+                z-index: 100;
+            }
+            h1 {
+                font-size: 1.6rem;
+                margin-bottom: 20px;
+                padding: 0 10px;
+            }
         }
 
         @media (min-width: 769px) and (max-width: 1024px) {
@@ -467,7 +503,7 @@
         
         let activeTargetTrackId = null; 
         let activeTargetAlbumId = null;
-        let activeTargetType = 'track'; // 'track' or 'album'
+        let activeTargetType = 'track'; 
         let currentActionQueueId = null; let activeTimeQueueId = null; let tempSelectedColor = '#ffffff';
         
         let savedAlbums = [];
@@ -507,15 +543,13 @@
             });
         }
 
-        // --- Albums Logic ---
         function loadAlbums() {
-            const f = localStorage.getItem('SuperSimpleFolders'); // Kept key for backwards compatibility
+            const f = localStorage.getItem('SuperSimpleFolders'); 
             let parsed = f ? JSON.parse(f) : [];
             savedAlbums = parsed.map(album => {
                 if (album.tracksSnapshot) {
                     album.tracksSnapshot = album.tracksSnapshot.filter(t => t.platform === 'youtube' || t.platform === 'local');
                 }
-                // Migration logic for old folders
                 if (!album.coverUrl && !album.customImage) album.coverUrl = getRandomCover();
                 if (!album.color) album.color = neonColors[Math.floor(Math.random() * neonColors.length)];
                 if (!album.symbol) album.symbol = getRandomSymbol();
@@ -550,6 +584,17 @@
             saveAlbumsState();
             renderAlbums();
         }
+        
+        function handleSaveAlbum(e) {
+            if (e && e.currentTarget) {
+                const btn = e.currentTarget;
+                btn.classList.remove('mega-flash');
+                void btn.offsetWidth; // Trigger reflow for animation restart
+                btn.classList.add('mega-flash');
+                setTimeout(() => btn.classList.remove('mega-flash'), 700);
+            }
+            createAlbum();
+        }
 
         async function loadAlbumTracks(id) {
             if (isAlbumsEditing) return; 
@@ -567,7 +612,7 @@
                 saveAllTracksToDB();
                 saveTrackOrder();
                 renderGrid();
-                toggleAlbumsDashboard(); // Close it after load
+                toggleAlbumsDashboard(); 
             }
         }
 
@@ -616,7 +661,6 @@
                     renderAlbums();
                 };
 
-                // Only show delete btn locally if editing albums
                 if(isAlbumsEditing) delBtn.style.display = 'flex';
                 
                 boxContainer.appendChild(delBtn);
@@ -756,16 +800,14 @@
             safeBind('dashboardOpenAlbumsBtn', 'click', toggleAlbumsDashboard);
             safeBind('closeAlbumsBtn', 'click', toggleAlbumsDashboard);
 
-            // Edit Modes
             safeBind('editGridBtn', 'click', toggleEditMode);
             safeBind('queueEditBtn', 'click', toggleEditMode);
             safeBind('editAlbumsBtn', 'click', toggleAlbumsEditMode);
 
-            // Album Save
-            safeBind('saveGridBtn', 'click', createAlbum);
-            safeBind('dashboardSaveGridBtn', 'click', createAlbum);
+            // Updated saving events hooked to the flash function
+            safeBind('saveGridBtn', 'click', handleSaveAlbum);
+            safeBind('dashboardSaveGridBtn', 'click', handleSaveAlbum);
 
-            // Collapse Header
             safeBind('collapseHeaderBtn', 'click', () => {
                 const header = document.getElementById('mainHeader');
                 const isCollapsed = header.classList.toggle('collapsed');
@@ -778,7 +820,6 @@
             safeBind('mediaLink', 'keypress', (e) => { if (e.key === 'Enter') handleAddMediaLink(); });
             safeBind('masterToggleBtn', 'click', () => { const isAnyPlaying = queue.some(q => q.state === 'PLAYING'); if (isAnyPlaying) queue.forEach(q => { if (q.state==='PLAYING' && q.playerAPI) q.playerAPI.pause(); }); else queue.forEach(q => { if (q.state==='PAUSED' && q.playerAPI) { q.preventGhostPlay=false; q.playerAPI.play(); } }); });
             
-            // Bottom Sheets
             safeBind('bottomSheetOverlay', 'click', (e) => { if (e.target.id==='bottomSheetOverlay') closeBottomSheet(); });
             safeBind('bs-cancel', 'click', closeBottomSheet);
             safeBind('bs-fadein', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); if(q) fadeIn(q); closeBottomSheet(); });
@@ -823,7 +864,6 @@
                 closeBottomSheet(); 
             });
 
-            // Album Bottom Sheet
             safeBind('albumBottomSheetOverlay', 'click', (e) => { if (e.target.id==='albumBottomSheetOverlay') closeAlbumBottomSheet(); });
             safeBind('abs-cancel', 'click', closeAlbumBottomSheet);
             safeBind('abs-view', 'click', () => { openViewAlbum(activeTargetAlbumId); closeAlbumBottomSheet(); });
@@ -881,7 +921,6 @@
                 closeAlbumBottomSheet();
             });
 
-            // Universal Modals Actions
             document.querySelectorAll('.color-swatch').forEach(el => el.onclick = (e) => { tempSelectedColor=e.target.dataset.color; document.getElementById('colorPreview').style.background=tempSelectedColor; });
             safeBind('nativeColorPicker', 'input', (e) => { tempSelectedColor=e.target.value; document.getElementById('colorPreview').style.background=tempSelectedColor; });
             safeBind('btnConfirmColor', 'click', () => { 
