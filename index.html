@@ -188,7 +188,14 @@
         .album-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--neon-color); filter: blur(20px); opacity: 0.5; transition: all 0.3s; z-index: 0; }
         .album-box { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; z-index: 1; cursor: pointer; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); overflow: hidden; }
         .album-box img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.85; transition: opacity 0.3s; }
-        .album-name { font-size: 1.1rem; font-weight: 700; text-align: center; color: white; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px; }
+        
+        .album-name-container { 
+            display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; white-space: nowrap; 
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+        }
+        .album-name { display: inline-block; font-size: 1.1rem; font-weight: 700; color: white; padding: 0 5px; }
+        .album-name.needs-scroll { animation: scroll-left-right 8s linear infinite alternate; }
         
         @media (hover: hover) and (pointer: fine) {
             .album-wrapper:not(.is-editing):hover .album-box { transform: scale(1.04); }
@@ -447,7 +454,7 @@
         <div class="bottom-sheet" id="bottomSheet">
             <div class="sheet-group"><button class="sheet-btn" id="bs-fadein">Fade In</button><button class="sheet-btn" id="bs-fadeout">Fade to Pause</button><button class="sheet-btn" id="bs-loop">Loop</button></div>
             <div class="sheet-group"><button class="sheet-btn" id="bs-dup">Duplicate Track</button><button class="sheet-btn" id="bs-link">Change Link</button><button class="sheet-btn" id="bs-rename">Rename Track</button></div>
-            <div class="sheet-group"><button class="sheet-btn" id="bs-art">Album Art</button><button class="sheet-btn" id="bs-color">Color</button><button class="sheet-btn" id="bs-symbol">Symbol</button></div>
+            <div class="sheet-group"><button class="sheet-btn" id="bs-art">Track Art</button><button class="sheet-btn" id="bs-color">Color</button><button class="sheet-btn" id="bs-symbol">Symbol</button></div>
             <div class="sheet-group"><button class="sheet-btn sheet-delete" id="bs-delete">Delete Track</button></div>
             <div class="sheet-group"><button class="sheet-btn sheet-cancel" id="bs-cancel">Cancel</button></div>
         </div>
@@ -468,6 +475,7 @@
                 <button class="sheet-btn" id="abs-art">Album Art</button>
                 <button class="sheet-btn" id="abs-color">Color</button>
                 <button class="sheet-btn" id="abs-symbol">Symbol</button>
+                <button class="sheet-btn" id="abs-vinyls">Vinyls</button>
             </div>
             <div class="sheet-group"><button class="sheet-btn sheet-delete" id="abs-delete">Delete Album</button></div>
             <div class="sheet-group"><button class="sheet-btn sheet-cancel" id="abs-cancel">Cancel</button></div>
@@ -487,6 +495,7 @@
     <div class="modal-overlay" id="artSourceModal" style="z-index: 4500;"><div class="modal"><h2>Add Album Art</h2><div class="modal-buttons"><button class="btn-auto" id="btnArtUploadChoice">Upload Image/GIF</button><button class="btn-keep" id="btnArtLinkChoice">Paste Link</button></div><button class="btn-cancel" onclick="hideModal('artSourceModal')">Cancel</button></div></div>
     <div class="modal-overlay" id="replaceArtModal" style="z-index: 4500;"><div class="modal"><h2>Manage Art</h2><div class="modal-buttons" style="flex-direction:row;"><button class="btn-auto" id="btnReplaceArt">Replace Art</button><button class="btn-danger" id="btnRemoveArt">Remove Art</button></div><button class="btn-cancel" onclick="hideModal('replaceArtModal')">Cancel</button></div></div>
     <div class="modal-overlay" id="symbolModal" style="z-index: 4500;"><div class="modal symbol-modal"><h2>Select Symbol</h2><div class="symbol-grid" id="symbolGrid"></div><button class="btn-cancel" onclick="hideModal('symbolModal')">Cancel</button></div></div>
+    <div class="modal-overlay" id="vinylsModal" style="z-index: 4500;"><div class="modal symbol-modal"><h2>Select Vinyl</h2><div class="symbol-grid" id="vinylsGrid" style="grid-template-columns: repeat(4, 1fr); gap: 10px;"></div><button class="btn-cancel" onclick="hideModal('vinylsModal')">Cancel</button></div></div>
 
     <div id="hidden-players"></div>
     <input type="file" id="hiddenFileInput" accept="image/*, image/gif" style="display:none;">
@@ -598,7 +607,7 @@
             if (e && e.currentTarget) {
                 const btn = e.currentTarget;
                 btn.classList.remove('mega-flash');
-                void btn.offsetWidth; // Trigger reflow for animation restart
+                void btn.offsetWidth; 
                 btn.classList.add('mega-flash');
                 setTimeout(() => btn.classList.remove('mega-flash'), 700);
             }
@@ -651,9 +660,12 @@
                 boxContainer.appendChild(glow);
                 boxContainer.appendChild(box);
                 
+                const nameContainer = document.createElement('div');
+                nameContainer.className = 'album-name-container';
                 const nameDiv = document.createElement('div');
                 nameDiv.className = 'album-name';
                 nameDiv.textContent = album.name;
+                nameContainer.appendChild(nameDiv);
 
                 box.onclick = () => {
                     if (isAlbumsEditing) return;
@@ -674,8 +686,14 @@
                 
                 boxContainer.appendChild(delBtn);
                 wrapper.appendChild(boxContainer);
-                wrapper.appendChild(nameDiv);
+                wrapper.appendChild(nameContainer);
                 container.appendChild(wrapper);
+
+                requestAnimationFrame(() => {
+                    if (nameDiv.scrollWidth > nameContainer.clientWidth) {
+                        nameDiv.classList.add('needs-scroll');
+                    }
+                });
             });
         }
 
@@ -782,6 +800,7 @@
                 
                 loadAlbums();
                 populateSymbolGrid(); 
+                populateVinylsGrid();
                 renderGrid();
                 
                 const savedQueue = loadQueueState(); savedQueue.forEach(s => { try { restoreQueueItem(s); } catch(e) {} });
@@ -813,7 +832,6 @@
             safeBind('queueEditBtn', 'click', toggleEditMode);
             safeBind('editAlbumsBtn', 'click', toggleAlbumsEditMode);
 
-            // Updated saving events hooked to the flash function
             safeBind('saveGridBtn', 'click', handleSaveAlbum);
             safeBind('dashboardSaveGridBtn', 'click', handleSaveAlbum);
 
@@ -929,6 +947,11 @@
                 document.getElementById('symbolModal').style.display = 'flex'; 
                 closeAlbumBottomSheet();
             });
+            safeBind('abs-vinyls', 'click', () => {
+                activeTargetType = 'album';
+                document.getElementById('vinylsModal').style.display = 'flex';
+                closeAlbumBottomSheet();
+            });
 
             document.querySelectorAll('.color-swatch').forEach(el => el.onclick = (e) => { tempSelectedColor=e.target.dataset.color; document.getElementById('colorPreview').style.background=tempSelectedColor; });
             safeBind('nativeColorPicker', 'input', (e) => { tempSelectedColor=e.target.value; document.getElementById('colorPreview').style.background=tempSelectedColor; });
@@ -976,7 +999,7 @@
                 hideModal('replaceArtModal'); 
             });
 
-            window.addEventListener('resize', () => { updateGridGlow(); updateArrowVisibility(); });
+            window.addEventListener('resize', () => { updateGridGlow(); updateArrowVisibility(); renderAlbums(); });
         }
 
         function hideModal(id) { document.getElementById(id).style.display='none'; }
@@ -1211,6 +1234,26 @@
                 }; 
                 grid.appendChild(div); 
             }); 
+        }
+
+        function populateVinylsGrid() {
+            const grid = document.getElementById('vinylsGrid');
+            albumCovers.forEach(url => {
+                const div = document.createElement('div');
+                div.style.aspectRatio = '1/1';
+                div.style.cursor = 'pointer';
+                div.style.borderRadius = '50%';
+                div.style.overflow = 'hidden';
+                div.style.border = '2px solid transparent';
+                div.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
+                div.onclick = () => {
+                    if (activeTargetType === 'album' && activeTargetAlbumId) {
+                        updateData(activeTargetAlbumId, 'album', {customImage: url});
+                    }
+                    hideModal('vinylsModal');
+                };
+                grid.appendChild(div);
+            });
         }
 
         function startUITracker() { setInterval(()=>{ queue.forEach(q=>{ try { if(q.state==='PLAYING'&&q.playerAPI&&!q.isScrubbing){ if(q.platform==='youtube'){const ct=q.playerAPI.getCurrentTime(); if(ct!=null) q.currentTime=ct;} const tEl=document.querySelector(`.queue-item-wrapper[data-queue-id="${q.queueId}"] .time-text`); const sEl=document.getElementById(`scrub_${q.queueId}`); if(tEl) tEl.textContent=formatTime(q.currentTime)+' / '+formatTime(q.duration); if(sEl) sEl.value=q.currentTime; } } catch(e){} }); },500); }
