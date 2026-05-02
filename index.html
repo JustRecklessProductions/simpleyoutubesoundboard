@@ -183,7 +183,11 @@
         .queue-item.is-looping input[type="range"].progress-slider::-webkit-slider-thumb { background: var(--neon-color) !important; box-shadow: 0 0 15px var(--neon-color), 0 0 5px white; }
 
         /* --- Albums Aesthetic --- */
-        .album-wrapper { display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; width: 100%; }
+        .album-wrapper { 
+            display: flex; flex-direction: column; align-items: center; gap: 12px; 
+            position: relative; width: 100%; 
+            min-width: 0; /* The magic CSS Grid overflow fix */
+        }
         .album-box-container { position: relative; width: 100%; aspect-ratio: 1/1; }
         .album-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--neon-color); filter: blur(20px); opacity: 0.5; transition: all 0.3s; z-index: 0; }
         .album-box { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; z-index: 1; cursor: pointer; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); overflow: hidden; }
