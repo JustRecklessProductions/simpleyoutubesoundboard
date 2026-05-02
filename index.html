@@ -12,7 +12,12 @@
             --neon-1: #fc0e12; --neon-2: #00fff7; --neon-3: #ff00fc; --neon-4: #fff500;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+        }
         
         button:focus, button:focus-visible, input:focus, input:focus-visible { outline: none !important; }
 
@@ -239,8 +244,12 @@
 
         /* --- Mobile Tweaks (3 columns & Top Bar) --- */
         @media (max-width: 768px) {
-            /* 3 Columns strictly on mobile */
-            .grid-container { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+            /* 3 Columns strictly on mobile for main grid */
+            #gridContainer { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+            
+            /* Keep Albums Dashboard at 2 columns */
+            #albumsGridContainer { grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px; }
+
             .input-stack input[type="text"]::placeholder { font-size: 11px; }
 
             /* Black top bar to prevent button overlap over title */
