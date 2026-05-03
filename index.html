@@ -452,6 +452,7 @@
             </div>
         </div>
         <div class="grid-container" id="albumsGridContainer" style="align-content: start;"></div>
+        <button id="purgeDbBtn" class="btn-danger" style="display: none; position: absolute; bottom: 20px; left: 20px; z-index: 2000; padding: 12px 20px; border: none; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">Purge Unused Audio</button>
     </div>
 
     <div class="bottom-sheet-overlay" id="bottomSheetOverlay">
@@ -552,13 +553,19 @@
                     const validLoaded = [];
                     loaded.forEach(t => {
                         if (t.platform === 'youtube' || t.platform === 'local') validLoaded.push(t);
-                        else deleteTrackFromDB(t.id);
                     });
                     loaded = validLoaded;
 
                     const orderStr = localStorage.getItem('SuperSimpleTrackOrder');
                     if (orderStr) {
-                        try { const order = JSON.parse(orderStr); loaded.sort((a, b) => { const ai = order.indexOf(a.id), bi = order.indexOf(b.id); if (ai === -1) return 1; if (bi === -1) return -1; return ai - bi; }); } catch(e) {}
+                        try { 
+                            const order = JSON.parse(orderStr); 
+                            loaded = loaded.filter(t => order.includes(t.id));
+                            loaded.sort((a, b) => { 
+                                const ai = order.indexOf(a.id), bi = order.indexOf(b.id); 
+                                if (ai === -1) return 1; if (bi === -1) return -1; return ai - bi; 
+                            }); 
+                        } catch(e) {}
                     }
                     resolve(loaded);
                 };
@@ -592,6 +599,14 @@
                 if (copy.type === 'mp3') delete copy.localAudio; 
                 return copy;
             });
+            
+            const queueSnapshot = queue.map(q => ({
+                ...q,
+                playerAPI: null,
+                state: 'PAUSED',
+                isScrubbing: false
+            }));
+
             const sym = getRandomSymbol();
             const album = {
                 id: 'album_' + Date.now(),
@@ -599,7 +614,8 @@
                 symbol: sym,
                 color: neonColors[colorIndex],
                 coverUrl: getRandomCover(),
-                tracksSnapshot: snapshot
+                tracksSnapshot: snapshot,
+                queueSnapshot: queueSnapshot
             };
             colorIndex = (colorIndex + 1) % neonColors.length;
             savedAlbums.push(album);
@@ -623,7 +639,7 @@
             const album = savedAlbums.find(f => f.id === id);
             if (album && confirm("Load this album? Your current grid will be replaced.")) {
                 const fullDbTracks = await getAllTracksRawFromDB();
-                tracks.forEach(t => deleteTrackFromDB(t.id));
+                
                 tracks = album.tracksSnapshot.map(snapTrack => {
                     if (snapTrack.type === 'mp3' && !snapTrack.localAudio) {
                         const dbMatch = fullDbTracks.find(dbt => dbt.id === snapTrack.id);
@@ -634,6 +650,20 @@
                 saveAllTracksToDB();
                 saveTrackOrder();
                 renderGrid();
+                
+                queue.forEach(q => {
+                    if (q.playerAPI) q.playerAPI.destroy();
+                    const div = document.getElementById(`player_${q.queueId}`);
+                    if (div) div.remove();
+                });
+                queue = [];
+
+                if (album.queueSnapshot) {
+                    album.queueSnapshot.forEach(qs => restoreQueueItem(qs));
+                }
+                
+                saveQueueState();
+                renderQueue();
                 toggleAlbumsDashboard(); 
             }
         }
@@ -902,7 +932,8 @@
             safeBind('abs-overwrite', 'click', () => {
                 if(confirm("Overwrite this album with current grid?")) {
                     const snapshot = tracks.map(t => { const copy = { ...t }; if (copy.type === 'mp3') delete copy.localAudio; return copy; });
-                    updateData(activeTargetAlbumId, 'album', { tracksSnapshot: snapshot });
+                    const queueSnapshot = queue.map(q => ({ ...q, playerAPI: null, state: 'PAUSED', isScrubbing: false }));
+                    updateData(activeTargetAlbumId, 'album', { tracksSnapshot: snapshot, queueSnapshot: queueSnapshot });
                 }
                 closeAlbumBottomSheet();
             });
@@ -1004,6 +1035,26 @@
             });
 
             window.addEventListener('resize', () => { updateGridGlow(); updateArrowVisibility(); renderAlbums(); });
+
+            safeBind('purgeDbBtn', 'click', async () => {
+                if (confirm("Are you sure? This will permanently delete any MP3 files from the database that aren't currently used in your active grid or saved albums to free up space. This action cannot be undone.")) {
+                    const allDbTracks = await getAllTracksRawFromDB();
+                    const referencedIds = new Set();
+                    tracks.forEach(t => referencedIds.add(t.id));
+                    savedAlbums.forEach(album => {
+                        if(album.tracksSnapshot) album.tracksSnapshot.forEach(t => referencedIds.add(t.id));
+                    });
+                    
+                    let purgedCount = 0;
+                    allDbTracks.forEach(dbt => {
+                        if (!referencedIds.has(dbt.id)) {
+                            deleteTrackFromDB(dbt.id);
+                            purgedCount++;
+                        }
+                    });
+                    alert(`Purge complete! Removed ${purgedCount} unused track(s) from the database.`);
+                }
+            });
         }
 
         function hideModal(id) { document.getElementById(id).style.display='none'; }
@@ -1023,6 +1074,7 @@
             isAlbumsEditing = !isAlbumsEditing;
             const btn = document.getElementById('editAlbumsBtn');
             btn.classList.toggle('is-active', isAlbumsEditing);
+            document.getElementById('purgeDbBtn').style.display = isAlbumsEditing ? 'block' : 'none';
             renderAlbums();
         }
 
@@ -1093,7 +1145,7 @@
                 if(track.customImage){const img=document.createElement('img'); img.src=track.customImage; content.appendChild(img);} else{const sym=document.createElement('div'); sym.className='track-symbol'; sym.textContent=track.symbol; content.appendChild(sym);}
                 const hover=document.createElement('div'); hover.className='hover-text'; hover.textContent=track.baseName; content.appendChild(hover); box.appendChild(content);
                 [['up','▲'],['down','▼'],['left','◀'],['right','▶']].forEach(([dir, glyph]) => { const btn=document.createElement('button'); btn.className=`grid-arrow-btn arrow-${dir}`; btn.textContent=glyph; btn.onclick=(e)=>{ e.stopPropagation(); moveTrack(track.id, dir); }; box.appendChild(btn); });
-                const del=document.createElement('div'); del.className='delete-box-btn'; del.textContent='X'; del.onclick=(e)=>{ e.stopPropagation(); deleteTrackFromDB(track.id); tracks=tracks.filter(t=>t.id!==track.id); saveTrackOrder(); queue.filter(q=>q.trackId===track.id).forEach(q=>removeQueueItem(q.queueId)); renderGrid(); }; box.appendChild(del);
+                const del=document.createElement('div'); del.className='delete-box-btn'; del.textContent='X'; del.onclick=(e)=>{ e.stopPropagation(); tracks=tracks.filter(t=>t.id!==track.id); saveTrackOrder(); queue.filter(q=>q.trackId===track.id).forEach(q=>removeQueueItem(q.queueId)); renderGrid(); }; box.appendChild(del);
                 let startX = 0, startY = 0, isDragging = false;
                 box.onpointerdown = (e) => { if (isEditing) return; startX = e.clientX; startY = e.clientY; isDragging = false; };
                 box.onpointermove = (e) => { if (isEditing) return; if (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10) isDragging = true; };
