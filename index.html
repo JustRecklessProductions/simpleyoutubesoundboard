@@ -170,8 +170,8 @@
         .queue-right-actions { width: 65px; flex-shrink: 0; display: flex; flex-direction: column; border-left: 1px solid #222; border-radius: 0 16px 16px 0; overflow: hidden; }
         .play-pause-btn { flex-grow: 1; background: transparent; border: none; border-bottom: 1px solid #222; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s, color 0.2s, filter 0.2s; }
         .play-pause-btn.active { color: var(--neon-color); filter: drop-shadow(0 0 5px var(--neon-color)); }
-        .fade-pause-btn { flex-grow: 1; background: transparent; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-        .play-pause-btn:hover, .fade-pause-btn:hover { background: rgba(255,255,255,0.05); }
+        .fade-action-btn { flex-grow: 1; background: transparent; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .play-pause-btn:hover, .fade-action-btn:hover { background: rgba(255,255,255,0.05); }
         
         .queue-item-center { flex-grow: 1; padding: 16px; display: flex; flex-direction: column; justify-content: center; touch-action: pan-y; min-width: 0; overflow: hidden; }
         .q-name-container { display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; white-space: nowrap; margin-bottom: 12px; }
@@ -463,7 +463,6 @@
 
     <div class="bottom-sheet-overlay" id="bottomSheetOverlay">
         <div class="bottom-sheet" id="bottomSheet">
-            <div class="sheet-group"><button class="sheet-btn" id="bs-fadein">Fade In</button><button class="sheet-btn" id="bs-fadeout">Fade to Pause</button><button class="sheet-btn" id="bs-loop">Loop</button></div>
             <div class="sheet-group"><button class="sheet-btn" id="bs-dup">Duplicate Track</button><button class="sheet-btn" id="bs-link">Change Link</button><button class="sheet-btn" id="bs-rename">Rename Track</button></div>
             <div class="sheet-group"><button class="sheet-btn" id="bs-art">Track Art</button><button class="sheet-btn" id="bs-color">Color</button><button class="sheet-btn" id="bs-symbol">Symbol</button></div>
             <div class="sheet-group"><button class="sheet-btn sheet-delete" id="bs-delete">Delete Track</button></div>
@@ -889,9 +888,7 @@
             
             safeBind('bottomSheetOverlay', 'click', (e) => { if (e.target.id==='bottomSheetOverlay') closeBottomSheet(); });
             safeBind('bs-cancel', 'click', closeBottomSheet);
-            safeBind('bs-fadein', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); if(q) fadeIn(q); closeBottomSheet(); });
-            safeBind('bs-fadeout', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); if(q) fadeOut(q); closeBottomSheet(); });
-            safeBind('bs-loop', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); if(q) { q.isLooping=!q.isLooping; updateQueueUI(); saveQueueState(); } closeBottomSheet(); });
+            
             safeBind('bs-dup', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); const t = tracks.find(t=>t.id===q.trackId); if(t) addToQueue(t, q.currentTime); closeBottomSheet(); });
             safeBind('bs-rename', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); const n = prompt('Rename track:', q.name); if(n) { updateData(q.trackId, 'track', { baseName: n }); } closeBottomSheet(); });
             safeBind('bs-delete', 'click', () => { removeQueueItem(currentActionQueueId); closeBottomSheet(); });
@@ -1084,7 +1081,7 @@
             renderAlbums();
         }
 
-        function openBottomSheet(queueId, type, isLooping) { currentActionQueueId = queueId; document.getElementById('bs-link').style.display = type==='mp3' ? 'none' : 'block'; document.getElementById('bs-loop').textContent = isLooping ? 'Unloop Track' : 'Loop Track'; const overlay = document.getElementById('bottomSheetOverlay'); overlay.style.display = 'flex'; setTimeout(() => document.getElementById('bottomSheet').classList.add('open'), 10); }
+        function openBottomSheet(queueId, type) { currentActionQueueId = queueId; document.getElementById('bs-link').style.display = type==='mp3' ? 'none' : 'block'; const overlay = document.getElementById('bottomSheetOverlay'); overlay.style.display = 'flex'; setTimeout(() => document.getElementById('bottomSheet').classList.add('open'), 10); }
         function closeBottomSheet() { document.getElementById('bottomSheet').classList.remove('open'); setTimeout(() => { document.getElementById('bottomSheetOverlay').style.display='none'; currentActionQueueId=null; }, 350); }
         
         function openAlbumBottomSheet(albumId) { activeTargetAlbumId = albumId; const overlay = document.getElementById('albumBottomSheetOverlay'); overlay.style.display = 'flex'; setTimeout(() => document.getElementById('albumBottomSheet').classList.add('open'), 10); }
@@ -1140,8 +1137,40 @@
         
         function handleAddMP3(e) { const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=(ev) => { const sym = getRandomSymbol(); const track={id:'track_'+Date.now(),type:'mp3',platform:'local',baseName:file.name.replace(/\.[^/.]+$/,''),color:neonColors[colorIndex],symbol:sym,localAudio:ev.target.result}; colorIndex=(colorIndex+1)%neonColors.length; tracks.push(track); saveTrackToDB(track); saveTrackOrder(); renderGrid(); }; reader.readAsDataURL(file); e.target.value=''; }
 
-        function fadeIn(qItem) { if(!qItem.playerAPI) return; let tv = qItem.volume; qItem.volume = 0; qItem.playerAPI.setVolume(0); qItem.state = 'PLAYING'; qItem.preventGhostPlay = false; qItem.playerAPI.play(); let step = Math.max(1, tv / 25); setTimeout(() => { const iv = setInterval(() => { qItem.volume = Math.min(tv, parseFloat(qItem.volume) + step); qItem.playerAPI.setVolume(qItem.volume); updateQueueUI(); if(qItem.volume >= tv) clearInterval(iv); }, 80); }, 400); }
-        function fadeOut(qItem) { if(!qItem.playerAPI||qItem.state!=='PLAYING') return; const iv=setInterval(()=>{ qItem.volume=Math.max(0,qItem.volume-1); qItem.playerAPI.setVolume(qItem.volume); updateQueueUI(); if(qItem.volume<=0){clearInterval(iv); qItem.playerAPI.pause(); qItem.state='PAUSED'; updateQueueUI();} },80); }
+        function fadeIn(qItem) { 
+            if(!qItem.playerAPI) return; 
+            let target = qItem.targetVolume || 100; 
+            if (qItem.volume >= target && target > 0) return; 
+            if (qItem.state !== 'PLAYING') { 
+                qItem.state = 'PLAYING'; 
+                qItem.preventGhostPlay = false; 
+                qItem.playerAPI.play(); 
+            } 
+            clearInterval(qItem.fadeInterval); 
+            qItem.fadeInterval = setInterval(() => { 
+                qItem.volume = Math.min(target, parseInt(qItem.volume) + 1); 
+                if(qItem.playerAPI) qItem.playerAPI.setVolume(qItem.volume); 
+                updateQueueUI(); 
+                if(qItem.volume >= target) clearInterval(qItem.fadeInterval); 
+            }, 80); 
+        }
+
+        function fadeOut(qItem) { 
+            if(!qItem.playerAPI || qItem.state !== 'PLAYING') return; 
+            if (qItem.volume > 0) qItem.targetVolume = qItem.volume; 
+            clearInterval(qItem.fadeInterval); 
+            qItem.fadeInterval = setInterval(() => { 
+                qItem.volume = Math.max(0, parseInt(qItem.volume) - 1); 
+                if(qItem.playerAPI) qItem.playerAPI.setVolume(qItem.volume); 
+                updateQueueUI(); 
+                if(qItem.volume <= 0) { 
+                    clearInterval(qItem.fadeInterval); 
+                    qItem.playerAPI.pause(); 
+                    qItem.state = 'PAUSED'; 
+                    updateQueueUI(); 
+                } 
+            }, 80); 
+        }
 
         function renderGrid() {
             const container=document.getElementById('gridContainer'); container.innerHTML='';
@@ -1167,9 +1196,11 @@
                 const wrapper=document.createElement('div'); wrapper.className='queue-item-wrapper'; wrapper.dataset.queueId=qItem.queueId;
                 const el=document.createElement('div'); el.className=`queue-item ${qItem.state==='PLAYING'?'is-playing':''} ${qItem.isLooping?'is-looping':''}`; el.style.setProperty('--neon-color',qItem.color);
                 
+                const isFadeInBtn = qItem.state === 'PAUSED' && qItem.volume <= 0;
+
                 el.innerHTML=`
                     <div class="queue-left-actions">
-                        <button class="options-btn" onclick="openBottomSheet('${qItem.queueId}','${qItem.type}',${qItem.isLooping})">⋮</button>
+                        <button class="options-btn" onclick="openBottomSheet('${qItem.queueId}','${qItem.type}')">⋮</button>
                         <button class="loop-btn ${qItem.isLooping?'active':''}" onclick="const q=queue.find(it=>it.queueId==='${qItem.queueId}'); q.isLooping=!q.isLooping; updateQueueUI(); saveQueueState();" title="Loop Track">
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
                         </button>
@@ -1186,8 +1217,11 @@
                         <button class="play-pause-btn ${qItem.state==='PLAYING'?'active':''}" onclick="const q=queue.find(it=>it.queueId==='${qItem.queueId}'); q.preventGhostPlay=false; if(q.state==='PLAYING') q.playerAPI.pause(); else q.playerAPI.play();">
                             ${qItem.state === 'PLAYING' ? pauseSvg : playSvg}
                         </button>
-                        <button class="fade-pause-btn" onclick="const q=queue.find(it=>it.queueId==='${qItem.queueId}'); fadeOut(q);" title="Fade to Pause">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="16" y1="10" x2="16" y2="18"></line><polyline points="13 15 16 18 19 15"></polyline></svg>
+                        <button class="fade-action-btn" onclick="const q=queue.find(it=>it.queueId==='${qItem.queueId}'); if(q.state==='PAUSED' && q.volume<=0) fadeIn(q); else fadeOut(q);" title="${isFadeInBtn ? 'Fade In' : 'Fade to Pause'}">
+                            ${isFadeInBtn 
+                                ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`
+                                : `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="16" y1="10" x2="16" y2="18"></line><polyline points="13 15 16 18 19 15"></polyline></svg>`
+                            }
                         </button>
                     </div>`;
                 
@@ -1225,6 +1259,15 @@
                 const loopBtn=el.querySelector('.loop-btn');
                 if(loopBtn) {
                     loopBtn.classList.toggle('active', q.isLooping);
+                }
+
+                const fadeBtn=el.querySelector('.fade-action-btn');
+                if (fadeBtn) {
+                    const isFadeIn = q.state === 'PAUSED' && q.volume <= 0;
+                    fadeBtn.title = isFadeIn ? 'Fade In' : 'Fade to Pause';
+                    fadeBtn.innerHTML = isFadeIn 
+                        ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`
+                        : `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="16" y1="10" x2="16" y2="18"></line><polyline points="13 15 16 18 19 15"></polyline></svg>`;
                 }
                 
                 const nameEl = el.querySelector('.q-name'); if (nameEl) nameEl.textContent = q.name;
