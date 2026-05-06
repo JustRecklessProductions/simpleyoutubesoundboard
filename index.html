@@ -531,13 +531,14 @@ const allSymbolsList = (() => {
             // Tofu Filter: Detects if the device can actually display the symbol
             const ctx = document.createElement('canvas').getContext('2d');
             ctx.font = '32px Arial';
-            const missingWidth = ctx.measureText('\uFFFD').width; // Width of the standard "missing" character
+            // 0x10FFFF is a permanently unassigned noncharacter, guaranteeing a true OS "tofu" box measurement
+            const tofuWidth = ctx.measureText(String.fromCodePoint(0x10FFFF)).width;
 
             function canRender(char) {
                 if (curated.includes(char)) return true; // Always keep curated favorites
                 const width = ctx.measureText(char).width;
-                // If width differs from the "missing" symbol, it's likely a real emoji
-                return width !== missingWidth && width > 0;
+                // If width differs from the true tofu box, it's a real emoji
+                return width !== tofuWidth && width > 0;
             }
             
             const set = new Set(curated);
