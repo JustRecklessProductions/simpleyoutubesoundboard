@@ -519,9 +519,24 @@
         const neonColors = ['#fc0e12','#00fff7','#ff00fc','#fff500'];
         const randomSymbols = ['🔥','🌊','🍃','🌲','🌋','🌌','🌙','☀️','🌈','🪐','☄️','🫧','★','☆','⚔️','🛡️','🏹','🔪','🪓','💥','💣','🧨','⚡','🚀','🛸','🏆','🆙','🆒','💯','💢','🐺','🐦','🦉','🦄','💡','🧪','👻','👽','✨','🌟','⛺','💎','👑','🌸','🍀','🎸','🎬','☕','🍕','🍎','🎁','🎈','😀','😂','😍'];
         function getRandomSymbol() { return randomSymbols[Math.floor(Math.random() * randomSymbols.length)]; }
-        const defaultMusicSymbols = ['♫','𝄞','♪','𝄢','𝄽','♬','♮','𝄡'];
-        const allSymbolsList = ['🔥','🌊','🌧','⛈','🌬','🍃','🌲','🌋','🏔','🌌','🌙','🌑','☀️','☁️','🌫','❄️','💨','🌦','🌈','🪐','☄️','🏜','🏝','🫧','♨','☀','☁','★','☆','☂','🗡️','⚔️','🛡️','🏹','🔪','🪓','💥','💣','🧨','⚡','🚀','🛸','🚂','🚗','✈️','🏆','⚽','🎯','🆙','🆒','💯','💢','⚓','🐺','🐦','🦉','🐍','🦂','🦄','🐼','🚨','🆘','⚠️','‼️','❕','🛑','🚫','⛔','📛','🚩','☢️','☣️','🩹','🩺','🚑','🚒','🔔','📢','📣','☠','☢','☣','🚷','💡','🔋','⚙️','🧪','💻','📱','📷','📶','⏻','🔍','📍','📅','✉️','🛒','⚙','⚗','⚛','⚖','⏼','⏽','⏾','☏','☎','💀','☠️','👻','👹','👺','🧛','🧟','🧌','🦇','🕷️','🕸️','🩸','⚰️','🪦','🏚️','🥀','⛓️','👽','🤡','😈','👿','😱','😨','😰','👁️','🧠','🌚','✨','🌟','🕯','⛺','🏙','🏠','📖','📚','🔑','🔒','💎','👑','🌸','☘','🍀','🎸','🎨','🎬','☕','🍕','🍎','🎁','🎈','🧘','🛌','🛁','😀','😂','😍','🤔','🤫','✔️','❌','✖️',...defaultMusicSymbols];
-
+const defaultMusicSymbols = ['♫','𝄞','♪','𝄢','𝄽','♬','♮','𝄡'];
+        const allSymbolsList = (() => {
+            const curated = ['🔥','🌊','🌧','⛈','🌬','🍃','🌲','🌋','🏔','🌌','🌙','🌑','☀️','☁️','🌫','❄️','💨','🌦','🌈','🪐','☄️','🏜','🏝','🫧','♨','☀','☁','★','☆','☂','🗡️','⚔️','🛡️','🏹','🔪','🪓','💥','💣','🧨','⚡','🚀','🛸','🚂','🚗','✈️','🏆','⚽','🎯','🆙','🆒','💯','💢','⚓','🐺','🐦','🦉','🐍','🦂','🦄','🐼','🚨','🆘','⚠️','‼️','❕','🛑','🚫','⛔','📛','🚩','☢️','☣️','🩹','🩺','🚑','🚒','🔔','📢','📣','☠','☢','☣','🚷','💡','🔋','⚙️','🧪','💻','📱','📷','📶','⏻','🔍','📍','📅','✉️','🛒','⚙','⚗','⚛','⚖','⏼','⏽','⏾','☏','☎','💀','☠️','👻','👹','👺','🧛','🧟','🧌','🦇','🕷️','🕸️','🩸','⚰️','🪦','🏚️','🥀','⛓️','👽','🤡','😈','👿','😱','😨','😰','👁️','🧠','🌚','✨','🌟','🕯','⛺','🏙','🏠','📖','📚','🔑','🔒','💎','👑','🌸','☘','🍀','🎸','🎨','🎬','☕','🍕','🍎','🎁','🎈','🧘','🛌','🛁','😀','😂','😍','🤔','🤫','✔️','❌','✖️',...defaultMusicSymbols];
+            
+            // Unicode ranges for Emoticons, Misc Symbols, Transport, and Supplemental Pictographs
+            const ranges = [
+                [0x1F600, 0x1F64F], [0x1F300, 0x1F5FF], [0x1F680, 0x1F6FF], 
+                [0x1F900, 0x1F9FF], [0x1FA70, 0x1FAFF], [0x2600, 0x26FF], [0x2700, 0x27BF]
+            ];
+            
+            const set = new Set(curated);
+            ranges.forEach(([start, end]) => {
+                for (let i = start; i <= end; i++) {
+                    set.add(String.fromCodePoint(i));
+                }
+            });
+            return Array.from(set);
+        })();
         const albumCovers = ['https://i.imgur.com/YVyRoP7.png','https://i.imgur.com/8bT97KW.png','https://i.imgur.com/0miV3Hi.png','https://i.imgur.com/5J4S56c.png','https://i.imgur.com/IMiAxsC.png','https://i.imgur.com/qx73gKq.png','https://i.imgur.com/p20iFfV.png','https://i.imgur.com/5pJhvaf.png','https://i.imgur.com/pJ0hjjx.png','https://i.imgur.com/QmdTT0W.png','https://i.imgur.com/88zAZ8X.png','https://i.imgur.com/jaJsU3D.png','https://i.imgur.com/tKdrqtg.png','https://i.imgur.com/ektS4qN.png','https://i.imgur.com/8DefwaJ.png','https://i.imgur.com/EJU91xr.png','https://i.imgur.com/6xTJKyG.png','https://i.imgur.com/mbtPi6J.png','https://i.imgur.com/S30g8fP.png','https://i.imgur.com/JheX72g.png','https://i.imgur.com/3KFJuR1.png','https://i.imgur.com/VGnL8IA.png','https://i.imgur.com/Cm3sdIZ.png','https://i.imgur.com/ALYTxVz.png','https://i.imgur.com/N3Rbl2I.png','https://i.imgur.com/RD4CTUA.png'];
         function getRandomCover() { return albumCovers[Math.floor(Math.random() * albumCovers.length)]; }
 
