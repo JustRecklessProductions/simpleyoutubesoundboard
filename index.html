@@ -520,19 +520,31 @@
         const randomSymbols = ['🔥','🌊','🍃','🌲','🌋','🌌','🌙','☀️','🌈','🪐','☄️','🫧','★','☆','⚔️','🛡️','🏹','🔪','🪓','💥','💣','🧨','⚡','🚀','🛸','🏆','🆙','🆒','💯','💢','🐺','🐦','🦉','🦄','💡','🧪','👻','👽','✨','🌟','⛺','💎','👑','🌸','🍀','🎸','🎬','☕','🍕','🍎','🎁','🎈','😀','😂','😍'];
         function getRandomSymbol() { return randomSymbols[Math.floor(Math.random() * randomSymbols.length)]; }
 const defaultMusicSymbols = ['♫','𝄞','♪','𝄢','𝄽','♬','♮','𝄡'];
-        const allSymbolsList = (() => {
+const allSymbolsList = (() => {
             const curated = ['🔥','🌊','🌧','⛈','🌬','🍃','🌲','🌋','🏔','🌌','🌙','🌑','☀️','☁️','🌫','❄️','💨','🌦','🌈','🪐','☄️','🏜','🏝','🫧','♨','☀','☁','★','☆','☂','🗡️','⚔️','🛡️','🏹','🔪','🪓','💥','💣','🧨','⚡','🚀','🛸','🚂','🚗','✈️','🏆','⚽','🎯','🆙','🆒','💯','💢','⚓','🐺','🐦','🦉','🐍','🦂','🦄','🐼','🚨','🆘','⚠️','‼️','❕','🛑','🚫','⛔','📛','🚩','☢️','☣️','🩹','🩺','🚑','🚒','🔔','📢','📣','☠','☢','☣','🚷','💡','🔋','⚙️','🧪','💻','📱','📷','📶','⏻','🔍','📍','📅','✉️','🛒','⚙','⚗','⚛','⚖','⏼','⏽','⏾','☏','☎','💀','☠️','👻','👹','👺','🧛','🧟','🧌','🦇','🕷️','🕸️','🩸','⚰️','🪦','🏚️','🥀','⛓️','👽','🤡','😈','👿','😱','😨','😰','👁️','🧠','🌚','✨','🌟','🕯','⛺','🏙','🏠','📖','📚','🔑','🔒','💎','👑','🌸','☘','🍀','🎸','🎨','🎬','☕','🍕','🍎','🎁','🎈','🧘','🛌','🛁','😀','😂','😍','🤔','🤫','✔️','❌','✖️',...defaultMusicSymbols];
             
-            // Unicode ranges for Emoticons, Misc Symbols, Transport, and Supplemental Pictographs
             const ranges = [
                 [0x1F600, 0x1F64F], [0x1F300, 0x1F5FF], [0x1F680, 0x1F6FF], 
                 [0x1F900, 0x1F9FF], [0x1FA70, 0x1FAFF], [0x2600, 0x26FF], [0x2700, 0x27BF]
             ];
+
+            // Tofu Filter: Detects if the device can actually display the symbol
+            const ctx = document.createElement('canvas').getContext('2d');
+            ctx.font = '32px Arial';
+            const missingWidth = ctx.measureText('\uFFFD').width; // Width of the standard "missing" character
+
+            function canRender(char) {
+                if (curated.includes(char)) return true; // Always keep curated favorites
+                const width = ctx.measureText(char).width;
+                // If width differs from the "missing" symbol, it's likely a real emoji
+                return width !== missingWidth && width > 0;
+            }
             
             const set = new Set(curated);
             ranges.forEach(([start, end]) => {
                 for (let i = start; i <= end; i++) {
-                    set.add(String.fromCodePoint(i));
+                    const char = String.fromCodePoint(i);
+                    if (canRender(char)) set.add(char);
                 }
             });
             return Array.from(set);
