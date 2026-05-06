@@ -128,6 +128,11 @@
         .arrow-left  { left: 6px;   top: 50%;  transform: translateY(-50%); }
         .arrow-right { right: 6px;  top: 50%;  transform: translateY(-50%); }
 
+/* Grid Options Btn */
+        .grid-options-btn { position: absolute; top: 6px; left: 6px; width: 28px; height: 28px; background: rgba(0,0,0,0.82); border: 2px solid white; border-radius: 50%; color: white; font-size: 16px; font-weight: bold; cursor: pointer; z-index: 30; display: none; align-items: center; justify-content: center; transition: background 0.15s; padding-bottom: 4px; line-height: 1; }
+        .grid-options-btn:hover { background: rgba(255,255,255,0.3); }
+        body.is-editing .grid-options-btn { display: flex; }
+
         /* Universal Delete box btn */
         .delete-box-btn { position: absolute; top: -12px; right: -12px; width: 36px; height: 36px; font-family: 'Nunito', sans-serif; background: #ff4444; border: 3px solid var(--bg); border-radius: 50%; color: white; font-weight: bold; font-size: 16px; display: none; align-items: center; justify-content: center; z-index: 30; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
         body.is-editing .delete-box-btn { display: flex; }
@@ -461,12 +466,27 @@
         <button id="purgeDbBtn" class="btn-danger" style="display: none; position: absolute; bottom: 20px; left: 20px; z-index: 2000; padding: 12px 20px; border: none; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">Purge Unused Audio</button>
     </div>
 
-    <div class="bottom-sheet-overlay" id="bottomSheetOverlay">
+<div class="bottom-sheet-overlay" id="bottomSheetOverlay">
         <div class="bottom-sheet" id="bottomSheet">
             <div class="sheet-group"><button class="sheet-btn" id="bs-dup">Duplicate Track</button><button class="sheet-btn" id="bs-link">Change Link</button><button class="sheet-btn" id="bs-rename">Rename Track</button></div>
             <div class="sheet-group"><button class="sheet-btn" id="bs-art">Track Art</button><button class="sheet-btn" id="bs-color">Color</button><button class="sheet-btn" id="bs-symbol">Symbol</button></div>
             <div class="sheet-group"><button class="sheet-btn sheet-delete" id="bs-delete">Delete Track</button></div>
             <div class="sheet-group"><button class="sheet-btn sheet-cancel" id="bs-cancel">Cancel</button></div>
+        </div>
+    </div>
+
+    <div class="bottom-sheet-overlay" id="gridBottomSheetOverlay" style="z-index: 3500;">
+        <div class="bottom-sheet" id="gridBottomSheet">
+            <div class="sheet-group">
+                <button class="sheet-btn" id="gbs-loop">Loop Track</button>
+                <button class="sheet-btn" id="gbs-fade">Fade In/Out</button>
+                <button class="sheet-btn" id="gbs-vol">Default Volume</button>
+                <button class="sheet-btn" id="gbs-time">Set Start Time</button>
+            </div>
+            <div class="sheet-group"><button class="sheet-btn" id="gbs-dup">Duplicate Track</button><button class="sheet-btn" id="gbs-link">Change Link</button><button class="sheet-btn" id="gbs-rename">Rename Track</button></div>
+            <div class="sheet-group"><button class="sheet-btn" id="gbs-art">Track Art</button><button class="sheet-btn" id="gbs-color">Color</button><button class="sheet-btn" id="gbs-symbol">Symbol</button></div>
+            <div class="sheet-group"><button class="sheet-btn sheet-delete" id="gbs-delete">Delete Track</button></div>
+            <div class="sheet-group"><button class="sheet-btn sheet-cancel" id="gbs-cancel">Cancel</button></div>
         </div>
     </div>
 
@@ -535,9 +555,10 @@ const allSymbolsList = [
         let isDashboardOpen = false; let isAlbumsDashboardOpen = false; 
         let isEditing = false; let isAlbumsEditing = false;
         
-        let activeTargetTrackId = null; 
+let activeTargetTrackId = null; 
         let activeTargetAlbumId = null;
-        let activeTargetType = 'track'; 
+        let activeGridTrackId = null;
+        let activeTargetType = 'track';
         let currentActionQueueId = null; let activeTimeQueueId = null; let tempSelectedColor = '#ffffff';
         
         let savedAlbums = [];
@@ -894,8 +915,24 @@ const allSymbolsList = [
             safeBind('mediaLink', 'keypress', (e) => { if (e.key === 'Enter') handleAddMediaLink(); });
             safeBind('masterToggleBtn', 'click', () => { const isAnyPlaying = queue.some(q => q.state === 'PLAYING'); if (isAnyPlaying) queue.forEach(q => { if (q.state==='PLAYING' && q.playerAPI) q.playerAPI.pause(); }); else queue.forEach(q => { if (q.state==='PAUSED' && q.playerAPI) { q.preventGhostPlay=false; q.playerAPI.play(); } }); });
             
-            safeBind('bottomSheetOverlay', 'click', (e) => { if (e.target.id==='bottomSheetOverlay') closeBottomSheet(); });
+safeBind('bottomSheetOverlay', 'click', (e) => { if (e.target.id==='bottomSheetOverlay') closeBottomSheet(); });
             safeBind('bs-cancel', 'click', closeBottomSheet);
+
+            safeBind('gridBottomSheetOverlay', 'click', (e) => { if (e.target.id==='gridBottomSheetOverlay') closeGridBottomSheet(); });
+            safeBind('gbs-cancel', 'click', closeGridBottomSheet);
+            
+            safeBind('gbs-dup', 'click', () => { const t = tracks.find(t=>t.id===activeGridTrackId); if(t) { const clone = {...t, id:'track_'+Date.now(), baseName: t.baseName + ' (Copy)'}; tracks.push(clone); saveTrackToDB(clone); saveTrackOrder(); renderGrid(); } closeGridBottomSheet(); });
+            safeBind('gbs-rename', 'click', () => { const t = tracks.find(t=>t.id===activeGridTrackId); const n = prompt('Rename track:', t.baseName); if(n) updateData(t.id, 'track', { baseName: n }); closeGridBottomSheet(); });
+            safeBind('gbs-delete', 'click', () => { tracks=tracks.filter(t=>t.id!==activeGridTrackId); saveTrackOrder(); queue.filter(q=>q.trackId===activeGridTrackId).forEach(q=>removeQueueItem(q.queueId)); renderGrid(); closeGridBottomSheet(); });
+            safeBind('gbs-symbol', 'click', () => { activeTargetType = 'track'; activeTargetTrackId = activeGridTrackId; document.getElementById('symbolModal').style.display = 'flex'; closeGridBottomSheet(); });
+            safeBind('gbs-link', 'click', () => { const t = tracks.find(t=>t.id===activeGridTrackId); const cur = `https://youtu.be/${t.mediaId}`; const newLink = prompt('Paste new YouTube link:', cur); if (newLink && newLink!==cur) { const parsed = parseMediaUrl(newLink); if (!parsed) alert("Sorry, that link's a no go."); else { updateData(t.id, 'track', { platform: parsed.platform, mediaId: parsed.id }); } } closeGridBottomSheet(); });
+            safeBind('gbs-color', 'click', () => { activeTargetType = 'track'; activeTargetTrackId = activeGridTrackId; tempSelectedColor = tracks.find(t=>t.id===activeTargetTrackId).color; document.getElementById('colorPreview').style.background = tempSelectedColor; document.getElementById('colorModal').style.display = 'flex'; closeGridBottomSheet(); });
+            safeBind('gbs-art', 'click', () => { activeTargetType = 'track'; activeTargetTrackId = activeGridTrackId; const t = tracks.find(t=>t.id===activeTargetTrackId); if (t && t.customImage) document.getElementById('replaceArtModal').style.display='flex'; else document.getElementById('artSourceModal').style.display='flex'; closeGridBottomSheet(); });
+            
+            safeBind('gbs-loop', 'click', () => { const t = tracks.find(t=>t.id===activeGridTrackId); updateData(t.id, 'track', { defaultLoop: !t.defaultLoop }); closeGridBottomSheet(); });
+            safeBind('gbs-fade', 'click', () => { const t = tracks.find(t=>t.id===activeGridTrackId); updateData(t.id, 'track', { defaultFade: !t.defaultFade }); closeGridBottomSheet(); });
+            safeBind('gbs-vol', 'click', () => { const t = tracks.find(t=>t.id===activeGridTrackId); let v = prompt('Set Default Volume (0-100):', t.defaultVolume !== undefined ? t.defaultVolume : 50); if(v !== null && !isNaN(v)) updateData(t.id, 'track', { defaultVolume: parseInt(v) }); closeGridBottomSheet(); });
+            safeBind('gbs-time', 'click', () => { const t = tracks.find(t=>t.id===activeGridTrackId); let v = prompt('Set Default Start Time in seconds (e.g. 60 for 1 min):', t.defaultStartTime !== undefined ? t.defaultStartTime : 0); if(v !== null && !isNaN(v)) updateData(t.id, 'track', { defaultStartTime: parseInt(v) }); closeGridBottomSheet(); });
             
             safeBind('bs-dup', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); const t = tracks.find(t=>t.id===q.trackId); if(t) addToQueue(t, q.currentTime); closeBottomSheet(); });
             safeBind('bs-rename', 'click', () => { const q = queue.find(q=>q.queueId===currentActionQueueId); const n = prompt('Rename track:', q.name); if(n) { updateData(q.trackId, 'track', { baseName: n }); } closeBottomSheet(); });
@@ -1089,9 +1126,22 @@ const allSymbolsList = [
             renderAlbums();
         }
 
-        function openBottomSheet(queueId, type) { currentActionQueueId = queueId; document.getElementById('bs-link').style.display = type==='mp3' ? 'none' : 'block'; const overlay = document.getElementById('bottomSheetOverlay'); overlay.style.display = 'flex'; setTimeout(() => document.getElementById('bottomSheet').classList.add('open'), 10); }
+function openBottomSheet(queueId, type) { currentActionQueueId = queueId; document.getElementById('bs-link').style.display = type==='mp3' ? 'none' : 'block'; const overlay = document.getElementById('bottomSheetOverlay'); overlay.style.display = 'flex'; setTimeout(() => document.getElementById('bottomSheet').classList.add('open'), 10); }
         function closeBottomSheet() { document.getElementById('bottomSheet').classList.remove('open'); setTimeout(() => { document.getElementById('bottomSheetOverlay').style.display='none'; currentActionQueueId=null; }, 350); }
-        
+
+        function openGridBottomSheet(trackId, type) { 
+            activeGridTrackId = trackId; 
+            const t = tracks.find(x => x.id === trackId);
+            document.getElementById('gbs-link').style.display = type==='mp3' ? 'none' : 'block'; 
+            document.getElementById('gbs-loop').textContent = t.defaultLoop ? 'Loop: ON' : 'Loop: OFF';
+            document.getElementById('gbs-fade').textContent = t.defaultFade ? 'Fade: ON' : 'Fade: OFF';
+            document.getElementById('gbs-vol').textContent = 'Default Vol: ' + (t.defaultVolume !== undefined ? t.defaultVolume : '50');
+            document.getElementById('gbs-time').textContent = 'Start Time: ' + (t.defaultStartTime !== undefined ? t.defaultStartTime + 's' : '0s');
+            const overlay = document.getElementById('gridBottomSheetOverlay'); 
+            overlay.style.display = 'flex'; 
+            setTimeout(() => document.getElementById('gridBottomSheet').classList.add('open'), 10); 
+        }
+        function closeGridBottomSheet() { document.getElementById('gridBottomSheet').classList.remove('open'); setTimeout(() => { document.getElementById('gridBottomSheetOverlay').style.display='none'; activeGridTrackId=null; }, 350); }        
         function openAlbumBottomSheet(albumId) { activeTargetAlbumId = albumId; const overlay = document.getElementById('albumBottomSheetOverlay'); overlay.style.display = 'flex'; setTimeout(() => document.getElementById('albumBottomSheet').classList.add('open'), 10); }
         function closeAlbumBottomSheet() { document.getElementById('albumBottomSheet').classList.remove('open'); setTimeout(() => { document.getElementById('albumBottomSheetOverlay').style.display='none'; }, 350); }
 
@@ -1193,9 +1243,12 @@ const allSymbolsList = [
                 const box=document.createElement('div'); box.className=`track-box ${queue.some(q=>q.trackId===track.id)?'in-queue':''}`; box.dataset.trackId=track.id; box.setAttribute('title', track.baseName);
                 const content=document.createElement('div'); content.className='track-box-content'; content.style.setProperty('--neon-color',track.color);
                 if(track.customImage){const img=document.createElement('img'); img.src=track.customImage; content.appendChild(img);} else{const sym=document.createElement('div'); sym.className='track-symbol'; sym.textContent=track.symbol; content.appendChild(sym);}
-                const hover=document.createElement('div'); hover.className='hover-text'; hover.textContent=track.baseName; content.appendChild(hover); box.appendChild(content);
-                [['up','▲'],['down','▼'],['left','◀'],['right','▶']].forEach(([dir, glyph]) => { const btn=document.createElement('button'); btn.className=`grid-arrow-btn arrow-${dir}`; btn.textContent=glyph; btn.onclick=(e)=>{ e.stopPropagation(); moveTrack(track.id, dir); }; box.appendChild(btn); });
-                const del=document.createElement('div'); del.className='delete-box-btn'; del.textContent='X'; del.onclick=(e)=>{ e.stopPropagation(); tracks=tracks.filter(t=>t.id!==track.id); saveTrackOrder(); queue.filter(q=>q.trackId===track.id).forEach(q=>removeQueueItem(q.queueId)); renderGrid(); }; box.appendChild(del);
+const hover=document.createElement('div'); hover.className='hover-text'; hover.textContent=track.baseName; content.appendChild(hover); box.appendChild(content);
+                
+                const optBtn = document.createElement('button'); optBtn.className = 'grid-options-btn'; optBtn.innerHTML = '⋯'; 
+                optBtn.onclick = (e) => { e.stopPropagation(); openGridBottomSheet(track.id, track.type); }; box.appendChild(optBtn);
+
+                [['up','▲'],['down','▼'],['left','◀'],['right','▶']].forEach(([dir, glyph]) => { const btn=document.createElement('button'); btn.className=`grid-arrow-btn arrow-${dir}`; btn.textContent=glyph; btn.onclick=(e)=>{ e.stopPropagation(); moveTrack(track.id, dir); }; box.appendChild(btn); });                const del=document.createElement('div'); del.className='delete-box-btn'; del.textContent='X'; del.onclick=(e)=>{ e.stopPropagation(); tracks=tracks.filter(t=>t.id!==track.id); saveTrackOrder(); queue.filter(q=>q.trackId===track.id).forEach(q=>removeQueueItem(q.queueId)); renderGrid(); }; box.appendChild(del);
                 let startX = 0, startY = 0, isDragging = false;
                 box.onpointerdown = (e) => { if (isEditing) return; startX = e.clientX; startY = e.clientY; isDragging = false; };
                 box.onpointermove = (e) => { if (isEditing) return; if (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10) isDragging = true; };
@@ -1313,8 +1366,14 @@ const allSymbolsList = [
             initializePlayer(q, base, true); 
         }
 
-        function addToQueue(t, startAt=0, autoPlay=false) { const q={queueId:'q_'+Date.now()+Math.floor(Math.random()*1000),trackId:t.id,type:t.type,platform:t.platform,mediaId:t.mediaId,name:t.baseName,color:t.color,playerAPI:null,state:autoPlay?'PLAYING':'PAUSED',duration:0,isLooping:false,volume:50,currentTime:startAt,isScrubbing:false,preventGhostPlay:!autoPlay, isFading:false, fadeInterval:null, targetVolume: 100}; queue.push(q); renderQueue(); initializePlayer(q,t); }
-        function removeQueueItem(id) { const i=queue.findIndex(q=>q.queueId===id); if(i>-1){if(queue[i].playerAPI) queue[i].playerAPI.destroy(); const div=document.getElementById(`player_${id}`); if(div) div.remove(); queue.splice(i,1); renderQueue(); renderGrid();} }
+function addToQueue(t, startAt=0, autoPlay=false) { 
+            let startVol = t.defaultVolume !== undefined ? t.defaultVolume : 50;
+            let timeAt = startAt > 0 ? startAt : (t.defaultStartTime || 0);
+            if (t.defaultFade && autoPlay) { startVol = 0; }
+            const q={queueId:'q_'+Date.now()+Math.floor(Math.random()*1000),trackId:t.id,type:t.type,platform:t.platform,mediaId:t.mediaId,name:t.baseName,color:t.color,playerAPI:null,state:autoPlay?'PLAYING':'PAUSED',duration:0,isLooping:t.defaultLoop||false,volume:startVol,currentTime:timeAt,isScrubbing:false,preventGhostPlay:!autoPlay, isFading:false, fadeInterval:null, targetVolume: t.defaultVolume !== undefined ? t.defaultVolume : 50}; 
+            queue.push(q); renderQueue(); initializePlayer(q,t); 
+            if (t.defaultFade && autoPlay) fadeIn(q);
+        }        function removeQueueItem(id) { const i=queue.findIndex(q=>q.queueId===id); if(i>-1){if(queue[i].playerAPI) queue[i].playerAPI.destroy(); const div=document.getElementById(`player_${id}`); if(div) div.remove(); queue.splice(i,1); renderQueue(); renderGrid();} }
         function formatTime(s) { if(!s) return '0:00'; const m=Math.floor(s/60),sec=Math.floor(s%60); return `${m}:${sec<10?'0':''}${sec}`; }
         function updateGridGlow() { document.querySelectorAll('.track-box').forEach(box=>{ const qs=queue.filter(q=>q.trackId===box.dataset.trackId); box.classList.toggle('in-queue', qs.length>0); box.classList.toggle('is-playing-glow', qs.some(it=>it.state==='PLAYING')); }); }
         
